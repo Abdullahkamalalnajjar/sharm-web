@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // The backend only allows configured CORS origins, so in development the browser talks to
 // this dev server and Vite forwards API calls to the ASP.NET API (self-signed HTTPS cert).
-const api = process.env.API_PROXY_TARGET ?? 'https://localhost:5003';
+const api = process.env.API_PROXY_TARGET ?? 'https://api-sharm.tryasp.net';
 const proxy = { target: api, changeOrigin: true, secure: false };
 
 export default defineConfig({
