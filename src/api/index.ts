@@ -4,7 +4,10 @@ import type {
   AddressInput,
   AdminDashboard,
   Cart,
+  DailyReport,
+  Driver,
   Menu,
+  MonthlyReport,
   NearbyStore,
   Order,
   OrderStatus,
@@ -16,6 +19,7 @@ import type {
   StoreStatus,
   StoreType,
   Tokens,
+  YearlyReport,
 } from '@/types';
 
 // ---------- Auth ----------
@@ -162,6 +166,8 @@ export const ordersApi = {
   confirm: (id: number, deliveryFee: number) => api.post<Order>(`${adminOrders}/${id}/confirm`, { deliveryFee }),
   setDeliveryFee: (id: number, deliveryFee: number) =>
     api.put<Order>(`${adminOrders}/${id}/delivery-fee`, { deliveryFee }),
+  /** `driverId` null takes the order back from its driver. */
+  assignDriver: (id: number, driverId: number | null) => api.put<Order>(`${adminOrders}/${id}/driver`, { driverId }),
   startDelivery: (id: number) => api.post<Order>(`${adminOrders}/${id}/out-for-delivery`),
   markDelivered: (id: number) => api.post<Order>(`${adminOrders}/${id}/delivered`),
   cancel: (id: number, reason?: string | null) => api.post<Order>(`${adminOrders}/${id}/cancel`, { reason: reason ?? null }),
@@ -172,4 +178,37 @@ export const ordersApi = {
 
 export const adminApi = {
   dashboard: () => api.get<AdminDashboard>('/api/admin/dashboard'),
+};
+
+// ---------- Drivers ----------
+
+const adminDrivers = '/api/admin/drivers';
+const me = '/api/driver';
+
+export const driversApi = {
+  all: () => api.get<Driver[]>(adminDrivers),
+  create: (input: { fullName: string; phoneNumber: string; email: string; password: string }) =>
+    api.post<Driver>(adminDrivers, input),
+  update: (id: number, input: { fullName: string; phoneNumber: string }) => api.put<Driver>(`${adminDrivers}/${id}`, input),
+  setActive: (id: number, active: boolean) => api.post<Driver>(`${adminDrivers}/${id}/${active ? 'activate' : 'deactivate'}`),
+
+  me: () => api.get<Driver>(`${me}/me`),
+  /** Active orders by default; `history` for delivered and cancelled ones. */
+  myOrders: (history: boolean) => api.get<Order[]>(`${me}/orders`, { history }),
+  myOrder: (id: number) => api.get<Order>(`${me}/orders/${id}`),
+  /** "استلمت": picked up from the stores. */
+  pickedUp: (id: number) => api.post<Order>(`${me}/orders/${id}/picked-up`),
+  /** "وصّلت": handed to the customer. */
+  delivered: (id: number) => api.post<Order>(`${me}/orders/${id}/delivered`),
+};
+
+// ---------- Reports ----------
+
+const reports = '/api/admin/reports';
+const two = (v: number) => String(v).padStart(2, '0');
+
+export const reportsApi = {
+  daily: (d: Date) => api.get<DailyReport>(`${reports}/daily`, { date: `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}` }),
+  monthly: (d: Date) => api.get<MonthlyReport>(`${reports}/monthly`, { year: d.getFullYear(), month: d.getMonth() + 1 }),
+  yearly: (d: Date) => api.get<YearlyReport>(`${reports}/yearly`, { year: d.getFullYear() }),
 };

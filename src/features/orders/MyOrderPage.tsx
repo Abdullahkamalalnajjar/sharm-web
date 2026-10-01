@@ -10,7 +10,7 @@ import { orderStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
 
-import { OrderAddressCard, OrderItemsCard, OrderStatusBadge, OrderTimeline, OrderTotalsCard } from './OrderWidgets';
+import { OrderAddressCard, OrderDriverCard, OrderItemsCard, OrderStatusBadge, OrderTimeline, OrderTotalsCard, canAssignDriver } from './OrderWidgets';
 
 /** Customer view of one order: status, items, totals, address; cancel while pending. */
 export function MyOrderPage() {
@@ -55,6 +55,9 @@ export function MyOrderPage() {
             <div className="grid gap-3 md:grid-cols-2 md:items-start">
               <div className="flex flex-col gap-3">
                 <OrderTimeline order={order.data} />
+                {order.data.driver && canAssignDriver(order.data) && (
+                  <OrderDriverCard driver={order.data.driver} title="المندوب اللي هيوصّلك" />
+                )}
                 <OrderAddressCard order={order.data} />
               </div>
               <div className="flex flex-col gap-3">

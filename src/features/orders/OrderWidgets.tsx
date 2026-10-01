@@ -1,10 +1,16 @@
 import clsx from 'clsx';
-import { Banknote, Mail, MapPin, MinusCircle, Phone, Store, StickyNote, UserRound, XCircle } from 'lucide-react';
+import { Banknote, Bike, Mail, Map, MapPin, MinusCircle, Phone, Store, StickyNote, UserRound, UserRoundX, XCircle, ArrowLeftRight } from 'lucide-react';
 
-import { IconWell, Price, SoftCard, StatusChip } from '@/components/ui';
+import { Button, IconWell, Price, SoftCard, StatusChip } from '@/components/ui';
 import { addressDetails, formatOrderDate, formatPrice } from '@/lib/format';
 import { ORDER_STATUSES, orderStatus } from '@/lib/meta';
-import type { Order, OrderCustomer, OrderItem, OrderSummary } from '@/types';
+import type { Order, OrderCustomer, OrderDriver, OrderItem, OrderSummary } from '@/types';
+
+export const telHref = (phone: string) => `tel:${phone.replace(/\s/g, '')}`;
+export const mapHref = (lat: number, lng: number) => `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+
+/** The admin can pick or change the driver until the order is delivered. */
+export const canAssignDriver = (o: Order) => o.status === 'Confirmed' || o.status === 'OutForDelivery';
 
 export function OrderStatusBadge({ status }: { status: Order['status'] }) {
   const meta = orderStatus(status);
@@ -15,6 +21,7 @@ export function OrderStatusBadge({ status }: { status: Order['status'] }) {
 export function OrderSummaryCard({ order, onClick, showCustomer }: { order: OrderSummary; onClick: () => void; showCustomer?: boolean }) {
   const meta = orderStatus(order.status);
   const needsFee = order.status === 'Pending' && order.deliveryFee == null;
+  const needsDriver = order.status === 'Confirmed' && order.driverName == null;
   return (
     <SoftCard as="button" onClick={onClick} className="p-3.5">
       <div className="flex items-center gap-3">
@@ -37,10 +44,17 @@ export function OrderSummaryCard({ order, onClick, showCustomer }: { order: Orde
           {order.addressLabel}
         </p>
       )}
+      {showCustomer && order.driverName && (
+        <p className="mt-1 flex items-center gap-1.5 text-[13px] text-ink-2">
+          <Bike className="size-4 text-ink-3" />
+          {order.driverName}
+        </p>
+      )}
       <div className="my-2.5 border-t border-line" />
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <span className="text-ink-2">{order.itemsCount} منتج</span>
         {needsFee && <StatusChip label="محتاج سعر توصيل" color="var(--color-warning)" />}
+        {showCustomer && needsDriver && <StatusChip label="محتاج مندوب" color="var(--color-warning)" />}
         <span className="flex-1" />
         <Price value={order.total} className="text-base" />
       </div>
@@ -52,7 +66,7 @@ export function OrderSummaryCard({ order, onClick, showCustomer }: { order: Orde
 export function OrderTimeline({ order }: { order: Order }) {
   if (order.status === 'Cancelled') {
     return (
-      <SoftCard className="flex items-start gap-2.5 p-4" >
+      <SoftCard className="flex items-start gap-2.5 p-4 bg-danger/10">
         <XCircle className="size-6 shrink-0 text-danger" />
         <div>
           <p className="font-extrabold text-ink">{order.cancelledBy === 'Customer' ? 'إنت لغيت الطلب' : 'الطلب اتلغى من الإدارة'}</p>
@@ -163,10 +177,12 @@ export function OrderTotalsCard({ order }: { order: Order }) {
   );
 }
 
-export function OrderAddressCard({ order, customer }: { order: Order; customer?: OrderCustomer | null }) {
+/** `showActions` adds call and map buttons (admin and driver). */
+export function OrderAddressCard({ order, customer, showActions }: { order: Order; customer?: OrderCustomer | null; showActions?: boolean }) {
   const a = order.address;
   const details = addressDetails(a);
   const phone = a.contactPhone ?? customer?.phoneNumber ?? null;
+  const hasMap = a.latitude != null && a.longitude != null;
   return (
     <SoftCard className="p-4">
       <div className="flex items-start gap-3">
@@ -190,12 +206,30 @@ export function OrderAddressCard({ order, customer }: { order: Order; customer?:
           {phone && (
             <p className="flex items-center gap-2 py-0.5 text-ink">
               <Phone className="size-[18px] text-ink-3" />
-              <a href={`tel:${phone}`} dir="ltr" className="hover:underline">
+              <a href={telHref(phone)} dir="ltr" className="hover:underline">
                 {phone}
               </a>
             </p>
           )}
         </>
+      )}
+      {showActions && (phone || hasMap) && (
+        <div className="mt-3 flex gap-2.5">
+          {phone && (
+            <a href={telHref(phone)} className="flex-1">
+              <Button block size="md" icon={<Phone className="size-[18px]" />}>
+                اتصل بالزبون
+              </Button>
+            </a>
+          )}
+          {hasMap && (
+            <a href={mapHref(a.latitude!, a.longitude!)} target="_blank" rel="noreferrer" className="flex-1">
+              <Button block size="md" variant="outline" icon={<Map className="size-[18px]" />}>
+                افتح الخريطة
+              </Button>
+            </a>
+          )}
+        </div>
       )}
       {order.note && (
         <>
@@ -204,6 +238,57 @@ export function OrderAddressCard({ order, customer }: { order: Order; customer?:
             <StickyNote className="size-[18px] shrink-0 text-ink-3" />
             {order.note}
           </p>
+        </>
+      )}
+    </SoftCard>
+  );
+}
+
+/** The driver on the order: name, phone and a call button. `onChange` / `onRemove` (admin) swap or take back the driver. */
+export function OrderDriverCard({
+  driver,
+  title = 'المندوب',
+  onChange,
+  onRemove,
+  disabled,
+}: {
+  driver: OrderDriver;
+  title?: string;
+  onChange?: () => void;
+  onRemove?: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <SoftCard className="p-4">
+      <div className="flex items-center gap-3">
+        <IconWell icon={Bike} size={46} color="var(--color-series-1)" />
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-ink-3">{title}</p>
+          <p className="font-extrabold text-ink">{driver.fullName}</p>
+          <p className="text-[13px] text-ink-2" dir="ltr">
+            {driver.phoneNumber}
+          </p>
+        </div>
+        <a href={telHref(driver.phoneNumber)} title="اتصل بالمندوب" className="grid size-11 place-items-center rounded-full bg-brand text-white shadow-brand hover:bg-brand-light">
+          <Phone className="size-5" />
+        </a>
+      </div>
+      {(onChange || onRemove) && (
+        <>
+          <div className="my-3 border-t border-line" />
+          <div className="flex items-center">
+            {onChange && (
+              <Button variant="ghost" size="sm" disabled={disabled} icon={<ArrowLeftRight className="size-4" />} onClick={onChange}>
+                غيّر المندوب
+              </Button>
+            )}
+            <span className="flex-1" />
+            {onRemove && (
+              <Button variant="ghost" size="sm" disabled={disabled} className="text-danger hover:bg-danger/10" icon={<UserRoundX className="size-4" />} onClick={onRemove}>
+                شيل المندوب
+              </Button>
+            )}
+          </div>
         </>
       )}
     </SoftCard>

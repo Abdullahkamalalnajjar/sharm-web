@@ -1,13 +1,13 @@
-import { CheckCircle2, ChevronLeft, Hourglass, LayoutGrid, LogOut, Package, ReceiptText, Store, PlusSquare, Users, type LucideIcon } from 'lucide-react';
+import { Bike, CheckCircle2, ChevronLeft, Hourglass, LayoutGrid, LogOut, Package, PlusSquare, Store, TrendingUp, UserRoundSearch, Users, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { useAdminDashboard } from '@/api/queries';
+import { useAdminDashboard, useTodayReport } from '@/api/queries';
 import { Button, ErrorView, IconWell, Loading, SectionHeader, SoftCard } from '@/components/ui';
-import { compactNumber, formatFullDate } from '@/lib/format';
-import { STORE_STATUSES, STORE_TYPES, storeStatus, storeType } from '@/lib/meta';
+import { compactNumber, formatFullDate, formatPrice } from '@/lib/format';
+import { ORDER_STATUSES, STORE_TYPES, storeStatus, storeType } from '@/lib/meta';
 import { useAuth } from '@/store/auth';
-import type { AdminDashboard, StoreStatus, StoreType } from '@/types';
+import type { AdminDashboard, OrderStatus, StoreStatus, StoreType } from '@/types';
 
 import { AdminStoreCard } from './AdminStoreCard';
 
@@ -18,6 +18,7 @@ export function AdminDashboardPage() {
   const d = dashboard.data;
 
   const openStores = (status?: StoreStatus) => navigate(status ? `/admin/stores?status=${status}` : '/admin/stores');
+  const openOrders = (status: OrderStatus | 'all' = 'Pending') => navigate(`/admin/orders?status=${status}`);
 
   return (
     <div className="pb-8">
@@ -48,7 +49,6 @@ export function AdminDashboardPage() {
           <div className="relative mt-1 flex flex-wrap gap-2">
             <HeaderPill icon={Store} text={`${d.openStores} مفتوح دلوقتي`} />
             <HeaderPill icon={CheckCircle2} text={`${d.activeStores} مفعّل`} />
-            <HeaderPill icon={ReceiptText} text={`${d.ordersInProgress} أوردر شغال`} />
           </div>
         )}
       </div>
@@ -61,12 +61,14 @@ export function AdminDashboardPage() {
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="flex flex-col gap-4">
-              {d.pendingOrders > 0 && (
+              <TodayCard onOpen={() => navigate('/admin/reports')} />
+              <OrdersStrip dashboard={d} onOpen={openOrders} />
+              {d.unassignedOrders > 0 && (
                 <AttentionBanner
-                  icon={ReceiptText}
-                  title={d.pendingOrders === 1 ? 'أوردر واحد جديد مستني المراجعة' : `${d.pendingOrders} أوردرات جديدة مستنية المراجعة`}
-                  subtitle="راجع الأوردر وحدد سعر التوصيل"
-                  onClick={() => navigate('/admin/orders')}
+                  icon={UserRoundSearch}
+                  title={d.unassignedOrders === 1 ? 'أوردر واحد محتاج مندوب' : `${d.unassignedOrders} أوردرات محتاجة مندوب`}
+                  subtitle="اتأكدت ومستنية تختار مين يوصّلها"
+                  onClick={() => openOrders('Confirmed')}
                 />
               )}
               {d.pendingStores > 0 && (
@@ -77,13 +79,22 @@ export function AdminDashboardPage() {
                   onClick={() => openStores('PendingApproval')}
                 />
               )}
+            </div>
+
+            <div className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3">
                 <StatTile icon={Users} label="الزباين" value={d.customers} />
                 <StatTile icon={Store} label="أصحاب المحلات" value={d.storeOwners} onClick={() => openStores()} />
                 <StatTile icon={Package} label="المنتجات" value={d.totalProducts} caption={d.unavailableProducts > 0 ? `${d.unavailableProducts} خلصان` : 'كله متاح'} />
                 <StatTile icon={LayoutGrid} label="الأقسام" value={d.totalCategories} />
-                <StatTile icon={ReceiptText} label="أوردرات اتوصّلت" value={d.deliveredOrders} onClick={() => navigate('/admin/orders')} />
-                <StatTile icon={Hourglass} label="أوردرات شغالة" value={d.ordersInProgress} onClick={() => navigate('/admin/orders')} />
+                <StatTile
+                  icon={Bike}
+                  label="المندوبين المفعّلين"
+                  value={d.activeDrivers}
+                  caption={d.unassignedOrders > 0 ? `${d.unassignedOrders} أوردر مستني مندوب` : undefined}
+                  onClick={() => navigate('/admin/drivers')}
+                  className="col-span-2"
+                />
               </div>
               <div className="flex gap-3">
                 <Button block icon={<PlusSquare className="size-5" />} onClick={() => navigate('/admin/stores/new')}>
@@ -95,19 +106,17 @@ export function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-4">
-              <SoftCard className="p-4">
-                <div className="flex items-center">
-                  <h3 className="flex-1 font-extrabold text-ink">المحلات حسب النوع</h3>
-                  <span className="text-ink-3">{d.totalStores} محل</span>
-                </div>
-                <StoreTypeBreakdown dashboard={d} />
-              </SoftCard>
-              <SoftCard className="p-4">
-                <h3 className="font-extrabold text-ink">حالة المحلات</h3>
-                <StoreStatusMeters dashboard={d} onSelect={openStores} />
-              </SoftCard>
-            </div>
+            <SoftCard className="p-4">
+              <div className="flex items-center">
+                <h3 className="flex-1 font-extrabold text-ink">المحلات حسب النوع</h3>
+                <span className="text-ink-3">{d.totalStores} محل</span>
+              </div>
+              <StoreTypeBreakdown dashboard={d} />
+            </SoftCard>
+            <SoftCard className="p-4">
+              <h3 className="font-extrabold text-ink">حالة المحلات</h3>
+              <StoreStatusMeters dashboard={d} onSelect={openStores} />
+            </SoftCard>
 
             {d.pendingApprovals.length > 0 && (
               <div className="lg:col-span-2">
@@ -135,6 +144,70 @@ function HeaderPill({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
   );
 }
 
+/** Today's money and orders; opens the full statistics. */
+function TodayCard({ onOpen }: { onOpen: () => void }) {
+  const today = useTodayReport().data?.totals;
+  const Cell = ({ label, value, accent }: { label: string; value: string; accent?: boolean }) => (
+    <div className="min-w-0 flex-1">
+      <p className="text-xs text-ink-2">{label}</p>
+      <p className={`truncate text-lg font-extrabold ${accent ? 'text-accent' : 'text-ink'}`}>{value}</p>
+    </div>
+  );
+  return (
+    <SoftCard as="button" onClick={onOpen} className="p-3.5">
+      <div className="flex items-center gap-2">
+        <TrendingUp className="size-5 text-accent" />
+        <span className="font-extrabold text-ink">النهارده</span>
+        <span className="flex-1" />
+        <span className="text-[13px] font-bold text-brand-light">كل الإحصائيات</span>
+        <ChevronLeft className="size-5 text-brand-light" />
+      </div>
+      <div className="mt-3 flex gap-3">
+        <Cell label="اتحصّل" value={today ? formatPrice(today.sales) : '—'} accent />
+        <Cell label="ليك (توصيل)" value={today ? formatPrice(today.deliveryFees) : '—'} />
+        <Cell label="أوردرات" value={today ? String(today.ordersPlaced) : '—'} />
+      </div>
+    </SoftCard>
+  );
+}
+
+/** Order work at a glance: new (needs review), in progress, delivered. */
+function OrdersStrip({ dashboard: d, onOpen }: { dashboard: AdminDashboard; onOpen: (s: OrderStatus | 'all') => void }) {
+  const cells: [OrderStatus, string, number][] = [
+    ['Pending', 'جديدة', d.pendingOrders],
+    ['Confirmed', 'شغالة', d.ordersInProgress],
+    ['Delivered', 'اتوصلت', d.deliveredOrders],
+  ];
+  return (
+    <SoftCard className="p-3.5">
+      <div className="flex items-center">
+        <h3 className="flex-1 font-extrabold text-ink">الأوردرات</h3>
+        <button type="button" onClick={() => onOpen('all')} className="text-[13px] font-bold text-brand-light hover:underline">
+          كل الأوردرات
+        </button>
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        {cells.map(([status, label, count]) => {
+          const meta = ORDER_STATUSES.find((s) => s.value === status)!;
+          return (
+            <button
+              key={status}
+              type="button"
+              onClick={() => onOpen(status)}
+              className="flex flex-col items-center rounded-2xl py-3 hover:brightness-110"
+              style={{ background: status === 'Pending' && count > 0 ? 'color-mix(in srgb, var(--color-warning) 14%, transparent)' : 'var(--color-surface-alt)' }}
+            >
+              <meta.Icon className="size-[22px]" style={{ color: meta.color }} />
+              <span className="mt-1.5 text-[22px] font-extrabold leading-tight text-ink">{count}</span>
+              <span className="text-xs text-ink-2">{label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </SoftCard>
+  );
+}
+
 function AttentionBanner({ icon, title, subtitle, onClick }: { icon: LucideIcon; title: string; subtitle: string; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-card bg-accent/15 p-3.5 text-start hover:bg-accent/20">
@@ -148,9 +221,9 @@ function AttentionBanner({ icon, title, subtitle, onClick }: { icon: LucideIcon;
   );
 }
 
-function StatTile({ icon, label, value, caption, onClick }: { icon: LucideIcon; label: string; value: number; caption?: string; onClick?: () => void }) {
+function StatTile({ icon, label, value, caption, onClick, className }: { icon: LucideIcon; label: string; value: number; caption?: string; onClick?: () => void; className?: string }) {
   return (
-    <SoftCard as={onClick ? 'button' : 'div'} onClick={onClick} className="p-3.5">
+    <SoftCard as={onClick ? 'button' : 'div'} onClick={onClick} className={`p-3.5 ${className ?? ''}`}>
       <IconWell icon={icon} size={38} />
       <p className="mt-3 text-[26px] font-extrabold leading-tight text-ink">{compactNumber(value)}</p>
       <p className="text-[13px] text-ink-2">{label}</p>
@@ -230,5 +303,3 @@ function StoreStatusMeters({ dashboard, onSelect }: { dashboard: AdminDashboard;
     </div>
   );
 }
-
-export const adminStoreStatuses = STORE_STATUSES;

@@ -26,7 +26,9 @@ export function sessionFromToken(accessToken: string): Session {
     ? 'admin'
     : permissions.includes('stores:manage')
       ? 'storeOwner'
-      : 'customer';
+      : permissions.includes('deliveries:handle')
+        ? 'driver'
+        : 'customer';
 
   return {
     userId: String(p['sub'] ?? p['nameid'] ?? p[ID_CLAIM] ?? ''),
@@ -38,4 +40,4 @@ export function sessionFromToken(accessToken: string): Session {
 }
 
 export const homeFor = (role: AppRole): string =>
-  role === 'admin' ? '/admin' : role === 'storeOwner' ? '/owner' : '/';
+  role === 'admin' ? '/admin' : role === 'storeOwner' ? '/owner' : role === 'driver' ? '/driver' : '/';

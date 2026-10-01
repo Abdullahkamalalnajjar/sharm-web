@@ -1,4 +1,4 @@
-import { ChevronLeft, LogOut, MapPin, ReceiptText, Store, UserRound, type LucideIcon } from 'lucide-react';
+import { Bike, ChevronLeft, LogOut, MapPin, ReceiptText, Store, UserRound, type LucideIcon } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { TabHeader } from '@/components/layout/AppShell';
@@ -6,7 +6,7 @@ import { IconWell, SoftCard, StatusChip } from '@/components/ui';
 import { LoginRequired } from '@/features/auth/LoginRequired';
 import { useAuth } from '@/store/auth';
 
-const ROLE_LABEL = { customer: 'زبون', storeOwner: 'صاحب محل', admin: 'أدمن' } as const;
+const ROLE_LABEL = { customer: 'زبون', storeOwner: 'صاحب محل', admin: 'أدمن', driver: 'مندوب' } as const;
 
 export function AccountPage() {
   const session = useAuth((s) => s.session);
@@ -40,6 +40,7 @@ export function AccountPage() {
           </>
         )}
         {session.role === 'storeOwner' && <Tile icon={Store} title="محلاتي" subtitle="إدارة المحلات والمنيو" onClick={() => navigate('/owner')} />}
+        {session.role === 'driver' && <Tile icon={Bike} title="أوردراتي" subtitle="الأوردرات اللي معاك دلوقتي" onClick={() => navigate('/driver')} />}
         <Tile
           icon={LogOut}
           title="تسجيل الخروج"

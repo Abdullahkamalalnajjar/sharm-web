@@ -1,4 +1,4 @@
-import { Bike, Check, CheckCheck, Pencil, XCircle } from 'lucide-react';
+import { Bike, Check, CheckCheck, ChevronLeft, Pencil, UserRoundPlus, UserRoundSearch, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router';
@@ -6,17 +6,28 @@ import { useParams } from 'react-router';
 import { ordersApi } from '@/api';
 import { keys, useAdminOrder } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
-import { Button, ErrorView, Loading } from '@/components/ui';
+import { Button, ErrorView, IconWell, Loading, SoftCard } from '@/components/ui';
 import { NumberDialog, ReasonDialog } from '@/features/owner/Dialogs';
-import { OrderAddressCard, OrderItemsCard, OrderStatusBadge, OrderTimeline, OrderTotalsCard } from '@/features/orders/OrderWidgets';
+import {
+  OrderAddressCard,
+  OrderDriverCard,
+  OrderItemsCard,
+  OrderStatusBadge,
+  OrderTimeline,
+  OrderTotalsCard,
+  canAssignDriver,
+} from '@/features/orders/OrderWidgets';
 import { formatOrderDate } from '@/lib/format';
 import { orderStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
 import type { Order, OrderItem } from '@/types';
 
+import { DriverPicker } from './DriverPicker';
+
 /** Admin view of one order with the next step for its status:
- *  Pending → confirm with delivery fee; Confirmed → send out; Out for delivery → delivered. */
+ *  Pending → confirm with delivery fee; Confirmed → pick a driver, then picked up;
+ *  Out for delivery → delivered. The driver usually marks the last two from their app. */
 export function AdminOrderPage() {
   const id = Number(useParams().id);
   const order = useAdminOrder(id);
@@ -24,20 +35,26 @@ export function AdminOrderPage() {
   const [busy, setBusy] = useState(false);
   const [feeDialog, setFeeDialog] = useState<'confirm' | 'edit' | null>(null);
   const [reasonOpen, setReasonOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   async function run(call: () => Promise<Order>, success: string) {
     setBusy(true);
-    const ok = await runAction(call, success);
+    const ok = await runAction(async () => {
+      const updated = await call();
+      qc.setQueryData(keys.adminOrder(id), updated);
+    }, success);
     setBusy(false);
-    if (ok) {
-      qc.setQueryData(keys.adminOrder(id), await ordersApi.byId(id).catch(() => undefined));
-      qc.invalidateQueries({ queryKey: ['admin'] });
-    }
+    if (ok) qc.invalidateQueries({ queryKey: ['admin'], refetchType: 'inactive' });
   }
 
   async function removeItem(o: Order, item: OrderItem) {
     if (!(await confirm(`تشيل "${item.productName}" من الأوردر؟`, 'شيل'))) return;
     await run(() => ordersApi.removeItem(o.id, item.id), 'المنتج اتشال');
+  }
+
+  async function removeDriver(o: Order) {
+    if (!(await confirm(`تشيل ${o.driver!.fullName} من الأوردر؟`, 'شيل'))) return;
+    await run(() => ordersApi.assignDriver(o.id, null), 'المندوب اتشال');
   }
 
   const o = order.data;
@@ -69,7 +86,28 @@ export function AdminOrderPage() {
             </div>
             <div className="grid gap-3 md:grid-cols-2 md:items-start">
               <div className="flex flex-col gap-3">
-                <OrderAddressCard order={o} customer={o.customer} />
+                <OrderAddressCard order={o} customer={o.customer} showActions />
+                {canAssignDriver(o) ? (
+                  o.driver ? (
+                    <OrderDriverCard
+                      driver={o.driver}
+                      disabled={busy}
+                      onChange={() => setPickerOpen(true)}
+                      onRemove={o.status === 'Confirmed' ? () => removeDriver(o) : undefined}
+                    />
+                  ) : (
+                    <SoftCard as="button" onClick={() => !busy && setPickerOpen(true)} className="flex items-center gap-3 p-4 bg-warning/10">
+                      <IconWell icon={UserRoundSearch} size={44} color="var(--color-warning)" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-extrabold text-ink">لسه مفيش مندوب</span>
+                        <span className="block text-xs text-ink-2">اختار مندوب عشان يستلم الأوردر</span>
+                      </span>
+                      <ChevronLeft className="size-5 text-warning" />
+                    </SoftCard>
+                  )
+                ) : (
+                  o.driver && <OrderDriverCard driver={o.driver} />
+                )}
                 <OrderTimeline order={o} />
               </div>
               <div className="flex flex-col gap-3">
@@ -93,9 +131,13 @@ export function AdminOrderPage() {
               <Button block loading={busy} icon={<Check className="size-5" />} onClick={() => setFeeDialog('confirm')}>
                 تأكيد وتحديد سعر التوصيل
               </Button>
+            ) : o.status === 'Confirmed' && !o.driver ? (
+              <Button block loading={busy} icon={<UserRoundPlus className="size-5" />} onClick={() => setPickerOpen(true)}>
+                اختار مندوب
+              </Button>
             ) : o.status === 'Confirmed' ? (
               <Button block loading={busy} icon={<Bike className="size-5" />} onClick={() => run(() => ordersApi.startDelivery(o.id), 'الأوردر خرج للتوصيل')}>
-                خرج للتوصيل
+                المندوب استلم الأوردر
               </Button>
             ) : (
               <Button block variant="success" loading={busy} icon={<CheckCheck className="size-5" />} onClick={() => run(() => ordersApi.markDelivered(o.id), 'الأوردر اتوصّل')}>
@@ -119,6 +161,12 @@ export function AdminOrderPage() {
         }
       />
       <ReasonDialog open={reasonOpen} onClose={() => setReasonOpen(false)} onSubmit={(reason) => run(() => ordersApi.cancel(id, reason || null), 'الأوردر اتلغى')} />
+      <DriverPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        currentDriverId={o?.driver?.id}
+        onPick={(d) => run(() => ordersApi.assignDriver(id, d.id), `الأوردر اتسلّم لـ ${d.fullName}`)}
+      />
     </div>
   );
 }

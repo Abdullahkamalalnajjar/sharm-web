@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import {
+  BarChart3,
   Bike,
   Home,
   LayoutDashboard,
@@ -24,6 +25,8 @@ interface NavItem {
   icon: LucideIcon;
   end?: boolean;
   badgeKey?: 'cart';
+  /** Shown in the desktop header only (the phone bar stays at four tabs). */
+  desktopOnly?: boolean;
 }
 
 const NAV: Record<AppRole, NavItem[]> = {
@@ -41,6 +44,12 @@ const NAV: Record<AppRole, NavItem[]> = {
     { to: '/admin', label: 'الرئيسية', icon: LayoutDashboard, end: true },
     { to: '/admin/orders', label: 'الأوردرات', icon: ReceiptText },
     { to: '/admin/stores', label: 'المحلات', icon: Store },
+    { to: '/admin/drivers', label: 'المندوبين', icon: Bike },
+    { to: '/admin/reports', label: 'الإحصائيات', icon: BarChart3, desktopOnly: true },
+  ],
+  driver: [
+    { to: '/driver', label: 'أوردراتي', icon: Bike, end: true },
+    { to: '/account', label: 'حسابي', icon: UserRound },
   ],
 };
 
@@ -139,7 +148,7 @@ export function AppShell() {
       {showBar && (
         <nav className="md:hidden fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-2 bg-gradient-to-t from-bg via-bg/90 to-transparent">
           <div className="mx-auto flex h-[70px] max-w-md items-stretch rounded-[35px] border border-line bg-surface p-2 shadow-card">
-            {items.map((item) => (
+            {items.filter((i) => !i.desktopOnly).map((item) => (
               <NavLink key={item.to} to={item.to} end={item.end} className="flex-1 min-w-0 flex">
                 {({ isActive }) => (
                   <span

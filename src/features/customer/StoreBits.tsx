@@ -101,7 +101,7 @@ export function StoreCard({ store }: { store: NearbyStore }) {
   return (
     <Link to={`/store/${store.id}`} className="card block overflow-hidden hover:border-surface-high transition-colors">
       <div className="relative h-[150px]">
-        <Cover type={store.type} logoUrl={store.logoUrl} className={clsx(!store.isOpen && "opacity-45")} />
+        <Cover type={store.type} logoUrl={store.logoUrl} className={clsx(!store.isOpen && 'opacity-45')} />
         <div className="absolute inset-0 scrim" />
         <div className="absolute top-3 start-3">
           <StatusChip label={store.isOpen ? 'مفتوح' : 'مقفول'} color={store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'} />

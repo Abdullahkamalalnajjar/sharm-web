@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { addressesApi, adminApi, cartApi, catalogApi, ordersApi, storesApi } from '@/api';
+import { addressesApi, adminApi, cartApi, catalogApi, driversApi, ordersApi, reportsApi, storesApi } from '@/api';
 import { SHARM_AREAS } from '@/lib/meta';
 import { useAuth } from '@/store/auth';
 import { useBrowse } from '@/store/ui';
-import type { Address, Cart, OrderStatus, StoreType } from '@/types';
+import type { Address, Cart, OrderStatus, Report, StoreType } from '@/types';
 import { EMPTY_CART } from '@/types';
 
 export const keys = {
@@ -21,6 +21,11 @@ export const keys = {
   adminStores: ['admin', 'stores'] as const,
   adminOrders: (status: OrderStatus | null) => ['admin', 'orders', status] as const,
   adminOrder: (id: number) => ['admin', 'orders', 'one', id] as const,
+  adminDrivers: ['admin', 'drivers'] as const,
+  report: (period: ReportPeriod, stamp: string) => ['admin', 'reports', period, stamp] as const,
+  driverProfile: ['driver', 'me'] as const,
+  driverOrders: (history: boolean) => ['driver', 'orders', history] as const,
+  driverOrder: (id: number) => ['driver', 'orders', 'one', id] as const,
 };
 
 const useIsCustomer = () => {
@@ -147,4 +152,78 @@ export const useAdminOrder = (id: number) =>
 export function useRefreshAdmin() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: ['admin'] });
+}
+
+export const useAdminDrivers = () => useQuery({ queryKey: keys.adminDrivers, queryFn: driversApi.all });
+
+// ---------- Reports ----------
+
+export type ReportPeriod = 'day' | 'month' | 'year';
+
+/** A report request: the period kind and any date inside it. */
+export interface ReportKey {
+  period: ReportPeriod;
+  date: Date;
+}
+
+export const shiftReportKey = (k: ReportKey, by: number): ReportKey => {
+  const d = k.date;
+  return {
+    period: k.period,
+    date:
+      k.period === 'day'
+        ? new Date(d.getFullYear(), d.getMonth(), d.getDate() + by)
+        : k.period === 'month'
+          ? new Date(d.getFullYear(), d.getMonth() + by, 1)
+          : new Date(d.getFullYear() + by, 0, 1),
+  };
+};
+
+/** True when this period contains today, so there is no "next". */
+export const isCurrentPeriod = (k: ReportKey): boolean => {
+  const now = new Date();
+  const d = k.date;
+  if (d.getFullYear() !== now.getFullYear()) return false;
+  if (k.period === 'year') return true;
+  if (d.getMonth() !== now.getMonth()) return false;
+  return k.period === 'month' || d.getDate() === now.getDate();
+};
+
+const reportStamp = (k: ReportKey) =>
+  k.period === 'day'
+    ? k.date.toDateString()
+    : k.period === 'month'
+      ? `${k.date.getFullYear()}-${k.date.getMonth()}`
+      : `${k.date.getFullYear()}`;
+
+async function loadReport(k: ReportKey): Promise<Report> {
+  if (k.period === 'day') {
+    const r = await reportsApi.daily(k.date);
+    return { totals: r.totals, previous: r.previousDay, points: [], hours: r.hours.map((h) => h.orders), best: null, stores: r.stores, drivers: r.drivers };
+  }
+  if (k.period === 'month') {
+    const r = await reportsApi.monthly(k.date);
+    return { totals: r.totals, previous: r.previousMonth, points: r.days, hours: [], best: r.bestDay, stores: r.stores, drivers: r.drivers };
+  }
+  const r = await reportsApi.yearly(k.date);
+  return { totals: r.totals, previous: r.previousYear, points: r.months, hours: [], best: r.bestMonth, stores: r.stores, drivers: r.drivers };
+}
+
+export const useReport = (k: ReportKey) =>
+  useQuery({ queryKey: keys.report(k.period, reportStamp(k)), queryFn: () => loadReport(k) });
+
+/** Today's numbers for the admin dashboard. */
+export const useTodayReport = () => useReport({ period: 'day', date: new Date() });
+
+// ---------- Driver ----------
+
+export const useDriverProfile = () => useQuery({ queryKey: keys.driverProfile, queryFn: driversApi.me });
+export const useDriverOrders = (history: boolean) =>
+  useQuery({ queryKey: keys.driverOrders(history), queryFn: () => driversApi.myOrders(history) });
+export const useDriverOrder = (id: number) =>
+  useQuery({ queryKey: keys.driverOrder(id), queryFn: () => driversApi.myOrder(id) });
+
+export function useRefreshDriver() {
+  const qc = useQueryClient();
+  return () => qc.invalidateQueries({ queryKey: ['driver'] });
 }

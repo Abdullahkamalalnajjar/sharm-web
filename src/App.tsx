@@ -5,6 +5,8 @@ import { CustomerArea, GuestOnly, RequireRole } from '@/components/layout/Guards
 import { AccountPage } from '@/features/account/AccountPage';
 import { AddressesPage } from '@/features/addresses/AddressesPage';
 import { AdminDashboardPage } from '@/features/admin/AdminDashboardPage';
+import { AdminDriversPage } from '@/features/admin/AdminDriversPage';
+import { AdminReportsPage } from '@/features/admin/AdminReportsPage';
 import { AdminOrderPage } from '@/features/admin/AdminOrderPage';
 import { AdminOrdersPage } from '@/features/admin/AdminOrdersPage';
 import { AdminStoresPage } from '@/features/admin/AdminStoresPage';
@@ -13,6 +15,8 @@ import { SignupPage } from '@/features/auth/SignupPage';
 import { CartPage } from '@/features/cart/CartPage';
 import { CheckoutPage } from '@/features/cart/CheckoutPage';
 import { HomePage } from '@/features/customer/HomePage';
+import { DriverHomePage } from '@/features/driver/DriverHomePage';
+import { DriverOrderPage } from '@/features/driver/DriverOrderPage';
 import { StorePage } from '@/features/customer/StorePage';
 import { MyOrderPage } from '@/features/orders/MyOrderPage';
 import { MyOrdersPage } from '@/features/orders/MyOrdersPage';
@@ -55,11 +59,19 @@ export function App() {
           <Route path="admin/orders" element={<AdminOrdersPage />} />
           <Route path="admin/orders/:id" element={<AdminOrderPage />} />
           <Route path="admin/stores" element={<AdminStoresPage />} />
+          <Route path="admin/drivers" element={<AdminDriversPage />} />
+          <Route path="admin/reports" element={<AdminReportsPage />} />
           <Route path="admin/stores/new" element={<StoreFormPage isAdmin />} />
           <Route path="admin/stores/:id/edit" element={<StoreFormPage isAdmin />} />
           <Route path="admin/stores/:id/menu" element={<ManageMenuPage />} />
           <Route path="admin/stores/:id/products/new" element={<ProductEditorPage />} />
           <Route path="admin/stores/:id/products/:productId" element={<ProductEditorPage />} />
+        </Route>
+
+        {/* Driver */}
+        <Route element={<RequireRole role="driver" />}>
+          <Route path="driver" element={<DriverHomePage />} />
+          <Route path="driver/orders/:id" element={<DriverOrderPage />} />
         </Route>
 
         {/* Auth */}

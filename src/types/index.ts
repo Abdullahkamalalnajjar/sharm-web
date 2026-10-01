@@ -170,6 +170,15 @@ export interface OrderAddress {
   apartment: string | null;
   landmark: string | null;
   contactPhone: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+/** The driver on an order. The customer sees them once assigned, to call them. */
+export interface OrderDriver {
+  id: number;
+  fullName: string;
+  phoneNumber: string;
 }
 
 export interface OrderItem {
@@ -213,8 +222,10 @@ export interface Order {
   itemsCount: number;
   canCustomerCancel: boolean;
   stores: OrderStoreGroup[];
-  /** Admin only. */
+  /** Admin and driver only. */
   customer: OrderCustomer | null;
+  driver: OrderDriver | null;
+  driverAssignedUtc: string | null;
 }
 
 export interface OrderSummary {
@@ -228,6 +239,8 @@ export interface OrderSummary {
   total: number;
   addressLabel: string;
   customerEmail: string | null;
+  /** Admin only. */
+  driverName: string | null;
 }
 
 export interface StoreTypeCount {
@@ -251,6 +264,108 @@ export interface AdminDashboard {
   pendingOrders: number;
   ordersInProgress: number;
   deliveredOrders: number;
+  activeDrivers: number;
+  /** Confirmed orders still without a driver. */
+  unassignedOrders: number;
+}
+
+/** A delivery driver as the admin sees them (also the driver's own profile). */
+export interface Driver {
+  id: number;
+  userId: string;
+  email: string | null;
+  fullName: string;
+  phoneNumber: string;
+  isActive: boolean;
+  /** Confirmed or on the way right now. */
+  activeOrders: number;
+  deliveredOrders: number;
+  createdUtc: string;
+}
+
+// ---------- Reports ----------
+
+/** Headline numbers of a period. Orders count on the day placed, money on the day delivered. */
+export interface ReportTotals {
+  ordersPlaced: number;
+  delivered: number;
+  cancelled: number;
+  inProgress: number;
+  /** Everything collected from customers (products + delivery). */
+  sales: number;
+  /** The stores' share (products only). */
+  storeSales: number;
+  /** The app's share. */
+  deliveryFees: number;
+  averageOrder: number;
+}
+
+/** One bar: a day of a month or a month of a year. */
+export interface ReportPoint {
+  start: string;
+  ordersPlaced: number;
+  delivered: number;
+  sales: number;
+  deliveryFees: number;
+}
+
+export interface StoreSales {
+  storeId: number;
+  storeName: string;
+  orders: number;
+  itemsSold: number;
+  sales: number;
+}
+
+export interface DriverStats {
+  driverId: number;
+  fullName: string;
+  delivered: number;
+  collected: number;
+  deliveryFees: number;
+}
+
+export interface DailyReport {
+  date: string;
+  totals: ReportTotals;
+  previousDay: ReportTotals;
+  hours: { hour: number; orders: number }[];
+  stores: StoreSales[];
+  drivers: DriverStats[];
+}
+
+export interface MonthlyReport {
+  year: number;
+  month: number;
+  totals: ReportTotals;
+  previousMonth: ReportTotals;
+  days: ReportPoint[];
+  bestDay: ReportPoint | null;
+  stores: StoreSales[];
+  drivers: DriverStats[];
+}
+
+export interface YearlyReport {
+  year: number;
+  totals: ReportTotals;
+  previousYear: ReportTotals;
+  months: ReportPoint[];
+  bestMonth: ReportPoint | null;
+  stores: StoreSales[];
+  drivers: DriverStats[];
+}
+
+/** What every report has in common, so one page can show day, month or year. */
+export interface Report {
+  totals: ReportTotals;
+  previous: ReportTotals;
+  /** Days of the month or months of the year. Empty for a day report. */
+  points: ReportPoint[];
+  /** Orders per hour (0-23). Day report only. */
+  hours: number[];
+  best: ReportPoint | null;
+  stores: StoreSales[];
+  drivers: DriverStats[];
 }
 
 export interface Tokens {
@@ -258,7 +373,7 @@ export interface Tokens {
   refreshToken: string;
 }
 
-export type AppRole = 'customer' | 'storeOwner' | 'admin';
+export type AppRole = 'customer' | 'storeOwner' | 'admin' | 'driver';
 
 export interface Session {
   userId: string;

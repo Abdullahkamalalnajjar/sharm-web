@@ -10,6 +10,7 @@ import { useAuth } from '@/store/auth';
 const TEST_ACCOUNTS = [
   { label: 'زبون', email: 'customer@sharm.app', password: 'Test123!' },
   { label: 'صاحب محل', email: 'owner@sharm.app', password: 'Test123!' },
+  { label: 'مندوب', email: 'driver@sharm.app', password: 'Test123!' },
   { label: 'أدمن', email: 'admin@example.com', password: 'Admin123!' },
 ];
 
