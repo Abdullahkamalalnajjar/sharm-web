@@ -1,18 +1,18 @@
 @import 'tailwindcss';
 
-/* DoorDash-style dark palette, mirrored from the Flutter app's lib/core/theme.dart. */
+/* Dark palette in the city-app style: warm charcoal surfaces, crimson brand, amber accent. */
 @theme {
   --font-sans: 'Cairo', ui-sans-serif, system-ui, sans-serif;
 
-  --color-bg: #0e0e10;
-  --color-surface: #1b1b1f;
-  --color-surface-alt: #27272d;
-  --color-surface-high: #323239;
+  --color-bg: #191717;
+  --color-surface: #242121;
+  --color-surface-alt: #2b2727;
+  --color-surface-high: #363131;
 
-  --color-brand: #ef2a2a;
-  --color-brand-light: #ff5a4e;
-  --color-brand-dark: #b8141b;
-  --color-accent: #ffc62e;
+  --color-brand: #cd183d;
+  --color-brand-light: #ff5c7c;
+  --color-brand-dark: #610129;
+  --color-accent: #ffb200;
   --color-accent-dark: #e0a800;
 
   --color-ink: #f5f5f7;
@@ -32,8 +32,9 @@
   --radius-card: 22px;
   --radius-field: 16px;
 
-  --shadow-card: 0 10px 24px rgb(0 0 0 / 0.35);
-  --shadow-brand: 0 4px 14px rgb(239 42 42 / 0.4);
+  --shadow-card: 0 2px 10px rgb(0 0 0 / 0.35);
+  --shadow-card-hover: 0 12px 28px rgb(0 0 0 / 0.5);
+  --shadow-brand: 0 4px 14px rgb(205 24 61 / 0.4);
 }
 
 @layer base {
@@ -52,7 +53,11 @@
     font: inherit;
   }
   ::selection {
-    background: rgb(239 42 42 / 0.45);
+    background: rgb(205 24 61 / 0.45);
+  }
+  html,
+  body {
+    overflow-x: clip;
   }
   * {
     scrollbar-width: thin;
@@ -117,4 +122,113 @@
 
 .animate-fade {
   animation: fade-in 180ms ease-out;
+}
+
+/* ---------- Home page, city-app style ---------- */
+
+/* Page container: the site's content column. */
+@utility container-site {
+  @apply mx-auto w-full max-w-[1320px] px-3 sm:px-4;
+}
+
+/* Section heading: icon on a tinted square + title. */
+@utility section-title {
+  @apply flex items-center gap-2 text-[1.3rem] font-extrabold text-ink;
+  & > .section-title-icon {
+    @apply grid size-[34px] shrink-0 place-items-center rounded-[11px] text-brand-light;
+    background: rgb(205 24 61 / 0.22);
+  }
+}
+
+@utility section-link {
+  @apply inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[0.85rem] font-bold text-brand-light transition-colors;
+  background: rgb(205 24 61 / 0.2);
+  &:hover {
+    background: rgb(205 24 61 / 0.32);
+  }
+}
+
+/* Horizontal scroller with snap and hidden scrollbar. */
+@utility h-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(230px, 280px);
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding: 0.25rem 0.1rem 0.5rem;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  & > * {
+    scroll-snap-align: start;
+  }
+}
+
+/* Full-width slider track (offers + featured). */
+@utility slider-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Image cover tile: name over a bottom gradient. */
+@utility tile-scrim {
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 45% 0 0;
+    background: linear-gradient(transparent, rgb(0 0 0 / 0.8));
+    pointer-events: none;
+  }
+}
+
+@utility city-scrim {
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.72) 0%, rgb(0 0 0 / 0.25) 45%, rgb(0 0 0 / 0) 70%);
+    pointer-events: none;
+  }
+}
+
+/* Lift on hover, press on tap. */
+@utility lift {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card-hover);
+  }
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+@keyframes bn-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.animate-bn-pulse {
+  animation: bn-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-bn-pulse,
+  .lift,
+  .lift:hover {
+    animation: none;
+    transform: none;
+  }
 }

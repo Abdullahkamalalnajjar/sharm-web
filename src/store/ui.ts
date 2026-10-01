@@ -12,10 +12,14 @@ interface BrowseState {
   storeType: StoreType | null;
   openOnly: boolean;
   search: string;
+  /** The delivery-location sheet, opened from the header's area button and the home page. */
+  pickerOpen: boolean;
   setSelection: (s: DeliverySelection | null) => void;
   setStoreType: (t: StoreType | null) => void;
   setOpenOnly: (v: boolean) => void;
   setSearch: (v: string) => void;
+  setPickerOpen: (v: boolean) => void;
+  clearFilters: () => void;
 }
 
 export const useBrowse = create<BrowseState>((set) => ({
@@ -23,10 +27,13 @@ export const useBrowse = create<BrowseState>((set) => ({
   storeType: null,
   openOnly: false,
   search: '',
+  pickerOpen: false,
   setSelection: (selection) => set({ selection }),
   setStoreType: (storeType) => set({ storeType }),
   setOpenOnly: (openOnly) => set({ openOnly }),
   setSearch: (search) => set({ search }),
+  setPickerOpen: (pickerOpen) => set({ pickerOpen }),
+  clearFilters: () => set({ storeType: null, openOnly: false, search: '' }),
 }));
 
 // ---------- Toasts ----------

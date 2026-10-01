@@ -1,7 +1,10 @@
 # sharm_web
 
 Website version of the Sharm delivery app (the Flutter app lives in `~/Desktop/sharm_app` and keeps
-working on its own). Same backend, same roles, same DoorDash-style dark theme.
+working on its own). Same backend, same roles. The customer home page follows the city-app.org
+layout (app banner, red header with the delivery-area button, search band, offers carousel, category
+tiles, featured slider, nearest-stores panel, areas grid, footer, floating bottom bar). Site links and
+contact channels live in `src/lib/site.ts`; the static promo cards in `src/lib/home-content.ts`.
 
 ## Run
 

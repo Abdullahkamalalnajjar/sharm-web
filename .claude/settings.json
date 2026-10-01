@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node shot.mjs \"http://localhost:5173/\" 390 844 m-top.png)",
+      "Bash(node shot.mjs \"http://localhost:5173/\" 390 844 m-full.png full)",
+      "Bash(npm run *)"
+    ]
+  }
+}
