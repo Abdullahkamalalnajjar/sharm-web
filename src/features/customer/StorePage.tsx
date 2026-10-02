@@ -7,7 +7,7 @@ import { useCart, useMenu, useStore } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { AppImage, EmptyView, ErrorView, Loading, Price, SectionHeader, SoftCard, StatusChip } from '@/components/ui';
 import { formatPrice } from '@/lib/format';
-import { storeType } from '@/lib/meta';
+import { categoryOf } from '@/lib/meta';
 import type { Product, Store } from '@/types';
 
 import { ProductSheet } from './ProductSheet';
@@ -63,10 +63,10 @@ export function StorePage() {
 }
 
 function StoreHeader({ store }: { store: Store }) {
-  const meta = storeType(store.type);
+  const meta = categoryOf(store);
   return (
     <SoftCard className="p-4 flex items-center gap-3.5">
-      <StoreAvatar type={store.type} logoUrl={store.logoUrl} size={68} />
+      <StoreAvatar category={store} logoUrl={store.logoUrl} size={68} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <h2 className="truncate text-lg font-extrabold text-ink">{store.name}</h2>
@@ -89,7 +89,7 @@ function StoreHeader({ store }: { store: Store }) {
 
 function ProductTile({ product, store, onOpen }: { product: Product; store: Store; onOpen: () => void }) {
   const hasOptions = product.optionGroups.length > 0;
-  const meta = storeType(store.type);
+  const meta = categoryOf(store);
   return (
     <SoftCard as="button" onClick={onOpen} className={clsx('p-2.5 flex items-center gap-3', !product.isAvailable && 'opacity-55 cursor-default')}>
       <div className="relative size-[78px] shrink-0 overflow-hidden rounded-2xl grid place-items-center" style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)` }}>

@@ -7,7 +7,7 @@ import { keys, useMyStores } from '@/api/queries';
 import { TabHeader } from '@/components/layout/AppShell';
 import { Button, EmptyView, ErrorView, Loading, SoftCard, StatusChip, Switch } from '@/components/ui';
 import { StoreAvatar } from '@/features/customer/StoreBits';
-import { storeStatus, storeType } from '@/lib/meta';
+import { storeStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import type { Store as StoreModel } from '@/types';
 
@@ -64,10 +64,10 @@ export function OwnerStoreCard({ store, basePath }: { store: StoreModel; basePat
   return (
     <SoftCard className="p-3.5">
       <div className="flex items-center gap-3">
-        <StoreAvatar type={store.type} logoUrl={store.logoUrl} size={52} />
+        <StoreAvatar category={store} logoUrl={store.logoUrl} size={52} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-extrabold text-ink">{store.name}</p>
-          <p className="text-[13px] text-ink-2">{storeType(store.type).label}</p>
+          <p className="text-[13px] text-ink-2">{store.categoryName}</p>
         </div>
         <StatusChip label={status.label} color={status.color} />
       </div>

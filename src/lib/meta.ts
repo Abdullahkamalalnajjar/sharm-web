@@ -8,27 +8,57 @@ import {
   Utensils,
   XCircle,
   Bike,
+  Apple,
+  Beef,
+  CakeSlice,
+  Coffee,
+  Croissant,
+  Droplet,
+  Fish,
+  Flower2,
+  Gift,
+  MonitorSmartphone,
+  PawPrint,
+  Store,
+  WashingMachine,
   type LucideIcon,
 } from 'lucide-react';
 
-import type { CartLineIssue, OrderStatus, StoreStatus, StoreType } from '@/types';
+import type { CartLineIssue, CategoryRef, OrderStatus, StoreStatus } from '@/types';
 
-export interface StoreTypeMeta {
-  value: StoreType;
-  label: string;
+export interface CategoryLook {
   Icon: LucideIcon;
-  /** Fixed categorical color, never changes between charts and filters. */
+  /** Fixed per icon, so a category keeps its color in every chart and filter. */
   color: string;
+  /** Suggested name, shown as the icon's tooltip. */
+  hint: string;
 }
 
-export const STORE_TYPES: StoreTypeMeta[] = [
-  { value: 'Restaurant', label: 'مطاعم', Icon: Utensils, color: 'var(--color-series-1)' },
-  { value: 'Supermarket', label: 'سوبر ماركت', Icon: ShoppingBasket, color: 'var(--color-series-2)' },
-  { value: 'Pharmacy', label: 'صيدليات', Icon: Pill, color: 'var(--color-series-3)' },
-];
+/** The icons the server allows for a category (StoreCategory.Icons in the backend). */
+export const STORE_CATEGORY_ICONS: Record<string, CategoryLook> = {
+  restaurant: { Icon: Utensils, color: 'var(--color-series-1)', hint: 'مطاعم' },
+  supermarket: { Icon: ShoppingBasket, color: 'var(--color-series-2)', hint: 'سوبر ماركت' },
+  pharmacy: { Icon: Pill, color: 'var(--color-series-3)', hint: 'صيدلية' },
+  bakery: { Icon: Croissant, color: '#E0A15A', hint: 'مخبوزات' },
+  cafe: { Icon: Coffee, color: '#B98563', hint: 'كافيه' },
+  sweets: { Icon: CakeSlice, color: '#F06FA6', hint: 'حلويات' },
+  fruits: { Icon: Apple, color: '#7BCB5A', hint: 'خضار وفاكهة' },
+  meat: { Icon: Beef, color: '#E5574F', hint: 'لحوم' },
+  fish: { Icon: Fish, color: '#3FB7D9', hint: 'أسماك' },
+  flowers: { Icon: Flower2, color: '#C77DFF', hint: 'ورد' },
+  pets: { Icon: PawPrint, color: '#D9A441', hint: 'حيوانات أليفة' },
+  electronics: { Icon: MonitorSmartphone, color: '#8C9EFF', hint: 'إلكترونيات' },
+  gifts: { Icon: Gift, color: '#FF8A65', hint: 'هدايا' },
+  water: { Icon: Droplet, color: '#4FC3F7', hint: 'مياه' },
+  laundry: { Icon: WashingMachine, color: '#90A4AE', hint: 'مغسلة' },
+  other: { Icon: Store, color: 'var(--color-ink-2)', hint: 'أخرى' },
+};
 
-export const storeType = (value: StoreType): StoreTypeMeta =>
-  STORE_TYPES.find((t) => t.value === value) ?? STORE_TYPES[0];
+export const categoryLook = (icon: string | null | undefined): CategoryLook =>
+  STORE_CATEGORY_ICONS[icon ?? ''] ?? STORE_CATEGORY_ICONS.other;
+
+/** Label, icon and color of a store's category. */
+export const categoryOf = (ref: CategoryRef) => ({ label: ref.categoryName, ...categoryLook(ref.categoryIcon) });
 
 export interface StoreStatusMeta {
   value: StoreStatus;

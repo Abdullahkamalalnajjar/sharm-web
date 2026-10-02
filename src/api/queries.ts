@@ -1,15 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { addressesApi, adminApi, cartApi, catalogApi, driversApi, ordersApi, reportsApi, storesApi } from '@/api';
+import { addressesApi, adminApi, cartApi, catalogApi, driversApi, notificationsApi, ordersApi, reportsApi, storeCategoriesApi, storesApi } from '@/api';
 import { SHARM_AREAS } from '@/lib/meta';
 import { useAuth } from '@/store/auth';
 import { useBrowse } from '@/store/ui';
-import type { Address, Cart, OrderStatus, Report, StoreType } from '@/types';
+import type { Address, Cart, OrderStatus, Report } from '@/types';
 import { EMPTY_CART } from '@/types';
 
 export const keys = {
   addresses: ['addresses'] as const,
-  nearby: (lat: number, lng: number, type: StoreType | null) => ['stores', 'nearby', lat, lng, type] as const,
+  nearby: (lat: number, lng: number, categoryId: number | null) => ['stores', 'nearby', lat, lng, categoryId] as const,
+  storeCategories: ['store-categories'] as const,
+  adminStoreCategories: ['admin', 'store-categories'] as const,
   store: (id: number) => ['stores', id] as const,
   menu: (id: number) => ['menu', id] as const,
   managedMenu: (id: number) => ['menu', 'manage', id] as const,
@@ -23,6 +25,8 @@ export const keys = {
   adminOrder: (id: number) => ['admin', 'orders', 'one', id] as const,
   adminDrivers: ['admin', 'drivers'] as const,
   report: (period: ReportPeriod, stamp: string) => ['admin', 'reports', period, stamp] as const,
+  unreadNotifications: ['notifications', 'unread'] as const,
+  notifications: ['notifications', 'list'] as const,
   driverProfile: ['driver', 'me'] as const,
   driverOrders: (history: boolean) => ['driver', 'orders', history] as const,
   driverOrder: (id: number) => ['driver', 'orders', 'one', id] as const,
@@ -81,13 +85,21 @@ export function useDeliveryLocation(): { location: DeliveryLocation | null; isLo
 
 // ---------- Stores & catalog ----------
 
-export function useNearbyStores(location: DeliveryLocation | null, type: StoreType | null) {
+export function useNearbyStores(location: DeliveryLocation | null, categoryId: number | null) {
   return useQuery({
-    queryKey: keys.nearby(location?.latitude ?? 0, location?.longitude ?? 0, type),
-    queryFn: () => storesApi.nearby(location!.latitude, location!.longitude, type),
+    queryKey: keys.nearby(location?.latitude ?? 0, location?.longitude ?? 0, categoryId),
+    queryFn: () => storesApi.nearby(location!.latitude, location!.longitude, categoryId),
     enabled: location !== null,
   });
 }
+
+/** Home tiles, filters and the store form. */
+export const useStoreCategories = () =>
+  useQuery({ queryKey: keys.storeCategories, queryFn: storeCategoriesApi.visible, staleTime: 5 * 60_000 });
+
+/** Every category, hidden ones included (admin). */
+export const useAdminStoreCategories = () =>
+  useQuery({ queryKey: keys.adminStoreCategories, queryFn: storeCategoriesApi.all });
 
 export const useStore = (id: number) => useQuery({ queryKey: keys.store(id), queryFn: () => storesApi.byId(id) });
 export const useMenu = (id: number) => useQuery({ queryKey: keys.menu(id), queryFn: () => catalogApi.menu(id) });
@@ -227,3 +239,25 @@ export function useRefreshDriver() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: ['driver'] });
 }
+
+// ---------- Notifications ----------
+
+/** The number on the bell. Refreshed by every live notification and when the tab comes back. */
+export function useUnreadNotifications() {
+  const signedIn = useAuth((s) => s.session !== null);
+  return useQuery({
+    queryKey: keys.unreadNotifications,
+    queryFn: notificationsApi.unreadCount,
+    enabled: signedIn,
+    placeholderData: signedIn ? undefined : 0,
+  });
+}
+
+/** The inbox, page by page (newest first). */
+export const useNotifications = () =>
+  useInfiniteQuery({
+    queryKey: keys.notifications,
+    queryFn: ({ pageParam }) => notificationsApi.page(pageParam),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (last) => (last.hasMore && last.items.length > 0 ? last.items[last.items.length - 1].id : undefined),
+  });

@@ -83,6 +83,32 @@ async function tryRefresh(): Promise<Tokens | null> {
   return refreshing;
 }
 
+/** Seconds-since-epoch expiry of a JWT, or null when it cannot be read. */
+function tokenExpiry(jwt: string): number | null {
+  try {
+    const part = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const exp = (JSON.parse(atob(part.padEnd(Math.ceil(part.length / 4) * 4, '='))) as { exp?: number }).exp;
+    return typeof exp === 'number' ? exp : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A current access token for connections that cannot retry on 401 (the live notifications socket):
+ * refreshed first when it expires within a minute.
+ */
+export async function freshAccessToken(): Promise<string | null> {
+  const current = tokenStorage.read();
+  if (!current) return null;
+  const exp = tokenExpiry(current.accessToken);
+  if (exp !== null && exp * 1000 > Date.now() + 60_000) return current.accessToken;
+  return (await tryRefresh())?.accessToken ?? null;
+}
+
+/** Where the API lives ('' = same origin, through the dev proxy). */
+export const apiBaseUrl = baseURL;
+
 type RetriableConfig = AxiosRequestConfig & { _retried?: boolean };
 
 http.interceptors.response.use(undefined, async (error: AxiosError) => {

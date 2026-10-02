@@ -5,12 +5,12 @@ import { useNavigate, useParams } from 'react-router';
 
 import { storesApi } from '@/api';
 import { errorMessage } from '@/api/client';
-import { useStore } from '@/api/queries';
+import { useStore, useStoreCategories } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
-import { Button, Chip, InlineError, Loading, Segmented, TextArea, TextField } from '@/components/ui';
-import { SHARM_AREAS, STORE_TYPES } from '@/lib/meta';
+import { Button, Chip, InlineError, Loading, TextArea, TextField } from '@/components/ui';
+import { SHARM_AREAS, categoryLook } from '@/lib/meta';
 import { showMessage } from '@/store/ui';
-import type { Store as StoreModel, StoreInput, StoreType } from '@/types';
+import type { Store as StoreModel, StoreInput } from '@/types';
 
 import { ImagePickerField, noImageEdit, type ImageEdit } from './ImagePicker';
 
@@ -28,7 +28,8 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
   const isEdit = store !== null;
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [type, setType] = useState<StoreType>(store?.type ?? 'Restaurant');
+  const categories = useStoreCategories();
+  const [categoryId, setCategoryId] = useState<number | null>(store?.categoryId ?? null);
   const [name, setName] = useState(store?.name ?? '');
   const [description, setDescription] = useState(store?.description ?? '');
   const [phone, setPhone] = useState(store?.phone ?? '');
@@ -48,6 +49,7 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
     const minOrderValue = Number(minOrder);
     const latValue = Number(lat);
     const lngValue = Number(lng);
+    if (categoryId === null) return setError('اختار القسم');
     if (!name.trim()) return setError('اسم المحل مطلوب');
     if (!phone.trim()) return setError('رقم التليفون مطلوب');
     if (!address.trim()) return setError('العنوان مطلوب');
@@ -59,7 +61,7 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
     const input: StoreInput = {
       name: name.trim(),
       description: description.trim() || null,
-      type,
+      categoryId,
       phone: phone.trim(),
       address: address.trim(),
       latitude: latValue,
@@ -89,15 +91,35 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
       <form onSubmit={submit} className="px-4 flex flex-col gap-3">
         <ImagePickerField label="لوجو المحل" currentUrl={store?.logoUrl} edit={logo} onChange={setLogo} placeholderIcon={Store} aspect="aspect-[2.2]" />
 
-        {!isEdit && (
-          <>
-            <p className="mt-1 text-sm font-extrabold text-ink">نوع المحل</p>
-            <Segmented<StoreType>
-              value={type}
-              onChange={setType}
-              options={STORE_TYPES.map((t) => ({ value: t.value, label: t.label, icon: <t.Icon className="size-4" /> }))}
-            />
-          </>
+        <p className="mt-1 text-sm font-extrabold text-ink">القسم</p>
+        {categories.isLoading ? (
+          <Loading className="py-2" />
+        ) : categories.isError ? (
+          <Button variant="outline" size="md" onClick={() => categories.refetch()}>
+            مقدرناش نجيب الأقسام، حاول تاني
+          </Button>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {[
+              ...(categories.data ?? []).map((c) => ({ id: c.id, name: c.name, icon: c.icon })),
+              // The store's current category stays selectable even if the admin hid it.
+              ...(store && !(categories.data ?? []).some((c) => c.id === store.categoryId)
+                ? [{ id: store.categoryId, name: store.categoryName, icon: store.categoryIcon }]
+                : []),
+            ].map((c) => {
+              const look = categoryLook(c.icon);
+              return (
+                <Chip
+                  key={c.id}
+                  selected={categoryId === c.id}
+                  onClick={() => setCategoryId(c.id)}
+                  icon={<look.Icon className="size-4" style={{ color: categoryId === c.id ? '#fff' : look.color }} />}
+                >
+                  {c.name}
+                </Chip>
+              );
+            })}
+          </div>
         )}
 
         {isAdmin && !isEdit && (

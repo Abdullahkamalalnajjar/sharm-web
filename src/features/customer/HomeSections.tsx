@@ -18,9 +18,10 @@ import { Link } from 'react-router';
 
 import { formatPrice } from '@/lib/format';
 import type { HomeOffer } from '@/lib/home-content';
-import { SHARM_AREAS, STORE_TYPES, storeType } from '@/lib/meta';
+import { AppImage } from '@/components/ui';
+import { SHARM_AREAS, categoryLook, categoryOf } from '@/lib/meta';
 import { useBrowse } from '@/store/ui';
-import type { NearbyStore } from '@/types';
+import type { NearbyStore, StoreCategory } from '@/types';
 
 import { Cover } from './StoreBits';
 
@@ -137,9 +138,11 @@ function useSlider(count: number) {
 
 // ---------- Offers carousel ----------
 
-export function OffersCarousel({ offers }: { offers: HomeOffer[] }) {
+export function OffersCarousel({ offers, categories }: { offers: HomeOffer[]; categories: StoreCategory[] }) {
   const slider = useSlider(offers.length);
-  const setStoreType = useBrowse((s) => s.setStoreType);
+  const setCategoryId = useBrowse((s) => s.setCategoryId);
+  // An offer points at a category by its icon; if that category is gone it shows everything.
+  const categoryFor = (icon: string | null) => (icon === null ? null : (categories.find((c) => c.icon === icon)?.id ?? null));
   return (
     <section className="container-site mt-1">
       <SectionHead title="أحدث العروض" icon={Flame} />
@@ -149,7 +152,7 @@ export function OffersCarousel({ offers }: { offers: HomeOffer[] }) {
             <button
               key={o.id}
               type="button"
-              onClick={() => setStoreType(o.storeType)}
+              onClick={() => setCategoryId(categoryFor(o.categoryIcon))}
               aria-label={o.title}
               className="relative aspect-[2.25/1] flex-[0_0_82%] snap-start overflow-hidden rounded-[18px] border-[1.5px] border-brand/70 text-start shadow-[0_4px_12px_rgb(0_0_0/0.15)] md:flex-[0_0_calc(50%-0.375rem)]"
               style={{ background: o.gradient }}
@@ -190,14 +193,16 @@ interface ServiceTile {
   label: string;
   Icon: LucideIcon;
   color: string;
+  /** The admin's picture for the category; the icon shows while it loads or when there is none. */
+  imageUrl?: string | null;
   badge?: string;
   badgeColor?: string;
   selected: boolean;
   onClick: () => void;
 }
 
-export function ServiceGrid({ stores }: { stores: NearbyStore[] }) {
-  const { storeType: selectedType, openOnly, setStoreType, setOpenOnly } = useBrowse();
+export function ServiceGrid({ stores, categories }: { stores: NearbyStore[]; categories: StoreCategory[] }) {
+  const { categoryId: selected, openOnly, setCategoryId, setOpenOnly } = useBrowse();
   const openCount = stores.filter((s) => s.isOpen).length;
 
   const tiles: ServiceTile[] = [
@@ -208,22 +213,24 @@ export function ServiceGrid({ stores }: { stores: NearbyStore[] }) {
       color: 'var(--color-accent)',
       badge: stores.length > 0 ? `${stores.length}` : undefined,
       badgeColor: '#1E6FE0',
-      selected: selectedType === null && !openOnly,
+      selected: selected === null && !openOnly,
       onClick: () => {
-        setStoreType(null);
+        setCategoryId(null);
         setOpenOnly(false);
       },
     },
-    ...STORE_TYPES.map((t) => {
-      const count = stores.filter((s) => s.type === t.value).length;
+    ...categories.map((c) => {
+      const count = stores.filter((s) => s.categoryId === c.id).length;
+      const look = categoryLook(c.icon);
       return {
-        key: t.value,
-        label: t.label,
-        Icon: t.Icon,
-        color: t.color,
+        key: `category-${c.id}`,
+        label: c.name,
+        Icon: look.Icon,
+        color: look.color,
+        imageUrl: c.imageUrl,
         badge: count > 0 ? `${count}` : undefined,
-        selected: selectedType === t.value,
-        onClick: () => setStoreType(selectedType === t.value ? null : t.value),
+        selected: selected === c.id,
+        onClick: () => setCategoryId(selected === c.id ? null : c.id),
       };
     }),
     {
@@ -241,14 +248,15 @@ export function ServiceGrid({ stores }: { stores: NearbyStore[] }) {
   return (
     <section className="container-site mt-6">
       <h2 className="sr-only">الأقسام</h2>
-      <div className="grid grid-cols-5 gap-x-2 gap-y-3 sm:gap-x-3.5 lg:grid-cols-[repeat(auto-fit,minmax(100px,1fr))] lg:gap-x-3 lg:gap-y-4">
+      {/* Phones and tablets: one row, five across, sliding sideways when the admin adds more categories. */}
+      <div className="no-scrollbar -mx-3 grid snap-x auto-cols-[calc((100%-2rem-4*0.5rem)/5)] grid-flow-col gap-x-2 overflow-x-auto px-3 pb-1 pt-1 scroll-px-3 sm:auto-cols-[calc((100%-2rem-4*0.875rem)/5)] sm:gap-x-3.5 lg:mx-0 lg:grid-flow-row lg:grid-cols-[repeat(auto-fit,minmax(100px,1fr))] lg:gap-x-3 lg:gap-y-4 lg:overflow-visible lg:px-0">
         {tiles.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={t.onClick}
             aria-pressed={t.selected}
-            className="group flex flex-col items-center gap-1.5 text-center outline-none"
+            className="group flex snap-start flex-col items-center gap-1.5 text-center outline-none"
           >
             <span
               className={clsx(
@@ -258,6 +266,8 @@ export function ServiceGrid({ stores }: { stores: NearbyStore[] }) {
               style={{ background: `linear-gradient(160deg, color-mix(in srgb, ${t.color} 42%, transparent), var(--color-surface) 90%)` }}
             >
               <t.Icon className="size-8 sm:size-10 drop-shadow" style={{ color: t.selected ? '#fff' : t.color }} strokeWidth={2.2} />
+              {t.imageUrl && <AppImage url={t.imageUrl} alt={t.label} fallback={null} className="absolute inset-0" />}
+              {t.imageUrl && t.selected && <span className="absolute inset-0 bg-brand/25" />}
               {t.badge && (
                 <span
                   className="absolute top-0 end-0 z-[1] max-w-[90%] truncate rounded-es-xl px-1.5 py-px text-[0.62rem] font-extrabold text-white sm:px-2 sm:text-[0.72rem]"
@@ -287,7 +297,7 @@ export function FeaturedSlider({ stores }: { stores: NearbyStore[] }) {
       <div className="group relative">
         <div ref={slider.ref} className="slider-track rounded-[20px] bg-surface shadow-card">
           {stores.map((s) => {
-            const meta = storeType(s.type);
+            const meta = categoryOf(s);
             return (
               <Link
                 key={s.id}
@@ -297,11 +307,11 @@ export function FeaturedSlider({ stores }: { stores: NearbyStore[] }) {
               >
                 {/* Blurred copy of the cover as the backdrop. */}
                 <div className="absolute inset-0 scale-[1.2] blur-[28px] saturate-[1.2] opacity-90">
-                  <Cover type={s.type} logoUrl={s.logoUrl} iconSize={0} />
+                  <Cover category={s} logoUrl={s.logoUrl} iconSize={0} />
                 </div>
                 <div className="absolute inset-0 bg-black/25" />
                 <div className="absolute inset-y-4 inset-x-[18%] overflow-hidden rounded-2xl sm:inset-y-5 sm:inset-x-[28%]">
-                  <Cover type={s.type} logoUrl={s.logoUrl} iconSize={96} />
+                  <Cover category={s} logoUrl={s.logoUrl} iconSize={96} />
                 </div>
                 <div className="absolute inset-x-0 bottom-0 flex items-end gap-2 bg-gradient-to-t from-black/80 to-transparent p-4 pt-10 text-white">
                   <div className="min-w-0 flex-1">
@@ -341,14 +351,14 @@ export function FeaturedSlider({ stores }: { stores: NearbyStore[] }) {
 // ---------- Purple panel: nearest stores ----------
 
 export function PlaceTile({ store }: { store: NearbyStore }) {
-  const meta = storeType(store.type);
+  const meta = categoryOf(store);
   return (
     <Link
       to={`/store/${store.id}`}
       className="tile-scrim group/tile relative block aspect-[16/10] overflow-hidden rounded-[15px] bg-black/20 text-white shadow-[0_3px_10px_rgb(0_0_0/0.15)]"
     >
       <div className={clsx('absolute inset-0 transition-transform duration-300 group-hover/tile:scale-[1.04]', !store.isOpen && 'opacity-50 grayscale-[0.4]')}>
-        <Cover type={store.type} logoUrl={store.logoUrl} />
+        <Cover category={store} logoUrl={store.logoUrl} />
       </div>
       <span className="absolute top-2 end-2 z-[1] grid size-[46px] place-items-center overflow-hidden rounded-xl border-2 border-white bg-white" style={{ color: meta.color }}>
         <meta.Icon className="size-6" />

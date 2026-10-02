@@ -1,13 +1,13 @@
-import { Bike, CheckCircle2, ChevronLeft, Hourglass, LayoutGrid, LogOut, Package, PlusSquare, Store, TrendingUp, UserRoundSearch, Users, type LucideIcon } from 'lucide-react';
+import { Bike, CheckCircle2, ChevronLeft, Hourglass, LayoutGrid, LogOut, Package, PlusSquare, SlidersHorizontal, Store, TrendingUp, UserRoundSearch, Users, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { useAdminDashboard, useTodayReport } from '@/api/queries';
 import { Button, ErrorView, IconWell, Loading, SectionHeader, SoftCard } from '@/components/ui';
 import { compactNumber, formatFullDate, formatPrice } from '@/lib/format';
-import { ORDER_STATUSES, STORE_TYPES, storeStatus, storeType } from '@/lib/meta';
+import { ORDER_STATUSES, categoryLook, storeStatus } from '@/lib/meta';
 import { useAuth } from '@/store/auth';
-import type { AdminDashboard, OrderStatus, StoreStatus, StoreType } from '@/types';
+import type { AdminDashboard, OrderStatus, StoreStatus } from '@/types';
 
 import { AdminStoreCard } from './AdminStoreCard';
 
@@ -108,10 +108,12 @@ export function AdminDashboardPage() {
 
             <SoftCard className="p-4">
               <div className="flex items-center">
-                <h3 className="flex-1 font-extrabold text-ink">المحلات حسب النوع</h3>
-                <span className="text-ink-3">{d.totalStores} محل</span>
+                <h3 className="flex-1 font-extrabold text-ink">المحلات حسب القسم</h3>
+                <Button variant="ghost" size="sm" icon={<SlidersHorizontal className="size-4" />} onClick={() => navigate('/admin/categories')}>
+                  إدارة الأقسام
+                </Button>
               </div>
-              <StoreTypeBreakdown dashboard={d} />
+              <StoreCategoryBreakdown dashboard={d} />
             </SoftCard>
             <SoftCard className="p-4">
               <h3 className="font-extrabold text-ink">حالة المحلات</h3>
@@ -233,43 +235,45 @@ function StatTile({ icon, label, value, caption, onClick, className }: { icon: L
 }
 
 /** One stacked bar plus a legend that doubles as the data table (label · count · share). */
-function StoreTypeBreakdown({ dashboard }: { dashboard: AdminDashboard }) {
-  const [focused, setFocused] = useState<StoreType | null>(null);
-  const total = dashboard.storesByType.reduce((n, c) => n + c.count, 0);
+function StoreCategoryBreakdown({ dashboard }: { dashboard: AdminDashboard }) {
+  const [focused, setFocused] = useState<number | null>(null);
+  const rows = dashboard.storesByCategory.map((c) => ({ ...c, look: categoryLook(c.icon) }));
+  const total = rows.reduce((n, c) => n + c.count, 0);
   if (total === 0) return <p className="py-3 text-ink-3">لسه مفيش محلات</p>;
-  const visible = dashboard.storesByType.filter((c) => c.count > 0);
-  const opacity = (t: StoreType) => (focused === null || focused === t ? 1 : 0.3);
-  const rows = STORE_TYPES.map((t) => ({ meta: t, count: dashboard.storesByType.find((c) => c.type === t.value)?.count ?? 0 }));
+  const opacity = (id: number) => (focused === null || focused === id ? 1 : 0.3);
+  const toggle = (id: number) => setFocused((f) => (f === id ? null : id));
 
   return (
     <div className="mt-3">
       <div className="flex h-3.5 gap-0.5 overflow-hidden rounded">
-        {visible.map((c) => (
-          <button
-            key={c.type}
-            type="button"
-            title={`${storeType(c.type).label}: ${c.count}`}
-            onClick={() => setFocused((f) => (f === c.type ? null : c.type))}
-            style={{ flex: c.count, background: storeType(c.type).color, opacity: opacity(c.type) }}
-            className="transition-opacity"
-          />
-        ))}
+        {rows
+          .filter((c) => c.count > 0)
+          .map((c) => (
+            <button
+              key={c.categoryId}
+              type="button"
+              title={`${c.name}: ${c.count}`}
+              onClick={() => toggle(c.categoryId)}
+              style={{ flex: c.count, background: c.look.color, opacity: opacity(c.categoryId) }}
+              className="transition-opacity"
+            />
+          ))}
       </div>
       <div className="mt-3 flex flex-col">
-        {rows.map(({ meta, count }) => (
+        {rows.map((c) => (
           <button
-            key={meta.value}
+            key={c.categoryId}
             type="button"
-            disabled={count === 0}
-            onClick={() => setFocused((f) => (f === meta.value ? null : meta.value))}
+            disabled={c.count === 0}
+            onClick={() => toggle(c.categoryId)}
             className="flex items-center gap-2.5 rounded-lg px-0.5 py-1.5 transition-opacity"
-            style={{ opacity: opacity(meta.value) }}
+            style={{ opacity: opacity(c.categoryId) }}
           >
-            <span className="size-2.5 rounded-[3px]" style={{ background: meta.color }} />
-            <meta.Icon className="size-[18px] text-ink-2" />
-            <span className="flex-1 text-start text-ink">{meta.label}</span>
-            <span className="font-bold text-ink tabular-nums">{count}</span>
-            <span className="w-12 text-end text-ink-3 tabular-nums">{Math.round((count * 100) / total)}%</span>
+            <span className="size-2.5 rounded-[3px]" style={{ background: c.look.color }} />
+            <c.look.Icon className="size-[18px] text-ink-2" />
+            <span className="flex-1 text-start text-ink">{c.name}</span>
+            <span className="font-bold text-ink tabular-nums">{c.count}</span>
+            <span className="w-12 text-end text-ink-3 tabular-nums">{Math.round((c.count * 100) / total)}%</span>
           </button>
         ))}
       </div>

@@ -22,6 +22,7 @@ import { useAuth } from '@/store/auth';
 import { useBrowse } from '@/store/ui';
 import type { AppRole } from '@/types';
 
+import { LiveBanner, NotificationBell, useLiveNotifications } from './LiveNotifications';
 import { ConfirmDialog, LoginPromptSheet, Toaster } from './Overlays';
 import { AppBanner, BrandMark, SiteFooter } from './SiteChrome';
 
@@ -92,6 +93,7 @@ export function AppShell() {
   const setPickerOpen = useBrowse((s) => s.setPickerOpen);
   const isCustomer = role === 'customer';
   const isHome = location.pathname === '/';
+  useLiveNotifications();
 
   // Nested pages (store, order, checkout) keep the bar but never own an active tab.
   const showBar =
@@ -152,6 +154,7 @@ export function AppShell() {
             )}
             {session ? (
               <>
+                <NotificationBell />
                 <span className="hidden text-sm text-white/85 lg:inline" dir="ltr">
                   {session.email}
                 </span>
@@ -240,6 +243,7 @@ export function AppShell() {
       )}
 
       {isCustomer && <DeliveryPicker open={pickerOpen} onClose={() => setPickerOpen(false)} />}
+      <LiveBanner />
       <Toaster />
       <ConfirmDialog />
       <LoginPromptSheet />

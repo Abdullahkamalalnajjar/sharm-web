@@ -1,10 +1,9 @@
 import { FilterX, MapPin, Store } from 'lucide-react';
 import { useRef } from 'react';
 
-import { useDeliveryLocation, useNearbyStores } from '@/api/queries';
+import { useDeliveryLocation, useNearbyStores, useStoreCategories } from '@/api/queries';
 import { Button, EmptyView, ErrorView, Loading, CountPill } from '@/components/ui';
 import { HOME_OFFERS } from '@/lib/home-content';
-import { STORE_TYPES } from '@/lib/meta';
 import { useBrowse } from '@/store/ui';
 
 import { AreaGrid, FeaturedSlider, NearestPanel, OffersCarousel, SearchBand, SectionHead, ServiceGrid } from './HomeSections';
@@ -12,29 +11,33 @@ import { StoreCard } from './StoreBits';
 
 export function HomePage() {
   const { location, isLoading: locating } = useDeliveryLocation();
-  const { storeType, openOnly, search, clearFilters, setPickerOpen } = useBrowse();
-  // One query for the area; type / open / search filter on the client so the tiles can show counts.
+  const { categoryId, openOnly, search, clearFilters, setPickerOpen } = useBrowse();
+  const categories = useStoreCategories().data ?? [];
+  // One query for the area; category / open / search filter on the client so the tiles can show counts.
   const stores = useNearbyStores(location, null);
   const listRef = useRef<HTMLDivElement>(null);
 
   const query = search.trim().toLowerCase();
   const all = stores.data ?? [];
   let list = all;
-  if (storeType) list = list.filter((s) => s.type === storeType);
+  if (categoryId !== null) list = list.filter((s) => s.categoryId === categoryId);
   if (openOnly) list = list.filter((s) => s.isOpen);
   if (query) list = list.filter((s) => s.name.toLowerCase().includes(query));
 
-  const filtering = query !== '' || openOnly || storeType !== null;
+  const filtering = query !== '' || openOnly || categoryId !== null;
   const open = all.filter((s) => s.isOpen);
   const nearest = [...all].sort((a, b) => a.distanceKm - b.distanceKm).slice(0, 10);
-  const typeLabel = STORE_TYPES.find((t) => t.value === storeType)?.label;
+  const typeLabel =
+    categoryId === null
+      ? undefined
+      : (categories.find((c) => c.id === categoryId)?.name ?? all.find((s) => s.categoryId === categoryId)?.categoryName);
 
   const listTitle = query
     ? `نتايج "${search.trim()}"`
     : openOnly
       ? `${typeLabel ?? 'المحلات'} المفتوحة دلوقتي`
-      : storeType
-        ? `${typeLabel} قريبة منك`
+      : categoryId !== null
+        ? `${typeLabel ?? 'المحلات'} قريبة منك`
         : 'كل المحلات القريبة';
 
   const scrollToList = () => listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -44,9 +47,9 @@ export function HomePage() {
       <h1 className="sr-only">شرم - {location?.title ?? ''}</h1>
       <SearchBand />
 
-      {!filtering && <OffersCarousel offers={HOME_OFFERS} />}
+      {!filtering && <OffersCarousel offers={HOME_OFFERS} categories={categories} />}
 
-      <ServiceGrid stores={all} />
+      <ServiceGrid stores={all} categories={categories} />
 
       {locating || stores.isLoading ? (
         <Loading />

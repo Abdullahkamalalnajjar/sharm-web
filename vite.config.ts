@@ -14,6 +14,7 @@ export default defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: {
     port: 5173,
-    proxy: { '/api': proxy, '/identity': proxy, '/uploads': proxy },
+    // /hubs is the live-notifications socket (SignalR over WebSockets).
+    proxy: { '/api': proxy, '/identity': proxy, '/uploads': proxy, '/hubs': { ...proxy, ws: true } },
   },
 });

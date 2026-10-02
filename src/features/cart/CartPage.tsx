@@ -82,7 +82,7 @@ function StoreGroupCard({ group }: { group: CartStoreGroup }) {
   return (
     <SoftCard className="overflow-hidden">
       <div className="flex items-center gap-2.5 px-3.5 pt-3.5 pb-2.5">
-        <StoreAvatar type={group.storeType} logoUrl={group.logoUrl} size={40} />
+        <StoreAvatar category={{ categoryName: '', categoryIcon: group.categoryIcon }} logoUrl={group.logoUrl} size={40} />
         <h3 className="flex-1 truncate font-extrabold text-ink">{group.storeName}</h3>
         <StatusChip label={group.isOpen ? 'مفتوح' : 'مقفول'} color={group.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'} />
       </div>

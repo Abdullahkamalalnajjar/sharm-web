@@ -1,5 +1,3 @@
-import type { StoreType } from '@/types';
-
 /**
  * Static promo cards of the home page ("أحدث العروض"). The backend has no offers yet, so these are
  * written here. `image` (any URL) replaces the drawn card when set; `endsAt` shows the yellow
@@ -11,8 +9,8 @@ export interface HomeOffer {
   subtitle: string;
   /** Big highlighted text, e.g. "30%". */
   highlight?: string;
-  /** Filters the store list to this type when tapped. null = all. */
-  storeType: StoreType | null;
+  /** Filters the store list to the category with this icon key when tapped. null = all. */
+  categoryIcon: string | null;
   image?: string;
   endsAt?: string;
   /** CSS gradient of the drawn card. */
@@ -26,7 +24,7 @@ export const HOME_OFFERS: HomeOffer[] = [
     title: 'عروض مخصوص ليك',
     subtitle: 'عرض الويك إند على المطاعم',
     highlight: 'خصم لحد 30%',
-    storeType: 'Restaurant',
+    categoryIcon: 'restaurant',
     gradient: 'linear-gradient(135deg, #CD183D 0%, #8a0f2a 100%)',
     emoji: '🍔',
   },
@@ -35,7 +33,7 @@ export const HOME_OFFERS: HomeOffer[] = [
     title: 'سوبر ماركت لحد باب البيت',
     subtitle: 'طلبات البيت بتوصل في أسرع وقت',
     highlight: 'توصيل سريع',
-    storeType: 'Supermarket',
+    categoryIcon: 'supermarket',
     gradient: 'linear-gradient(135deg, #1f8a4c 0%, #0f4d2a 100%)',
     emoji: '🛒',
   },
@@ -44,7 +42,7 @@ export const HOME_OFFERS: HomeOffer[] = [
     title: 'صيدليات شرم',
     subtitle: 'دواك يوصلك من أقرب صيدلية',
     highlight: 'على مدار اليوم',
-    storeType: 'Pharmacy',
+    categoryIcon: 'pharmacy',
     gradient: 'linear-gradient(135deg, #2560c9 0%, #10306b 100%)',
     emoji: '💊',
   },

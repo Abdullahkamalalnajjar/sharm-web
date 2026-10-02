@@ -1,6 +1,22 @@
 // Models mirrored from the Flutter app (lib/features/**/*_models.dart). Field names match the API.
 
-export type StoreType = 'Restaurant' | 'Supermarket' | 'Pharmacy';
+/** A store category (مطاعم، سوبر ماركت، ...), managed by the admin. `icon` is a key of STORE_CATEGORY_ICONS. */
+export interface StoreCategory {
+  id: number;
+  name: string;
+  icon: string;
+  imageUrl: string | null;
+  displayOrder: number;
+  isVisible: boolean;
+  /** Active stores in it. */
+  storesCount: number;
+}
+
+/** The category fields embedded in stores and cart groups. */
+export interface CategoryRef {
+  categoryName: string;
+  categoryIcon: string;
+}
 export type StoreStatus = 'PendingApproval' | 'Active' | 'Suspended';
 
 export interface Store {
@@ -8,7 +24,9 @@ export interface Store {
   ownerId: string;
   name: string;
   description: string | null;
-  type: StoreType;
+  categoryId: number;
+  categoryName: string;
+  categoryIcon: string;
   status: StoreStatus;
   logoUrl: string | null;
   phone: string;
@@ -23,7 +41,9 @@ export interface Store {
 export interface NearbyStore {
   id: number;
   name: string;
-  type: StoreType;
+  categoryId: number;
+  categoryName: string;
+  categoryIcon: string;
   logoUrl: string | null;
   address: string;
   minOrderAmount: number;
@@ -34,7 +54,7 @@ export interface NearbyStore {
 export interface StoreInput {
   name: string;
   description: string | null;
-  type: StoreType;
+  categoryId: number;
   phone: string;
   address: string;
   latitude: number;
@@ -142,7 +162,7 @@ export interface CartLine {
 export interface CartStoreGroup {
   storeId: number;
   storeName: string;
-  storeType: StoreType;
+  categoryIcon: string;
   logoUrl: string | null;
   isOpen: boolean;
   minOrderAmount: number;
@@ -243,8 +263,10 @@ export interface OrderSummary {
   driverName: string | null;
 }
 
-export interface StoreTypeCount {
-  type: StoreType;
+export interface StoreCategoryCount {
+  categoryId: number;
+  name: string;
+  icon: string;
   count: number;
 }
 
@@ -254,7 +276,7 @@ export interface AdminDashboard {
   pendingStores: number;
   suspendedStores: number;
   openStores: number;
-  storesByType: StoreTypeCount[];
+  storesByCategory: StoreCategoryCount[];
   totalProducts: number;
   unavailableProducts: number;
   totalCategories: number;
@@ -366,6 +388,36 @@ export interface Report {
   best: ReportPoint | null;
   stores: StoreSales[];
   drivers: DriverStats[];
+}
+
+/** One item of the in-app inbox (the bell). */
+export interface AppNotification {
+  id: number;
+  /** What it is about, e.g. "order". */
+  type: string;
+  /** What happened, e.g. "Placed", "DriverAssigned". */
+  event: string;
+  title: string;
+  body: string;
+  data: Record<string, string>;
+  isRead: boolean;
+  createdUtc: string;
+}
+
+export interface NotificationsPage {
+  items: AppNotification[];
+  unreadCount: number;
+  hasMore: boolean;
+}
+
+/** A live message pushed over SignalR while the site is open. */
+export interface LiveNotification {
+  type: string;
+  event: string;
+  title: string;
+  body: string;
+  data: Record<string, string>;
+  actorUserId: string | null;
 }
 
 export interface Tokens {

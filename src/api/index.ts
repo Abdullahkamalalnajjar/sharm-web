@@ -9,6 +9,7 @@ import type {
   Menu,
   MonthlyReport,
   NearbyStore,
+  NotificationsPage,
   Order,
   OrderStatus,
   OrderSummary,
@@ -17,7 +18,7 @@ import type {
   Store,
   StoreInput,
   StoreStatus,
-  StoreType,
+  StoreCategory,
   Tokens,
   YearlyReport,
 } from '@/types';
@@ -41,8 +42,8 @@ export const authApi = {
 // ---------- Stores ----------
 
 export const storesApi = {
-  nearby: (latitude: number, longitude: number, type: StoreType | null, radiusKm = 15) =>
-    api.get<NearbyStore[]>('/api/stores/nearby', { latitude, longitude, type, radiusKm }),
+  nearby: (latitude: number, longitude: number, categoryId: number | null, radiusKm = 15) =>
+    api.get<NearbyStore[]>('/api/stores/nearby', { latitude, longitude, categoryId, radiusKm }),
   byId: (storeId: number) => api.get<Store>(`/api/stores/${storeId}`),
 
   mine: () => api.get<Store[]>('/api/stores/mine'),
@@ -55,6 +56,26 @@ export const storesApi = {
   all: (status?: StoreStatus | null) => api.get<Store[]>('/api/stores/admin', { status }),
   approve: (storeId: number) => api.post<void>(`/api/stores/${storeId}/approve`),
   suspend: (storeId: number) => api.post<void>(`/api/stores/${storeId}/suspend`),
+};
+
+// ---------- Store categories ----------
+
+const adminCategories = '/api/admin/store-categories';
+
+export const storeCategoriesApi = {
+  /** Visible categories in display order (the home tiles). */
+  visible: () => api.get<StoreCategory[]>('/api/store-categories'),
+
+  all: () => api.get<StoreCategory[]>(adminCategories),
+  create: (name: string, icon: string) => api.post<StoreCategory>(adminCategories, { name, icon }),
+  update: (id: number, name: string, icon: string) => api.put<StoreCategory>(`${adminCategories}/${id}`, { name, icon }),
+  setVisible: (id: number, visible: boolean) =>
+    api.post<StoreCategory>(`${adminCategories}/${id}/${visible ? 'show' : 'hide'}`),
+  /** Every category id, first to last. */
+  reorder: (ids: number[]) => api.put<StoreCategory[]>(`${adminCategories}/order`, { categoryIds: ids }),
+  uploadImage: (id: number, file: File) => api.upload<StoreCategory>(`${adminCategories}/${id}/image`, file),
+  removeImage: (id: number) => api.delete<StoreCategory>(`${adminCategories}/${id}/image`),
+  delete: (id: number) => api.delete<void>(`${adminCategories}/${id}`),
 };
 
 // ---------- Catalog ----------
@@ -211,4 +232,18 @@ export const reportsApi = {
   daily: (d: Date) => api.get<DailyReport>(`${reports}/daily`, { date: `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}` }),
   monthly: (d: Date) => api.get<MonthlyReport>(`${reports}/monthly`, { year: d.getFullYear(), month: d.getMonth() + 1 }),
   yearly: (d: Date) => api.get<YearlyReport>(`${reports}/yearly`, { year: d.getFullYear() }),
+};
+
+// ---------- Notifications (the bell) ----------
+
+const notifications = '/api/notifications';
+
+export const notificationsApi = {
+  /** Newest first; `beforeId` (the last id you have) loads older ones. */
+  page: (beforeId?: number) => api.get<NotificationsPage>(notifications, { beforeId }),
+  // A zero count is left out of the response.
+  unreadCount: async () => (await api.get<number | undefined>(`${notifications}/unread-count`)) ?? 0,
+  /** Returns the unread count left. */
+  markRead: async (id: number) => (await api.post<number | undefined>(`${notifications}/${id}/read`)) ?? 0,
+  markAllRead: async () => (await api.post<number | undefined>(`${notifications}/read-all`)) ?? 0,
 };

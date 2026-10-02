@@ -1,7 +1,5 @@
 import { create } from 'zustand';
 
-import type { StoreType } from '@/types';
-
 // ---------- Customer browsing filters ----------
 
 export type DeliverySelection = { kind: 'address'; addressId: number } | { kind: 'area'; name: string };
@@ -9,13 +7,14 @@ export type DeliverySelection = { kind: 'address'; addressId: number } | { kind:
 interface BrowseState {
   /** What the customer picked explicitly. null = use the default address. */
   selection: DeliverySelection | null;
-  storeType: StoreType | null;
+  /** Selected category tile; null = all. */
+  categoryId: number | null;
   openOnly: boolean;
   search: string;
   /** The delivery-location sheet, opened from the header's area button and the home page. */
   pickerOpen: boolean;
   setSelection: (s: DeliverySelection | null) => void;
-  setStoreType: (t: StoreType | null) => void;
+  setCategoryId: (id: number | null) => void;
   setOpenOnly: (v: boolean) => void;
   setSearch: (v: string) => void;
   setPickerOpen: (v: boolean) => void;
@@ -24,16 +23,16 @@ interface BrowseState {
 
 export const useBrowse = create<BrowseState>((set) => ({
   selection: null,
-  storeType: null,
+  categoryId: null,
   openOnly: false,
   search: '',
   pickerOpen: false,
   setSelection: (selection) => set({ selection }),
-  setStoreType: (storeType) => set({ storeType }),
+  setCategoryId: (categoryId) => set({ categoryId }),
   setOpenOnly: (openOnly) => set({ openOnly }),
   setSearch: (search) => set({ search }),
   setPickerOpen: (pickerOpen) => set({ pickerOpen }),
-  clearFilters: () => set({ storeType: null, openOnly: false, search: '' }),
+  clearFilters: () => set({ categoryId: null, openOnly: false, search: '' }),
 }));
 
 // ---------- Toasts ----------

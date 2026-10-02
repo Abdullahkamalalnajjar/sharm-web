@@ -7,7 +7,7 @@ import { useRefreshAdmin } from '@/api/queries';
 import { Button, IconWell, Sheet, SoftCard, StatusChip, Switch } from '@/components/ui';
 import { StoreAvatar } from '@/features/customer/StoreBits';
 import { formatPrice } from '@/lib/format';
-import { storeStatus, storeType } from '@/lib/meta';
+import { categoryOf, storeStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
 import type { Store } from '@/types';
@@ -35,7 +35,7 @@ export function AdminStoreCard({ store }: { store: Store }) {
   const refresh = useRefreshAdmin();
   const navigate = useNavigate();
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const meta = storeType(store.type);
+  const meta = categoryOf(store);
 
   const run = async (action: () => Promise<unknown>, success: string) => {
     if (await runAction(action, success)) refresh();
@@ -50,7 +50,7 @@ export function AdminStoreCard({ store }: { store: Store }) {
     <>
       <SoftCard className="overflow-hidden">
         <button type="button" onClick={() => setDetailsOpen(true)} className="flex w-full items-start gap-3 px-3.5 pt-3.5 pb-3 text-start">
-          <StoreAvatar type={store.type} logoUrl={store.logoUrl} size={52} />
+          <StoreAvatar category={store} logoUrl={store.logoUrl} size={52} />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="flex-1 truncate font-extrabold text-ink">{store.name}</span>
@@ -104,7 +104,7 @@ export function AdminStoreCard({ store }: { store: Store }) {
 function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boolean; onClose: () => void }) {
   const refresh = useRefreshAdmin();
   const navigate = useNavigate();
-  const meta = storeType(store.type);
+  const meta = categoryOf(store);
   const status = storeStatus(store.status);
 
   const run = async (action: () => Promise<unknown>, success: string) => {
@@ -125,7 +125,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
   return (
     <Sheet open={open} onClose={onClose}>
       <div className="flex items-center gap-3.5">
-        <StoreAvatar type={store.type} logoUrl={store.logoUrl} size={56} />
+        <StoreAvatar category={store} logoUrl={store.logoUrl} size={56} />
         <div className="min-w-0 flex-1">
           <h3 className="text-[19px] font-extrabold text-ink">{store.name}</h3>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -136,7 +136,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
       </div>
       {store.description && <p className="mt-3.5 text-ink-2">{store.description}</p>}
       <div className="mt-4 flex flex-col gap-2">
-        <InfoRow icon={meta.Icon} label="النوع" value={meta.label} />
+        <InfoRow icon={meta.Icon} label="القسم" value={meta.label} />
         <InfoRow icon={MapPin} label="العنوان" value={store.address} />
         <InfoRow icon={Phone} label="التليفون" value={store.phone} ltr />
         <InfoRow icon={ShoppingBag} label="أقل طلب" value={store.minOrderAmount > 0 ? formatPrice(store.minOrderAmount) : 'مفيش حد أدنى'} />

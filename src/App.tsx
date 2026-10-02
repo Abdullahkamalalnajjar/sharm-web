@@ -4,6 +4,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { CustomerArea, GuestOnly, RequireRole } from '@/components/layout/Guards';
 import { AccountPage } from '@/features/account/AccountPage';
 import { AddressesPage } from '@/features/addresses/AddressesPage';
+import { AdminCategoriesPage } from '@/features/admin/AdminCategoriesPage';
 import { AdminDashboardPage } from '@/features/admin/AdminDashboardPage';
 import { AdminDriversPage } from '@/features/admin/AdminDriversPage';
 import { AdminReportsPage } from '@/features/admin/AdminReportsPage';
@@ -18,6 +19,7 @@ import { HomePage } from '@/features/customer/HomePage';
 import { DriverHomePage } from '@/features/driver/DriverHomePage';
 import { DriverOrderPage } from '@/features/driver/DriverOrderPage';
 import { StorePage } from '@/features/customer/StorePage';
+import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import { MyOrderPage } from '@/features/orders/MyOrderPage';
 import { MyOrdersPage } from '@/features/orders/MyOrdersPage';
 import { ManageMenuPage } from '@/features/owner/ManageMenuPage';
@@ -42,6 +44,7 @@ export function App() {
 
         {/* Shared by every role */}
         <Route path="account" element={<AccountPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
 
         {/* Store owner */}
         <Route element={<RequireRole role="storeOwner" />}>
@@ -61,6 +64,7 @@ export function App() {
           <Route path="admin/stores" element={<AdminStoresPage />} />
           <Route path="admin/drivers" element={<AdminDriversPage />} />
           <Route path="admin/reports" element={<AdminReportsPage />} />
+          <Route path="admin/categories" element={<AdminCategoriesPage />} />
           <Route path="admin/stores/new" element={<StoreFormPage isAdmin />} />
           <Route path="admin/stores/:id/edit" element={<StoreFormPage isAdmin />} />
           <Route path="admin/stores/:id/menu" element={<ManageMenuPage />} />
