@@ -44,7 +44,7 @@ export function AdminDashboardPage() {
           </button>
         </div>
         <p className="relative mt-5 text-sm text-white/85">المحلات على المنصة</p>
-        <p className="relative text-[52px] font-extrabold leading-tight text-accent">{d ? compactNumber(d.totalStores) : '—'}</p>
+        <p className="relative text-[52px] font-extrabold leading-tight text-highlight">{d ? compactNumber(d.totalStores) : '—'}</p>
         {d && (
           <div className="relative mt-1 flex flex-wrap gap-2">
             <HeaderPill icon={Store} text={`${d.openStores} مفتوح دلوقتي`} />
@@ -161,8 +161,8 @@ function TodayCard({ onOpen }: { onOpen: () => void }) {
         <TrendingUp className="size-5 text-accent" />
         <span className="font-extrabold text-ink">النهارده</span>
         <span className="flex-1" />
-        <span className="text-[13px] font-bold text-brand-light">كل الإحصائيات</span>
-        <ChevronLeft className="size-5 text-brand-light" />
+        <span className="text-[13px] font-bold text-brand-ink">كل الإحصائيات</span>
+        <ChevronLeft className="size-5 text-brand-ink" />
       </div>
       <div className="mt-3 flex gap-3">
         <Cell label="اتحصّل" value={today ? formatPrice(today.sales) : '—'} accent />
@@ -184,7 +184,7 @@ function OrdersStrip({ dashboard: d, onOpen }: { dashboard: AdminDashboard; onOp
     <SoftCard className="p-3.5">
       <div className="flex items-center">
         <h3 className="flex-1 font-extrabold text-ink">الأوردرات</h3>
-        <button type="button" onClick={() => onOpen('all')} className="text-[13px] font-bold text-brand-light hover:underline">
+        <button type="button" onClick={() => onOpen('all')} className="text-[13px] font-bold text-brand-ink hover:underline">
           كل الأوردرات
         </button>
       </div>

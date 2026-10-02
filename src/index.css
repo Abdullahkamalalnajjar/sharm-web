@@ -1,6 +1,13 @@
 @import 'tailwindcss';
 
-/* Dark palette in the city-app style: warm charcoal surfaces, crimson brand, amber accent. */
+/* `dark:` follows the picked theme, not the OS setting. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/*
+ * Two themes the visitor picks from the header (src/lib/theme.ts sets <html data-theme>).
+ * The defaults below are the dark one: warm charcoal surfaces, crimson brand, amber accent.
+ * [data-theme='lime'] further down swaps the same variables for white + lime.
+ */
 @theme {
   --font-sans: 'Cairo', ui-sans-serif, system-ui, sans-serif;
 
@@ -14,6 +21,12 @@
   --color-brand-dark: #610129;
   --color-accent: #ffb200;
   --color-accent-dark: #e0a800;
+  /* Chips and numbers on the brand color and on photos. */
+  --color-highlight: #ffb200;
+  /* Brand-colored text and links on surfaces. */
+  --color-brand-ink: #ff5c7c;
+  /* Toast background. */
+  --color-toast: #2b2727;
 
   --color-ink: #f5f5f7;
   --color-ink-2: #b2b2ba;
@@ -34,7 +47,43 @@
 
   --shadow-card: 0 2px 10px rgb(0 0 0 / 0.35);
   --shadow-card-hover: 0 12px 28px rgb(0 0 0 / 0.5);
-  --shadow-brand: 0 4px 14px rgb(205 24 61 / 0.4);
+  --shadow-brand: 0 4px 14px color-mix(in srgb, var(--color-brand) 40%, transparent);
+}
+
+/* White canvas and cards, lime brand (white bold text passes AA-large), amber prices. */
+:root[data-theme='lime'] {
+  color-scheme: light;
+
+  --color-bg: #f8fbf0;
+  --color-surface: #ffffff;
+  --color-surface-alt: #eef6dc;
+  --color-surface-high: #dcebbe;
+
+  --color-brand: #5a9a0a;
+  --color-brand-light: #6ba312;
+  --color-brand-dark: #3f6212;
+  --color-brand-ink: #4a7f0b;
+  --color-accent: #a86f12;
+  --color-accent-dark: #8a5a0c;
+  --color-highlight: #f7ff9e;
+  --color-toast: #1a2310;
+
+  --color-ink: #1a2310;
+  --color-ink-2: #55604a;
+  --color-ink-3: #7a846e;
+
+  --color-success: #2e9e5b;
+  --color-warning: #c77c02;
+  --color-danger: #d63b3b;
+
+  --color-series-1: #e2622f;
+  --color-series-2: #2e9e5b;
+  --color-series-3: #2f7be0;
+
+  --color-line: #e2eccd;
+
+  --shadow-card: 0 2px 10px rgb(63 98 18 / 0.08);
+  --shadow-card-hover: 0 12px 28px rgb(63 98 18 / 0.16);
 }
 
 @layer base {
@@ -53,7 +102,7 @@
     font: inherit;
   }
   ::selection {
-    background: rgb(205 24 61 / 0.45);
+    background: color-mix(in srgb, var(--color-brand) 45%, transparent);
   }
   html,
   body {
@@ -70,7 +119,7 @@
 }
 
 @utility field {
-  @apply w-full bg-surface text-ink rounded-field px-4 py-3.5 outline-none border border-transparent
+  @apply w-full bg-surface text-ink rounded-field px-4 py-3.5 outline-none border border-line
     placeholder:text-ink-3 focus:border-brand transition-colors disabled:opacity-60;
 }
 
@@ -135,16 +184,16 @@
 @utility section-title {
   @apply flex items-center gap-2 text-[1.3rem] font-extrabold text-ink;
   & > .section-title-icon {
-    @apply grid size-[34px] shrink-0 place-items-center rounded-[11px] text-brand-light;
-    background: rgb(205 24 61 / 0.22);
+    @apply grid size-[34px] shrink-0 place-items-center rounded-[11px] text-brand-ink;
+    background: color-mix(in srgb, var(--color-brand) 22%, transparent);
   }
 }
 
 @utility section-link {
-  @apply inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[0.85rem] font-bold text-brand-light transition-colors;
-  background: rgb(205 24 61 / 0.2);
+  @apply inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[0.85rem] font-bold text-brand-ink transition-colors;
+  background: color-mix(in srgb, var(--color-brand) 20%, transparent);
   &:hover {
-    background: rgb(205 24 61 / 0.32);
+    background: color-mix(in srgb, var(--color-brand) 32%, transparent);
   }
 }
 

@@ -101,7 +101,7 @@ export function ManageMenuPage() {
                   <button
                     type="button"
                     onClick={() => navigate(`${basePath}/stores/${storeId}/products/new?category=${c.id}`)}
-                    className="flex w-full items-center justify-center gap-1.5 py-3 text-sm font-bold text-brand-light hover:bg-surface-alt"
+                    className="flex w-full items-center justify-center gap-1.5 py-3 text-sm font-bold text-brand-ink hover:bg-surface-alt"
                   >
                     <Plus className="size-4" />
                     إضافة منتج

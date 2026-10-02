@@ -16,7 +16,7 @@ export function Toaster() {
           role="status"
           className={clsx(
             'pointer-events-auto flex items-center gap-2 rounded-2xl px-4 py-3 shadow-card text-sm font-semibold text-white max-w-md w-full animate-sheet',
-            t.isError ? 'bg-danger' : 'bg-surface-alt border border-line',
+            t.isError ? 'bg-danger' : 'bg-toast',
           )}
         >
           {t.isError ? <AlertCircle className="size-5 shrink-0" /> : <CheckCircle2 className="size-5 shrink-0 text-success" />}
@@ -28,7 +28,7 @@ export function Toaster() {
                 t.action?.onClick();
                 dismiss(t.id);
               }}
-              className="font-extrabold text-accent"
+              className="font-extrabold text-highlight"
             >
               {t.action.label}
             </button>

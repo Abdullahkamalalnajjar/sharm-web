@@ -96,7 +96,7 @@ export function OrderTimeline({ order }: { order: Order }) {
           <div key={step.status} className="flex gap-3">
             <div className="flex flex-col items-center">
               <span
-                className={clsx('grid size-[34px] place-items-center rounded-full', done ? 'bg-brand text-white' : 'bg-surface-alt text-ink-3', active && 'shadow-[0_0_12px_rgb(239_42_42/0.45)]')}
+                className={clsx('grid size-[34px] place-items-center rounded-full', done ? 'bg-brand text-white' : 'bg-surface-alt text-ink-3', active && 'shadow-brand')}
               >
                 <meta.Icon className="size-[18px]" />
               </span>

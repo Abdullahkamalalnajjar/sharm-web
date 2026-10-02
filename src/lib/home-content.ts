@@ -25,7 +25,7 @@ export const HOME_OFFERS: HomeOffer[] = [
     subtitle: 'عرض الويك إند على المطاعم',
     highlight: 'خصم لحد 30%',
     categoryIcon: 'restaurant',
-    gradient: 'linear-gradient(135deg, #CD183D 0%, #8a0f2a 100%)',
+    gradient: 'linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 100%)',
     emoji: '🍔',
   },
   {

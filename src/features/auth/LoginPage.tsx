@@ -18,10 +18,10 @@ export function Logo() {
   return (
     <div className="flex flex-col items-center">
       <div className="relative">
-        <div className="grid size-[92px] place-items-center rounded-[30px] bg-brand text-white shadow-[0_10px_24px_rgb(239_42_42/0.3)]">
+        <div className="grid size-[92px] place-items-center rounded-[30px] bg-brand text-white shadow-brand">
           <Bike className="size-12" />
         </div>
-        <span className="absolute -top-2 -end-2 grid size-[34px] place-items-center rounded-full bg-accent text-black ring-[3px] ring-bg">
+        <span className="absolute -top-2 -end-2 grid size-[34px] place-items-center rounded-full bg-highlight text-black ring-[3px] ring-bg">
           <Flame className="size-4" />
         </span>
       </div>
@@ -98,7 +98,7 @@ export function LoginPage() {
       </form>
 
       <div className="mt-3 flex flex-col items-center gap-1">
-        <Link to="/signup" className="text-sm font-bold text-brand-light hover:underline py-2">
+        <Link to="/signup" className="text-sm font-bold text-brand-ink hover:underline py-2">
           معندكش حساب؟ سجّل دلوقتي
         </Link>
         <Link to="/" className="text-sm font-bold text-ink-2 hover:text-ink py-1">

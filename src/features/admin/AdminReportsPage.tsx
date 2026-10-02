@@ -59,7 +59,7 @@ function PeriodBar({ reportKey, onChange }: { reportKey: ReportKey; onChange: (k
       </button>
       <div className="relative flex-1 py-2 text-center">
         <p className="font-extrabold text-ink">{periodTitle(reportKey)}</p>
-        {current && <p className="text-xs text-brand-light">{reportKey.period === 'day' ? 'النهارده' : reportKey.period === 'month' ? 'الشهر ده' : 'السنة دي'}</p>}
+        {current && <p className="text-xs text-brand-ink">{reportKey.period === 'day' ? 'النهارده' : reportKey.period === 'month' ? 'الشهر ده' : 'السنة دي'}</p>}
         {reportKey.period === 'day' && (
           <input
             type="date"
@@ -150,7 +150,7 @@ function MoneyHero({ totals: t, previous, previousName }: { totals: ReportTotals
   return (
     <div className="rounded-card bg-gradient-to-br from-brand-light via-brand to-brand-dark p-[18px]">
       <p className="text-white/85">الفلوس اللي اتحصّلت</p>
-      <p className="text-[40px] font-extrabold leading-tight text-accent">{formatPrice(t.sales)}</p>
+      <p className="text-[40px] font-extrabold leading-tight text-highlight">{formatPrice(t.sales)}</p>
       {d && (
         <p className="text-[13px] font-semibold text-white">
           {d.text} عن {previousName}

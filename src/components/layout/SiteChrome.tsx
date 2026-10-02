@@ -80,7 +80,7 @@ export function AppBanner() {
         </strong>
         <a
           href="#get-app"
-          className="lg:hidden inline-flex shrink-0 items-center gap-1 rounded-[10px] bg-accent px-2.5 py-1 text-[0.78rem] font-bold text-[#2b1d00] hover:bg-[#ffc233]"
+          className="lg:hidden inline-flex shrink-0 items-center gap-1 rounded-[10px] bg-highlight px-2.5 py-1 text-[0.78rem] font-bold text-[#2b1d00] hover:brightness-105"
         >
           <Download className="size-3.5" />
           حمّل التطبيق
@@ -130,7 +130,7 @@ export function SiteFooter() {
               <ul className="space-y-1.5">
                 {contact.map((c) => (
                   <li key={c.href}>
-                    <a href={c.href} className="inline-flex items-center gap-2 text-sm text-ink hover:text-brand-light">
+                    <a href={c.href} className="inline-flex items-center gap-2 text-sm text-ink hover:text-brand-ink">
                       <c.icon className="size-4 text-ink-2" />
                       <span dir={c.ltr ? 'ltr' : undefined}>{c.label}</span>
                     </a>
@@ -153,8 +153,8 @@ export function SiteFooter() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={s.label}
-                    className="grid size-[42px] place-items-center rounded-xl text-brand-light hover:bg-brand/30"
-                    style={{ background: 'rgb(205 24 61 / 0.2)' }}
+                    className="grid size-[42px] place-items-center rounded-xl text-brand-ink hover:bg-brand/30"
+                    style={{ background: 'color-mix(in srgb, var(--color-brand) 20%, transparent)' }}
                   >
                     <s.icon className="size-5" />
                   </a>
@@ -166,16 +166,16 @@ export function SiteFooter() {
 
         <div className="mt-6 border-t border-line pt-4 text-center text-[13px] text-ink-2">
           <nav className="mb-2 flex flex-wrap justify-center gap-x-5 gap-y-2 font-semibold" aria-label="صفحات">
-            <a href="#get-app" className="hover:text-brand-light">
+            <a href="#get-app" className="hover:text-brand-ink">
               حمّل تطبيق {SITE.name}
             </a>
-            <Link to="/orders" className="hover:text-brand-light">
+            <Link to="/orders" className="hover:text-brand-ink">
               طلباتي
             </Link>
-            <Link to="/addresses" className="hover:text-brand-light">
+            <Link to="/addresses" className="hover:text-brand-ink">
               عناويني
             </Link>
-            <Link to="/account" className="hover:text-brand-light">
+            <Link to="/account" className="hover:text-brand-ink">
               حسابي
             </Link>
           </nav>

@@ -25,6 +25,7 @@ import type { AppRole } from '@/types';
 import { LiveBanner, NotificationBell, useLiveNotifications } from './LiveNotifications';
 import { ConfirmDialog, LoginPromptSheet, Toaster } from './Overlays';
 import { AppBanner, BrandMark, SiteFooter } from './SiteChrome';
+import { ThemeButton } from './ThemePicker';
 
 interface NavItem {
   to: string;
@@ -103,8 +104,8 @@ export function AppShell() {
     <div className="min-h-dvh flex flex-col">
       {isCustomer && <AppBanner />}
 
-      {/* Red top bar */}
-      <header className="sticky top-0 z-30 bg-brand text-white shadow-[0_2px_10px_rgb(205_24_61/0.25)]">
+      {/* Brand top bar */}
+      <header className="sticky top-0 z-30 bg-brand text-white shadow-brand">
         <div className="container-site flex min-h-[60px] items-center gap-2">
           <NavLink to={isCustomer ? '/' : items[0].to} className="flex shrink-0 items-center gap-2 font-extrabold text-white" aria-label={SITE.name}>
             <BrandMark />
@@ -129,7 +130,7 @@ export function AppShell() {
                 <item.icon className="size-[18px]" />
                 {item.label}
                 {item.badgeKey === 'cart' && cartCount > 0 && (
-                  <span className="grid min-w-5 h-5 place-items-center rounded-full bg-accent px-1 text-[11px] font-extrabold text-black">
+                  <span className="grid min-w-5 h-5 place-items-center rounded-full bg-highlight px-1 text-[11px] font-extrabold text-black">
                     {cartCount}
                   </span>
                 )}
@@ -146,12 +147,13 @@ export function AppShell() {
               >
                 <ShoppingBag className="size-5" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1.5 -end-1.5 grid min-w-5 h-5 place-items-center rounded-full bg-accent px-1 text-[11px] font-extrabold text-black">
+                  <span className="absolute -top-1.5 -end-1.5 grid min-w-5 h-5 place-items-center rounded-full bg-highlight px-1 text-[11px] font-extrabold text-black">
                     {cartCount}
                   </span>
                 )}
               </NavLink>
             )}
+            <ThemeButton />
             {session ? (
               <>
                 <NotificationBell />
@@ -182,7 +184,7 @@ export function AppShell() {
                 </NavLink>
                 <NavLink
                   to="/signup"
-                  className="hidden h-[38px] items-center rounded-[10px] bg-accent px-3 text-sm font-extrabold text-[#2b1d00] hover:bg-[#ffc233] sm:inline-flex"
+                  className="hidden h-[38px] items-center rounded-[10px] bg-highlight px-3 text-sm font-extrabold text-[#2b1d00] hover:brightness-105 sm:inline-flex"
                 >
                   حساب جديد
                 </NavLink>
@@ -212,14 +214,14 @@ export function AppShell() {
                   <span
                     className={clsx(
                       'flex flex-1 flex-col items-center justify-center gap-0.5 text-[0.72rem] font-bold transition-colors',
-                      isActive ? 'text-brand-light' : 'text-ink-2',
+                      isActive ? 'text-brand-ink' : 'text-ink-2',
                     )}
                   >
                     {item.raised ? (
                       <span className="relative -mt-3.5 grid size-[50px] h-[46px] place-items-center rounded-[14px] bg-gradient-to-br from-brand-light via-brand to-brand-dark text-white shadow-brand animate-bn-pulse">
                         <item.icon className="size-6" />
                         {item.badgeKey === 'cart' && cartCount > 0 && (
-                          <span className="absolute -top-[11px] left-1/2 -translate-x-1/2 rounded-[7px] border-2 border-surface bg-[#E0103A] px-1.5 text-[0.6rem] font-extrabold leading-[1.5] text-white">
+                          <span className="absolute -top-[11px] left-1/2 -translate-x-1/2 rounded-[7px] border-2 border-surface bg-danger px-1.5 text-[0.6rem] font-extrabold leading-[1.5] text-white">
                             {cartCount}
                           </span>
                         )}

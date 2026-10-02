@@ -185,7 +185,7 @@ export function NotificationBell({ className }: { className?: string }) {
     >
       <Icon className="size-5" />
       {unread > 0 && (
-        <span className="absolute -top-1.5 -end-1.5 grid h-5 min-w-5 place-items-center rounded-full border-2 border-brand bg-accent px-1 text-[10px] font-black text-black">
+        <span className="absolute -top-1.5 -end-1.5 grid h-5 min-w-5 place-items-center rounded-full border-2 border-brand bg-highlight px-1 text-[10px] font-black text-black">
           {unread > 99 ? '99+' : unread}
         </span>
       )}

@@ -96,7 +96,7 @@ export function DriverHomePage() {
 function HeaderStat({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex items-center gap-2.5 rounded-[18px] bg-black/20 px-3.5 py-2.5">
-      <span className="text-[26px] font-extrabold text-accent leading-none">{value}</span>
+      <span className="text-[26px] font-extrabold text-highlight leading-none">{value}</span>
       <span className="font-semibold text-white">{label}</span>
     </div>
   );
@@ -123,7 +123,7 @@ function DeliveryCard({ order: o, onClick }: { order: Order; onClick: () => void
         {o.stores.map((s) => s.storeName).join(' • ')}
       </p>
       <p className="mt-1.5 flex items-center gap-2 text-ink-2 truncate">
-        <MapPin className="size-4 shrink-0 text-brand-light" />
+        <MapPin className="size-4 shrink-0 text-brand-ink" />
         {o.address.label} — {o.address.addressLine}
       </p>
       <div className="my-2.5 border-t border-line" />

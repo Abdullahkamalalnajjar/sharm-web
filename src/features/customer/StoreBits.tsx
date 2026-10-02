@@ -78,7 +78,7 @@ export function OpenStoreCard({ store }: { store: NearbyStore }) {
         )}
         <span className="flex-1" />
         <div className="flex items-center gap-1 text-white text-xs font-semibold">
-          <Navigation className="size-3.5 text-brand-light" />
+          <Navigation className="size-3.5 text-brand-ink" />
           {store.distanceKm.toFixed(1)} كم
           <span className="flex-1" />
           <RedCircle size={34} icon={ArrowOut} />
@@ -107,7 +107,7 @@ export function StoreCard({ store }: { store: NearbyStore }) {
           <StatusChip label={store.isOpen ? 'مفتوح' : 'مقفول'} color={store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'} />
         </div>
         <span className="absolute top-3 end-3 pill bg-black/55 text-white">
-          <Navigation className="size-3.5 text-brand-light" />
+          <Navigation className="size-3.5 text-brand-ink" />
           {store.distanceKm.toFixed(1)} كم
         </span>
         <h3 className="absolute inset-x-3.5 bottom-2.5 text-lg font-black text-white truncate">{store.name}</h3>

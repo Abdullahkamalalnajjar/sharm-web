@@ -22,7 +22,7 @@ const variantClass: Record<Variant, string> = {
   primary: 'bg-brand text-white hover:bg-brand-light shadow-brand',
   secondary: 'bg-surface-alt text-ink hover:bg-surface-high',
   outline: 'border border-surface-high text-ink hover:bg-surface-alt',
-  ghost: 'text-brand-light hover:bg-brand/10',
+  ghost: 'text-brand-ink hover:bg-brand/10',
   danger: 'bg-danger text-white hover:brightness-110',
   success: 'bg-success text-white hover:brightness-110',
 };
@@ -193,7 +193,7 @@ export function SectionHeader({
       <span className="flex-1" />
       {action &&
         (onAction ? (
-          <button type="button" onClick={onAction} className="text-[13px] font-bold text-brand-light hover:underline">
+          <button type="button" onClick={onAction} className="text-[13px] font-bold text-brand-ink hover:underline">
             {action}
           </button>
         ) : (

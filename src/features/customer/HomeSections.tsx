@@ -81,7 +81,7 @@ export function SearchBand() {
             aria-label="بحث"
             className="min-w-0 flex-1 bg-transparent text-base text-ink outline-none placeholder:text-ink-3"
           />
-          <button type="submit" aria-label="بحث" className="grid size-[42px] shrink-0 place-items-center rounded-full text-ink-2 hover:bg-black/10 hover:text-brand-light">
+          <button type="submit" aria-label="بحث" className="grid size-[42px] shrink-0 place-items-center rounded-full text-ink-2 hover:bg-black/10 hover:text-brand-ink">
             <Search className="size-5" />
           </button>
         </form>
@@ -168,12 +168,12 @@ export function OffersCarousel({ offers, categories }: { offers: HomeOffer[]; ca
                   <span className="absolute inset-0 flex flex-col justify-center gap-1 p-4 pe-28 text-white md:p-6 md:pe-40">
                     <span className="self-start rounded-md bg-white/20 px-2 py-0.5 text-[11px] font-bold">{o.subtitle}</span>
                     <span className="text-[20px] font-black leading-tight md:text-[28px]">{o.title}</span>
-                    {o.highlight && <span className="text-[17px] font-extrabold text-accent md:text-[24px]">{o.highlight}</span>}
+                    {o.highlight && <span className="text-[17px] font-extrabold text-highlight md:text-[24px]">{o.highlight}</span>}
                   </span>
                 </>
               )}
               {o.endsAt && (
-                <span className="absolute bottom-0 start-0 z-[1] rounded-te-xl bg-accent px-3 py-0.5 text-[0.85rem] font-extrabold text-[#2b1d00]">
+                <span className="absolute bottom-0 start-0 z-[1] rounded-te-xl bg-highlight px-3 py-0.5 text-[0.85rem] font-extrabold text-[#2b1d00]">
                   ينتهي {o.endsAt}
                 </span>
               )}
@@ -277,7 +277,7 @@ export function ServiceGrid({ stores, categories }: { stores: NearbyStore[]; cat
                 </span>
               )}
             </span>
-            <span className={clsx('text-[0.8rem] font-extrabold leading-tight sm:text-[0.95rem]', t.selected ? 'text-brand-light' : 'text-ink/85 group-hover:text-brand-light')}>
+            <span className={clsx('text-[0.8rem] font-extrabold leading-tight sm:text-[0.95rem]', t.selected ? 'text-brand-ink' : 'text-ink/85 group-hover:text-brand-ink')}>
               {t.label}
             </span>
           </button>
@@ -366,7 +366,7 @@ export function PlaceTile({ store }: { store: NearbyStore }) {
       <span
         className={clsx(
           'absolute top-2 start-2 z-[1] rounded-[5px] px-1.5 py-px text-[0.8rem] font-extrabold',
-          store.isOpen ? 'bg-accent text-[#3a2600]' : 'bg-black/70 text-white',
+          store.isOpen ? 'bg-highlight text-[#3a2600]' : 'bg-black/70 text-white',
         )}
       >
         {store.isOpen ? (store.minOrderAmount > 0 ? `أقل طلب ${formatPrice(store.minOrderAmount)}` : 'مفتوح') : 'مقفول دلوقتي'}
@@ -388,7 +388,7 @@ export function NearestPanel({ stores, onAll }: { stores: NearbyStore[]; onAll: 
             type="button"
             onClick={onAll}
             aria-label="عرض الكل"
-            className="grid size-[42px] shrink-0 place-items-center rounded-full bg-accent text-[#3a2600] shadow-[0_2px_8px_rgb(0_0_0/0.15)] hover:brightness-105"
+            className="grid size-[42px] shrink-0 place-items-center rounded-full bg-highlight text-[#3a2600] shadow-[0_2px_8px_rgb(0_0_0/0.15)] hover:brightness-105"
           >
             <ArrowLeft className="size-5 rtl:-scale-x-100" />
           </button>
@@ -457,4 +457,5 @@ export function AreaGrid({ currentTitle }: { currentTitle: string | undefined })
   );
 }
 
-const AREA_TINTS = ['#610129', '#7a1427', '#8f2a3a', '#5a1a3d', '#9c1b2f'];
+// Darker shades of the brand, so each area card differs a little and follows the theme.
+const AREA_TINTS = [70, 55, 85, 45, 95].map((p) => `color-mix(in srgb, var(--color-brand-dark) ${p}%, black)`);

@@ -193,7 +193,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
                   <button
                     type="button"
                     onClick={() => setOptionDialog({ group: g, option: null })}
-                    className="flex w-full items-center justify-center gap-1.5 border-t border-line py-3 text-sm font-bold text-brand-light hover:bg-surface-alt"
+                    className="flex w-full items-center justify-center gap-1.5 border-t border-line py-3 text-sm font-bold text-brand-ink hover:bg-surface-alt"
                   >
                     <Plus className="size-4" />
                     إضافة اختيار

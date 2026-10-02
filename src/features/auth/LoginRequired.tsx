@@ -16,7 +16,7 @@ export function LoginRequired({ title, icon, message }: { title: string; icon: L
         <Button className="mt-3" onClick={() => navigate('/login')}>
           تسجيل الدخول
         </Button>
-        <Link to="/signup" className="py-2 text-sm font-bold text-brand-light hover:underline">
+        <Link to="/signup" className="py-2 text-sm font-bold text-brand-ink hover:underline">
           معندكش حساب؟ سجّل دلوقتي
         </Link>
       </div>
