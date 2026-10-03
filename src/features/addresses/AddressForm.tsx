@@ -7,6 +7,7 @@ import { errorMessage } from '@/api/client';
 import { keys } from '@/api/queries';
 import { Button, Chip, InlineError, Sheet, Switch, TextField } from '@/components/ui';
 import { ADDRESS_LABELS, SHARM_AREAS } from '@/lib/meta';
+import { MapPicker } from './MapPicker';
 import { showMessage } from '@/store/ui';
 import type { Address, AddressInput } from '@/types';
 
@@ -112,11 +113,19 @@ function AddressForm({ address, onClose, onSaved }: { address: Address | null; o
           </Chip>
         ))}
       </div>
-      {areaName === null && (
-        <p className="text-xs text-ink-3">
-          الموقع الحالي: {lat.toFixed(4)}, {lng.toFixed(4)}
-        </p>
-      )}
+      <p className="text-xs text-ink-3">دوس على الخريطة أو اسحب الدبوس عشان تحدد مكان التوصيل بالظبط</p>
+      <MapPicker
+        lat={lat}
+        lng={lng}
+        onChange={(la, ln) => {
+          setLat(la);
+          setLng(ln);
+          setAreaName(matchArea(la, ln));
+        }}
+      />
+      <p className="text-xs text-ink-3" dir="ltr">
+        {lat.toFixed(5)}, {lng.toFixed(5)}
+      </p>
 
       <TextField name="line" label="الشارع / العنوان" value={line} onChange={(e) => setLine(e.target.value)} className="mt-2" />
       <div className="grid grid-cols-3 gap-2">
