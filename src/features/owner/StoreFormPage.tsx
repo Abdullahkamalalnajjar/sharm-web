@@ -13,7 +13,7 @@ import { showMessage } from '@/store/ui';
 import type { Store as StoreModel, StoreInput } from '@/types';
 
 import { ImagePickerField, noImageEdit, type ImageEdit } from './ImagePicker';
-
+import { MapPicker } from '../addresses/MapPicker';
 /** Create / edit a store. The admin can register a store for an owner (by email); it is approved right away. */
 export function StoreFormPage({ isAdmin = false }: { isAdmin?: boolean }) {
   const params = useParams();
@@ -155,6 +155,15 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
             </Chip>
           ))}
         </div>
+        <p className="text-xs text-ink-3">دوس على الخريطة أو اسحب الدبوس عشان تحدد موقع المحل بالظبط</p>
+        <MapPicker
+          lat={Number(lat) || SHARM_AREAS[0].latitude}
+          lng={Number(lng) || SHARM_AREAS[0].longitude}
+          onChange={(la, ln) => {
+            setLat(String(la));
+            setLng(String(ln));
+          }}
+        />
         <div className="grid grid-cols-2 gap-3">
           <TextField name="lat" ltr inputMode="decimal" label="Latitude" value={lat} onChange={(e) => setLat(e.target.value)} />
           <TextField name="lng" ltr inputMode="decimal" label="Longitude" value={lng} onChange={(e) => setLng(e.target.value)} />
