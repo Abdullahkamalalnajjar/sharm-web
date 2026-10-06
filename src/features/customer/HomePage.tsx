@@ -1,7 +1,7 @@
-import { FilterX, MapPin, Store } from 'lucide-react';
+import { FilterX, Store } from 'lucide-react';
 import { useRef } from 'react';
 
-import { useDeliveryLocation, useNearbyStores, useStoreCategories } from '@/api/queries';
+import { useDeliveryLocation, useStores, useStoreCategories } from '@/api/queries';
 import { Button, EmptyView, ErrorView, Loading, CountPill } from '@/components/ui';
 import { HOME_OFFERS } from '@/lib/home-content';
 import { useBrowse } from '@/store/ui';
@@ -11,10 +11,10 @@ import { StoreCard } from './StoreBits';
 
 export function HomePage() {
   const { location, isLoading: locating } = useDeliveryLocation();
-  const { categoryId, openOnly, search, clearFilters, setPickerOpen } = useBrowse();
+  const { categoryId, openOnly, search, clearFilters } = useBrowse();
   const categories = useStoreCategories().data ?? [];
-  // One query for the area; category / open / search filter on the client so the tiles can show counts.
-  const stores = useNearbyStores(location, null);
+  // One query for every store; category / open / search filter on the client so the tiles can show counts.
+  const stores = useStores(location, null);
   const listRef = useRef<HTMLDivElement>(null);
 
   const query = search.trim().toLowerCase();
@@ -26,7 +26,10 @@ export function HomePage() {
 
   const filtering = query !== '' || openOnly || categoryId !== null;
   const open = all.filter((s) => s.isOpen);
-  const nearest = [...all].sort((a, b) => a.distanceKm - b.distanceKm).slice(0, 10);
+  const nearest = all
+    .filter((s) => s.distanceKm !== null)
+    .sort((a, b) => a.distanceKm! - b.distanceKm!)
+    .slice(0, 10);
   const typeLabel =
     categoryId === null
       ? undefined
@@ -37,8 +40,8 @@ export function HomePage() {
     : openOnly
       ? `${typeLabel ?? 'المحلات'} المفتوحة دلوقتي`
       : categoryId !== null
-        ? `${typeLabel ?? 'المحلات'} قريبة منك`
-        : 'كل المحلات القريبة';
+        ? (typeLabel ?? 'المحلات')
+        : 'كل المحلات';
 
   const scrollToList = () => listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
@@ -62,7 +65,7 @@ export function HomePage() {
           {!filtering && (
             <>
               <FeaturedSlider stores={open} />
-              <NearestPanel stores={nearest} onAll={scrollToList} />
+              {nearest.length > 0 && <NearestPanel stores={nearest} onAll={scrollToList} />}
             </>
           )}
 
@@ -81,18 +84,14 @@ export function HomePage() {
                     ? `مفيش نتايج لـ "${search.trim()}"`
                     : openOnly
                       ? `مفيش ${typeLabel ?? 'محلات'} مفتوحة دلوقتي`
-                      : `مفيش ${typeLabel ?? 'محلات'} قريبة من ${location?.title ?? 'المكان ده'} لسه`
+                      : `مفيش ${typeLabel ?? 'محلات'} لسه`
                 }
                 action={
                   filtering ? (
                     <Button variant="outline" size="md" icon={<FilterX className="size-4" />} onClick={clearFilters}>
                       اعرض الكل
                     </Button>
-                  ) : (
-                    <Button variant="outline" size="md" icon={<MapPin className="size-4" />} onClick={() => setPickerOpen(true)}>
-                      غيّر المكان
-                    </Button>
-                  )
+                  ) : undefined
                 }
               />
             ) : (

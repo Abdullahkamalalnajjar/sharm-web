@@ -319,9 +319,13 @@ export function FeaturedSlider({ stores }: { stores: NearbyStore[] }) {
                     <p className="flex items-center gap-1.5 text-xs font-semibold text-white/85 md:text-sm">
                       <meta.Icon className="size-3.5" style={{ color: meta.color }} />
                       {meta.label}
-                      <span className="opacity-60">•</span>
-                      <Navigation className="size-3.5 text-accent" />
-                      {s.distanceKm.toFixed(1)} كم
+                      {s.distanceKm !== null && (
+                        <>
+                          <span className="opacity-60">•</span>
+                          <Navigation className="size-3.5 text-accent" />
+                          {s.distanceKm.toFixed(1)} كم
+                        </>
+                      )}
                     </p>
                   </div>
                   <span className="rounded-[5px] bg-success px-2 py-0.5 text-[0.8rem] font-extrabold text-white">مفتوح</span>

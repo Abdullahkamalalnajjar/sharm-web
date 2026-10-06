@@ -78,8 +78,12 @@ export function OpenStoreCard({ store }: { store: NearbyStore }) {
         )}
         <span className="flex-1" />
         <div className="flex items-center gap-1 text-white text-xs font-semibold">
-          <Navigation className="size-3.5 text-brand-ink" />
-          {store.distanceKm.toFixed(1)} كم
+          {store.distanceKm !== null && (
+            <>
+              <Navigation className="size-3.5 text-brand-ink" />
+              {store.distanceKm.toFixed(1)} كم
+            </>
+          )}
           <span className="flex-1" />
           <RedCircle size={34} icon={ArrowOut} />
         </div>
@@ -96,7 +100,7 @@ function ArrowOut(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-/** Full-width store card for the nearby list. */
+/** Full-width store card for the store list. */
 export function StoreCard({ store }: { store: NearbyStore }) {
   return (
     <Link to={`/store/${store.id}`} className="card block overflow-hidden hover:border-surface-high transition-colors">
@@ -106,10 +110,12 @@ export function StoreCard({ store }: { store: NearbyStore }) {
         <div className="absolute top-3 start-3">
           <StatusChip label={store.isOpen ? 'مفتوح' : 'مقفول'} color={store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'} />
         </div>
-        <span className="absolute top-3 end-3 pill bg-black/55 text-white">
-          <Navigation className="size-3.5 text-brand-ink" />
-          {store.distanceKm.toFixed(1)} كم
-        </span>
+        {store.distanceKm !== null && (
+          <span className="absolute top-3 end-3 pill bg-black/55 text-white">
+            <Navigation className="size-3.5 text-brand-ink" />
+            {store.distanceKm.toFixed(1)} كم
+          </span>
+        )}
         <h3 className="absolute inset-x-3.5 bottom-2.5 text-lg font-black text-white truncate">{store.name}</h3>
       </div>
       <div className="flex items-center gap-2.5 px-3.5 py-3">

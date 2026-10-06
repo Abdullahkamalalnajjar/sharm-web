@@ -55,32 +55,57 @@ export const setSessionExpiredHandler = (handler: () => void) => {
   onSessionExpired = handler;
 };
 
-http.interceptors.request.use((config) => {
-  const tokens = tokenStorage.read();
-  if (tokens) config.headers.Authorization = `Bearer ${tokens.accessToken}`;
+const isAuthCall = (url?: string) => url?.startsWith('/identity/token') ?? false;
+
+http.interceptors.request.use(async (config) => {
+  if (isAuthCall(config.url)) return config;
+  const token = await freshAccessToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
 let refreshing: Promise<Tokens | null> | null = null;
 
-async function tryRefresh(): Promise<Tokens | null> {
+/**
+ * New tokens, or null. The refresh token is single-use, so only one refresh runs at a time:
+ * within this tab (one shared promise) and across tabs (a Web Lock; the tabs share localStorage).
+ */
+function tryRefresh(): Promise<Tokens | null> {
+  const used = tokenStorage.read()?.accessToken;
+  const locked = async (): Promise<Tokens | null> =>
+    navigator.locks ? navigator.locks.request('sharm.token-refresh', () => refresh(used)) : refresh(used);
+  refreshing ??= locked().finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
+}
+
+/**
+ * The session ends only when the server rejects the refresh token (4xx);
+ * a network error or server fault keeps it for the next attempt.
+ */
+async function refresh(used: string | undefined): Promise<Tokens | null> {
   const current = tokenStorage.read();
   if (!current) return null;
-  refreshing ??= axios
-    .post<Envelope<Tokens>>(`${baseURL}/identity/token/refresh-token`, {
-      accessToken: current.accessToken,
-      refreshToken: current.refreshToken,
-    })
-    .then((res) => {
-      const tokens = res.data.value;
-      tokenStorage.save(tokens);
-      return tokens;
-    })
-    .catch(() => null)
-    .finally(() => {
-      refreshing = null;
-    });
-  return refreshing;
+  // Another tab refreshed while this one waited for the lock.
+  if (current.accessToken !== used) return current;
+  try {
+    const res = await axios.post<Envelope<Tokens>>(
+      `${baseURL}/identity/token/refresh-token`,
+      { accessToken: current.accessToken, refreshToken: current.refreshToken },
+      { timeout: 20_000 },
+    );
+    const tokens = res.data.value;
+    tokenStorage.save(tokens);
+    return tokens;
+  } catch (e) {
+    const status = axios.isAxiosError(e) ? e.response?.status : undefined;
+    if (status !== undefined && status >= 400 && status < 500) {
+      tokenStorage.clear();
+      onSessionExpired?.();
+    }
+    return null;
+  }
 }
 
 /** Seconds-since-epoch expiry of a JWT, or null when it cannot be read. */
@@ -95,15 +120,15 @@ function tokenExpiry(jwt: string): number | null {
 }
 
 /**
- * A current access token for connections that cannot retry on 401 (the live notifications socket):
- * refreshed first when it expires within a minute.
+ * A current access token, refreshed first when it expires within a minute. If the refresh
+ * cannot reach the server, the current token is returned as it is.
  */
 export async function freshAccessToken(): Promise<string | null> {
   const current = tokenStorage.read();
   if (!current) return null;
   const exp = tokenExpiry(current.accessToken);
   if (exp !== null && exp * 1000 > Date.now() + 60_000) return current.accessToken;
-  return (await tryRefresh())?.accessToken ?? null;
+  return (await tryRefresh())?.accessToken ?? tokenStorage.read()?.accessToken ?? null;
 }
 
 /** Where the API lives ('' = same origin, through the dev proxy). */
@@ -114,21 +139,18 @@ type RetriableConfig = AxiosRequestConfig & { _retried?: boolean };
 http.interceptors.response.use(undefined, async (error: AxiosError) => {
   const config = error.config as RetriableConfig | undefined;
   const status = error.response?.status;
-  const hadToken = Boolean(config?.headers?.Authorization);
-  const isAuthCall = config?.url?.startsWith('/identity/token') ?? false;
+  const sent = config?.headers?.Authorization as string | undefined;
 
   // 401: access token expired. 403: permissions live in the token, so a token issued
   // before a permission was granted needs a fresh one.
-  if (config && (status === 401 || status === 403) && hadToken && !isAuthCall && !config._retried) {
-    const refreshed = await tryRefresh();
+  if (config && (status === 401 || status === 403) && sent && !isAuthCall(config.url) && !config._retried) {
+    // Another request (or tab) may already have refreshed while this one was in flight.
+    const stored = tokenStorage.read();
+    const refreshed = stored && `Bearer ${stored.accessToken}` !== sent ? stored : await tryRefresh();
     if (refreshed) {
       config._retried = true;
       config.headers = { ...config.headers, Authorization: `Bearer ${refreshed.accessToken}` };
       return http.request(config);
-    }
-    if (status === 401) {
-      tokenStorage.clear();
-      onSessionExpired?.();
     }
   }
   throw error;

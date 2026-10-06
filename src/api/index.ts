@@ -42,8 +42,9 @@ export const authApi = {
 // ---------- Stores ----------
 
 export const storesApi = {
-  nearby: (latitude: number, longitude: number, categoryId: number | null, radiusKm = 15) =>
-    api.get<NearbyStore[]>('/api/stores/nearby', { latitude, longitude, categoryId, radiusKm }),
+  /** Every active store; with a location, each has its distance and the nearest come first. */
+  browse: (latitude: number | null, longitude: number | null, categoryId: number | null) =>
+    api.get<NearbyStore[]>('/api/stores', { latitude, longitude, categoryId }),
   byId: (storeId: number) => api.get<Store>(`/api/stores/${storeId}`),
 
   mine: () => api.get<Store[]>('/api/stores/mine'),

@@ -9,7 +9,8 @@ import { EMPTY_CART } from '@/types';
 
 export const keys = {
   addresses: ['addresses'] as const,
-  nearby: (lat: number, lng: number, categoryId: number | null) => ['stores', 'nearby', lat, lng, categoryId] as const,
+  stores: (lat: number | null, lng: number | null, categoryId: number | null) =>
+    ['stores', 'browse', lat, lng, categoryId] as const,
   storeCategories: ['store-categories'] as const,
   adminStoreCategories: ['admin', 'store-categories'] as const,
   store: (id: number) => ['stores', id] as const,
@@ -85,11 +86,13 @@ export function useDeliveryLocation(): { location: DeliveryLocation | null; isLo
 
 // ---------- Stores & catalog ----------
 
-export function useNearbyStores(location: DeliveryLocation | null, categoryId: number | null) {
+/** Every active store; the delivery location (optional) only adds the distance and the order. */
+export function useStores(location: DeliveryLocation | null, categoryId: number | null) {
+  const lat = location?.latitude ?? null;
+  const lng = location?.longitude ?? null;
   return useQuery({
-    queryKey: keys.nearby(location?.latitude ?? 0, location?.longitude ?? 0, categoryId),
-    queryFn: () => storesApi.nearby(location!.latitude, location!.longitude, categoryId),
-    enabled: location !== null,
+    queryKey: keys.stores(lat, lng, categoryId),
+    queryFn: () => storesApi.browse(lat, lng, categoryId),
   });
 }
 

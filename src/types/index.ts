@@ -48,7 +48,8 @@ export interface NearbyStore {
   address: string;
   minOrderAmount: number;
   isOpen: boolean;
-  distanceKm: number;
+  /** Null when the list was asked for without a location. */
+  distanceKm: number | null;
 }
 
 export interface StoreInput {
