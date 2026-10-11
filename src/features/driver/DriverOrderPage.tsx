@@ -57,6 +57,7 @@ export function DriverOrderPage() {
                 <p className="text-ink-2">حصّل من الزبون كاش</p>
                 <p className="text-xs text-ink-3">
                   منتجات {formatPrice(o.subtotal)} + توصيل {formatPrice(o.deliveryFee ?? 0)}
+                  {o.taxAmount > 0 && <> + ضريبة {formatPrice(o.taxAmount)}</>}
                 </p>
               </div>
               <Price value={o.total} className="text-[22px]" />

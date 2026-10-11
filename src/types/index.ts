@@ -239,6 +239,9 @@ export interface Order {
   note: string | null;
   subtotal: number;
   deliveryFee: number | null;
+  /** Set by the admin with the delivery fee (e.g. 14 = 14%); charged on the products only, not the delivery fee. */
+  taxPercent: number;
+  taxAmount: number;
   total: number;
   itemsCount: number;
   canCustomerCancel: boolean;

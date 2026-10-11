@@ -7,7 +7,7 @@ import { ordersApi } from '@/api';
 import { keys, useAdminOrder } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, ErrorView, IconWell, Loading, SoftCard } from '@/components/ui';
-import { NumberDialog, ReasonDialog } from '@/features/owner/Dialogs';
+import { ReasonDialog } from '@/features/owner/Dialogs';
 import {
   OrderAddressCard,
   OrderDriverCard,
@@ -23,6 +23,7 @@ import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
 import type { Order, OrderItem } from '@/types';
 
+import { ChargesDialog } from './ChargesDialog';
 import { DriverPicker } from './DriverPicker';
 
 /** Admin view of one order with the next step for its status:
@@ -148,16 +149,15 @@ export function AdminOrderPage() {
         </div>
       )}
 
-      <NumberDialog
+      <ChargesDialog
         open={feeDialog !== null}
-        title={feeDialog === 'edit' ? 'تعديل سعر التوصيل' : `سعر التوصيل للأوردر #${o?.number ?? ''}`}
-        label="سعر التوصيل (ج.م)"
-        initial={feeDialog === 'edit' ? o?.deliveryFee : null}
+        title={feeDialog === 'edit' ? 'تعديل سعر التوصيل والضريبة' : `سعر التوصيل للأوردر #${o?.number ?? ''}`}
+        order={o}
         onClose={() => setFeeDialog(null)}
-        onSubmit={(fee) =>
+        onSubmit={({ deliveryFee, taxPercent }) =>
           feeDialog === 'edit'
-            ? run(() => ordersApi.setDeliveryFee(id, fee), 'سعر التوصيل اتعدّل')
-            : run(() => ordersApi.confirm(id, fee), 'الأوردر اتأكد')
+            ? run(() => ordersApi.setDeliveryFee(id, deliveryFee, taxPercent), 'سعر التوصيل اتعدّل')
+            : run(() => ordersApi.confirm(id, deliveryFee, taxPercent), 'الأوردر اتأكد')
         }
       />
       <ReasonDialog open={reasonOpen} onClose={() => setReasonOpen(false)} onSubmit={(reason) => run(() => ordersApi.cancel(id, reason || null), 'الأوردر اتلغى')} />

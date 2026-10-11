@@ -162,6 +162,9 @@ export function OrderTotalsCard({ order }: { order: Order }) {
         label="التوصيل"
         value={order.deliveryFee == null ? <span className="text-[13px] text-warning">هيتحدد من الإدارة</span> : <span className="text-ink">{formatPrice(order.deliveryFee)}</span>}
       />
+      {order.taxPercent > 0 && (
+        <Row label={`الضريبة (${order.taxPercent}%)`} value={<span className="text-ink">{formatPrice(order.taxAmount)}</span>} />
+      )}
       <div className="my-2 border-t border-line" />
       <Row label={order.deliveryFee == null ? 'الإجمالي (من غير التوصيل)' : 'الإجمالي'} value={<Price value={order.total} className="text-lg" />} />
       <Row

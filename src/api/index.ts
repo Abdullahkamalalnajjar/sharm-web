@@ -185,9 +185,11 @@ export const ordersApi = {
 
   all: (status?: OrderStatus | null) => api.get<OrderSummary[]>(adminOrders, { status }),
   byId: (id: number) => api.get<Order>(`${adminOrders}/${id}`),
-  confirm: (id: number, deliveryFee: number) => api.post<Order>(`${adminOrders}/${id}/confirm`, { deliveryFee }),
-  setDeliveryFee: (id: number, deliveryFee: number) =>
-    api.put<Order>(`${adminOrders}/${id}/delivery-fee`, { deliveryFee }),
+  /** `taxPercent` (e.g. 14 = 14%) is charged on the products only, not the delivery fee. */
+  confirm: (id: number, deliveryFee: number, taxPercent: number) =>
+    api.post<Order>(`${adminOrders}/${id}/confirm`, { deliveryFee, taxPercent }),
+  setDeliveryFee: (id: number, deliveryFee: number, taxPercent: number) =>
+    api.put<Order>(`${adminOrders}/${id}/delivery-fee`, { deliveryFee, taxPercent }),
   /** `driverId` null takes the order back from its driver. */
   assignDriver: (id: number, driverId: number | null) => api.put<Order>(`${adminOrders}/${id}/driver`, { driverId }),
   startDelivery: (id: number) => api.post<Order>(`${adminOrders}/${id}/out-for-delivery`),
