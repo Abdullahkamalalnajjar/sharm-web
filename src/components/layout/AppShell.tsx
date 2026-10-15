@@ -9,6 +9,7 @@ import {
   MapPin,
   ReceiptText,
   ShoppingBag,
+  Sparkles,
   Store,
   UserRound,
   type LucideIcon,
@@ -42,6 +43,7 @@ interface NavItem {
 const NAV: Record<AppRole, NavItem[]> = {
   customer: [
     { to: '/', label: 'الرئيسية', icon: Home, end: true },
+    { to: '/custom-order', label: 'طلب خاص', icon: Sparkles, desktopOnly: true },
     { to: '/orders', label: 'طلباتي', icon: ReceiptText },
     { to: '/cart', label: 'السلة', icon: ShoppingBag, badgeKey: 'cart', raised: true },
     { to: '/account', label: 'حسابي', icon: UserRound },

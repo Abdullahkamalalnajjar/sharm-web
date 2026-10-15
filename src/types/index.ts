@@ -36,6 +36,9 @@ export interface Store {
   minOrderAmount: number;
   isOpen: boolean;
   canAcceptOrders: boolean;
+  /** Customers' average stars (0 when unrated) and how many rated. */
+  ratingAverage: number;
+  ratingsCount: number;
 }
 
 export interface NearbyStore {
@@ -50,6 +53,8 @@ export interface NearbyStore {
   isOpen: boolean;
   /** Null when the list was asked for without a location. */
   distanceKm: number | null;
+  ratingAverage: number;
+  ratingsCount: number;
 }
 
 export interface StoreInput {
@@ -217,9 +222,13 @@ export interface OrderStoreGroup {
   storeName: string;
   subtotal: number;
   items: OrderItem[];
+  /** The customer's rating of this store in this order (customer view). */
+  myStars?: number | null;
+  myComment?: string | null;
 }
 
 export interface OrderCustomer {
+  userId?: string;
   email: string | null;
   phoneNumber: string | null;
 }
@@ -237,6 +246,9 @@ export interface Order {
   cancellationReason: string | null;
   address: OrderAddress;
   note: string | null;
+  /** Whether this is a custom order placed with free-form text. */
+  isCustomOrder?: boolean;
+  paymentMethod?: string;
   subtotal: number;
   deliveryFee: number | null;
   /** Set by the admin with the delivery fee (e.g. 14 = 14%); charged on the products only, not the delivery fee. */
@@ -250,6 +262,8 @@ export interface Order {
   customer: OrderCustomer | null;
   driver: OrderDriver | null;
   driverAssignedUtc: string | null;
+  /** Delivered and not a custom order: the customer can rate its stores. */
+  canRate?: boolean;
 }
 
 export interface OrderSummary {
@@ -257,6 +271,7 @@ export interface OrderSummary {
   number: string;
   status: OrderStatus;
   createdUtc: string;
+  isCustomOrder?: boolean;
   storeNames: string[];
   itemsCount: number;
   deliveryFee: number | null;
@@ -265,6 +280,12 @@ export interface OrderSummary {
   customerEmail: string | null;
   /** Admin only. */
   driverName: string | null;
+}
+
+export interface PlaceCustomOrderRequest {
+  addressId: number;
+  requestDetails: string;
+  paymentMethod?: string;
 }
 
 export interface StoreCategoryCount {
@@ -437,4 +458,47 @@ export interface Session {
   roles: string[];
   permissions: string[];
   role: AppRole;
+}
+
+// ---------- Ratings ----------
+
+export interface StoreRating {
+  id: number;
+  stars: number;
+  comment: string | null;
+  createdUtc: string;
+}
+
+/** A page of a store's ratings, newest first. */
+export interface StoreRatingsPage {
+  average: number;
+  count: number;
+  items: StoreRating[];
+  hasMore: boolean;
+}
+
+// ---------- Loyalty points ----------
+
+/** A delivered order whose total reaches `minOrderTotal` earns `pointsPerOrder` points. */
+export interface LoyaltySettings {
+  isEnabled: boolean;
+  minOrderTotal: number;
+  pointsPerOrder: number;
+}
+
+export interface PointsTransaction {
+  id: number;
+  points: number;
+  kind: 'OrderReward' | 'AdminAdjustment';
+  orderNumber: string | null;
+  reason: string | null;
+  createdUtc: string;
+}
+
+/** A balance, the current rule and a page of history (newest first). */
+export interface PointsAccount {
+  balance: number;
+  rule: LoyaltySettings;
+  items: PointsTransaction[];
+  hasMore: boolean;
 }

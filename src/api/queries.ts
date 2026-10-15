@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { addressesApi, adminApi, cartApi, catalogApi, driversApi, notificationsApi, ordersApi, reportsApi, storeCategoriesApi, storesApi } from '@/api';
+import { addressesApi, adminApi, cartApi, catalogApi, driversApi, loyaltyApi, notificationsApi, ordersApi, reportsApi, storeCategoriesApi, storesApi } from '@/api';
 import { SHARM_AREAS } from '@/lib/meta';
 import { useAuth } from '@/store/auth';
 import { useBrowse } from '@/store/ui';
@@ -8,6 +8,10 @@ import type { Address, Cart, OrderStatus, Report } from '@/types';
 import { EMPTY_CART } from '@/types';
 
 export const keys = {
+  storeRatings: (storeId: number) => ['stores', 'ratings', storeId] as const,
+  myPoints: ['points', 'me'] as const,
+  loyaltySettings: ['admin', 'loyalty', 'settings'] as const,
+  customerPoints: (customerId: string) => ['admin', 'loyalty', 'customer', customerId] as const,
   addresses: ['addresses'] as const,
   stores: (lat: number | null, lng: number | null, categoryId: number | null) =>
     ['stores', 'browse', lat, lng, categoryId] as const,
@@ -263,4 +267,36 @@ export const useNotifications = () =>
     queryFn: ({ pageParam }) => notificationsApi.page(pageParam),
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (last) => (last.hasMore && last.items.length > 0 ? last.items[last.items.length - 1].id : undefined),
+  });
+
+// ---------- Ratings & points ----------
+
+/** A store's ratings, page by page (newest first). */
+export const useStoreRatings = (storeId: number) =>
+  useInfiniteQuery({
+    queryKey: keys.storeRatings(storeId),
+    queryFn: ({ pageParam }) => storesApi.ratings(storeId, pageParam),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (last) => (last.hasMore && last.items.length > 0 ? last.items[last.items.length - 1].id : undefined),
+  });
+
+/** The signed-in customer's points and history, page by page. */
+export const useMyPoints = () => {
+  const signedIn = useAuth((s) => s.session !== null);
+  return useInfiniteQuery({
+    queryKey: keys.myPoints,
+    queryFn: ({ pageParam }) => loyaltyApi.mine(pageParam),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (last) => (last.hasMore && last.items.length > 0 ? last.items[last.items.length - 1].id : undefined),
+    enabled: signedIn,
+  });
+};
+
+export const useLoyaltySettings = () => useQuery({ queryKey: keys.loyaltySettings, queryFn: loyaltyApi.settings });
+
+export const useCustomerPoints = (customerId: string | undefined) =>
+  useQuery({
+    queryKey: keys.customerPoints(customerId ?? ''),
+    queryFn: () => loyaltyApi.customer(customerId!),
+    enabled: Boolean(customerId),
   });

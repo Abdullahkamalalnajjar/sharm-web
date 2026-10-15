@@ -66,6 +66,7 @@ export function useLiveNotifications() {
 
     const refresh = (n: LiveNotification) => {
       qc.invalidateQueries({ queryKey: ['notifications'] });
+      if (n.type === 'loyalty') qc.invalidateQueries({ queryKey: ['points'] });
       if (n.type !== 'order') return;
       qc.invalidateQueries({ queryKey: ['admin'] });
       qc.invalidateQueries({ queryKey: ['orders'] });

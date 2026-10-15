@@ -10,15 +10,18 @@ import type {
   MonthlyReport,
   NearbyStore,
   NotificationsPage,
+  LoyaltySettings,
   Order,
   OrderStatus,
   OrderSummary,
+  PointsAccount,
   Product,
   ProductInput,
   Store,
   StoreInput,
   StoreStatus,
   StoreCategory,
+  StoreRatingsPage,
   Tokens,
   YearlyReport,
 } from '@/types';
@@ -46,6 +49,8 @@ export const storesApi = {
   browse: (latitude: number | null, longitude: number | null, categoryId: number | null) =>
     api.get<NearbyStore[]>('/api/stores', { latitude, longitude, categoryId }),
   byId: (storeId: number) => api.get<Store>(`/api/stores/${storeId}`),
+  /** Newest first; `beforeId` (the last id you have) loads older ones. */
+  ratings: (storeId: number, beforeId?: number) => api.get<StoreRatingsPage>(`/api/stores/${storeId}/ratings`, { beforeId }),
 
   mine: () => api.get<Store[]>('/api/stores/mine'),
   create: (input: StoreInput) => api.post<Store>('/api/stores', input),
@@ -178,10 +183,15 @@ const adminOrders = '/api/admin/orders';
 
 export const ordersApi = {
   place: (addressId: number, note?: string | null) => api.post<Order>('/api/orders', { addressId, note: note ?? null }),
+  placeCustom: (addressId: number, requestDetails: string, paymentMethod?: string) =>
+    api.post<number>('/api/orders/custom', { addressId, requestDetails, paymentMethod: paymentMethod ?? 'Cash' }),
   mine: () => api.get<OrderSummary[]>('/api/orders/mine'),
   mineById: (id: number) => api.get<Order>(`/api/orders/mine/${id}`),
   cancelMine: (id: number, reason?: string | null) =>
     api.post<Order>(`/api/orders/mine/${id}/cancel`, { reason: reason ?? null }),
+  /** Stars (1-5) and an optional comment per store of a delivered order; rating again changes it. */
+  rateMine: (id: number, ratings: { storeId: number; stars: number; comment: string | null }[]) =>
+    api.put<Order>(`/api/orders/mine/${id}/ratings`, { ratings }),
 
   all: (status?: OrderStatus | null) => api.get<OrderSummary[]>(adminOrders, { status }),
   byId: (id: number) => api.get<Order>(`${adminOrders}/${id}`),
@@ -190,6 +200,8 @@ export const ordersApi = {
     api.post<Order>(`${adminOrders}/${id}/confirm`, { deliveryFee, taxPercent }),
   setDeliveryFee: (id: number, deliveryFee: number, taxPercent: number) =>
     api.put<Order>(`${adminOrders}/${id}/delivery-fee`, { deliveryFee, taxPercent }),
+  setCustomSubtotal: (id: number, newSubtotal: number) =>
+    api.put<Order>(`${adminOrders}/${id}/custom-subtotal`, { newSubtotal }),
   /** `driverId` null takes the order back from its driver. */
   assignDriver: (id: number, driverId: number | null) => api.put<Order>(`${adminOrders}/${id}/driver`, { driverId }),
   startDelivery: (id: number) => api.post<Order>(`${adminOrders}/${id}/out-for-delivery`),
@@ -249,4 +261,20 @@ export const notificationsApi = {
   /** Returns the unread count left. */
   markRead: async (id: number) => (await api.post<number | undefined>(`${notifications}/${id}/read`)) ?? 0,
   markAllRead: async () => (await api.post<number | undefined>(`${notifications}/read-all`)) ?? 0,
+};
+
+// ---------- Loyalty points ----------
+
+const adminLoyalty = '/api/admin/loyalty';
+
+export const loyaltyApi = {
+  /** Newest first; `beforeId` (the last id you have) loads older history. */
+  mine: (beforeId?: number) => api.get<PointsAccount>('/api/loyalty/me', { beforeId }),
+  settings: () => api.get<LoyaltySettings>(`${adminLoyalty}/settings`),
+  updateSettings: (input: LoyaltySettings) => api.put<LoyaltySettings>(`${adminLoyalty}/settings`, input),
+  customer: (customerId: string, beforeId?: number) =>
+    api.get<PointsAccount>(`${adminLoyalty}/customers/${customerId}`, { beforeId }),
+  /** Positive adds, negative takes (not below zero). */
+  adjust: (customerId: string, points: number, reason: string) =>
+    api.post<PointsAccount>(`${adminLoyalty}/customers/${customerId}/adjust`, { points, reason }),
 };

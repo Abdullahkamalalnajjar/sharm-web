@@ -15,7 +15,9 @@ import { LoginPage } from '@/features/auth/LoginPage';
 import { SignupPage } from '@/features/auth/SignupPage';
 import { CartPage } from '@/features/cart/CartPage';
 import { CheckoutPage } from '@/features/cart/CheckoutPage';
+import { CustomOrderPage } from '@/features/customer/CustomOrderPage';
 import { HomePage } from '@/features/customer/HomePage';
+import { PointsPage } from '@/features/loyalty/PointsPage';
 import { DriverHomePage } from '@/features/driver/DriverHomePage';
 import { DriverOrderPage } from '@/features/driver/DriverOrderPage';
 import { StorePage } from '@/features/customer/StorePage';
@@ -26,6 +28,7 @@ import { ManageMenuPage } from '@/features/owner/ManageMenuPage';
 import { OwnerStoresPage } from '@/features/owner/OwnerStoresPage';
 import { ProductEditorPage } from '@/features/owner/ProductEditorPage';
 import { StoreFormPage } from '@/features/owner/StoreFormPage';
+import { StoreRatingsPage } from '@/features/ratings/Ratings';
 
 export function App() {
   return (
@@ -34,12 +37,15 @@ export function App() {
         {/* Customer (guests can browse; account actions ask for login) */}
         <Route element={<CustomerArea />}>
           <Route index element={<HomePage />} />
+          <Route path="custom-order" element={<CustomOrderPage />} />
           <Route path="store/:id" element={<StorePage />} />
+          <Route path="store/:id/ratings" element={<StoreRatingsPage />} />
           <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
           <Route path="orders" element={<MyOrdersPage />} />
           <Route path="orders/:id" element={<MyOrderPage />} />
           <Route path="addresses" element={<AddressesPage />} />
+          <Route path="points" element={<PointsPage />} />
         </Route>
 
         {/* Shared by every role */}

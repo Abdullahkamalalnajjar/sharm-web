@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 
 import { AppImage, Price, StatusChip } from '@/components/ui';
 import { SHARM_AREAS, categoryOf } from '@/lib/meta';
+import { RatingBadge } from '@/features/ratings/Ratings';
 import type { CategoryRef, NearbyStore } from '@/types';
 
 /** Store cover filling its (relative) parent: the logo when there is one, else a dark tint of the category color with its icon. */
@@ -78,6 +79,7 @@ export function OpenStoreCard({ store }: { store: NearbyStore }) {
         )}
         <span className="flex-1" />
         <div className="flex items-center gap-1 text-white text-xs font-semibold">
+          <RatingBadge average={store.ratingAverage} count={store.ratingsCount} onDark className="me-1.5" />
           {store.distanceKm !== null && (
             <>
               <Navigation className="size-3.5 text-brand-ink" />
@@ -123,6 +125,7 @@ export function StoreCard({ store }: { store: NearbyStore }) {
           <p className="truncate text-[12.5px] text-ink-2">{store.address}</p>
           <div className="mt-1.5 flex items-center gap-2.5 flex-wrap">
             <TypeTag category={store} />
+            <RatingBadge average={store.ratingAverage} count={store.ratingsCount} />
             {store.minOrderAmount > 0 && (
               <span className="inline-flex items-center gap-1 text-xs text-ink-2">
                 <ShoppingBag className="size-3.5 text-ink-3" />

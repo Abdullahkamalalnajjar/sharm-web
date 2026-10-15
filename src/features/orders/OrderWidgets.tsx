@@ -1,5 +1,20 @@
 import clsx from 'clsx';
-import { Banknote, Bike, Mail, Map, MapPin, MinusCircle, Phone, Store, StickyNote, UserRound, UserRoundX, XCircle, ArrowLeftRight } from 'lucide-react';
+import {
+  Banknote,
+  Bike,
+  Mail,
+  Map,
+  MapPin,
+  MinusCircle,
+  Phone,
+  Sparkles,
+  Store,
+  StickyNote,
+  UserRound,
+  UserRoundX,
+  XCircle,
+  ArrowLeftRight,
+} from 'lucide-react';
 
 import { Button, IconWell, Price, SoftCard, StatusChip } from '@/components/ui';
 import { addressDetails, formatOrderDate, formatPrice } from '@/lib/format';
@@ -25,16 +40,28 @@ export function OrderSummaryCard({ order, onClick, showCustomer }: { order: Orde
   return (
     <SoftCard as="button" onClick={onClick} className="p-3.5">
       <div className="flex items-center gap-3">
-        <IconWell icon={meta.Icon} size={42} color={meta.color} />
+        <IconWell icon={order.isCustomOrder ? Sparkles : meta.Icon} size={42} color={order.isCustomOrder ? '#9333EA' : meta.color} />
         <div className="min-w-0 flex-1">
-          <p className="font-extrabold text-ink">أوردر #{order.number}</p>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="font-extrabold text-ink">أوردر #{order.number}</p>
+            {order.isCustomOrder && <StatusChip label="طلب خاص" color="#9333EA" />}
+          </div>
           <p className="text-xs text-ink-3">{formatOrderDate(order.createdUtc)}</p>
         </div>
         <OrderStatusBadge status={order.status} />
       </div>
       <p className="mt-3 flex items-center gap-1.5 text-ink-2 truncate">
-        <Store className="size-4 shrink-0 text-ink-3" />
-        {order.storeNames.join(' • ')}
+        {order.isCustomOrder ? (
+          <>
+            <Sparkles className="size-4 shrink-0 text-[#9333EA]" />
+            <span className="text-[#9333EA] font-semibold">طلب خاص (من خارج المنيو)</span>
+          </>
+        ) : (
+          <>
+            <Store className="size-4 shrink-0 text-ink-3" />
+            {order.storeNames.join(' • ')}
+          </>
+        )}
       </p>
       {showCustomer && order.customerEmail && (
         <p className="mt-1 flex items-center gap-1.5 text-[13px] text-ink-2 flex-wrap">
@@ -52,7 +79,7 @@ export function OrderSummaryCard({ order, onClick, showCustomer }: { order: Orde
       )}
       <div className="my-2.5 border-t border-line" />
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-ink-2">{order.itemsCount} منتج</span>
+        <span className="text-ink-2">{order.isCustomOrder ? 'طلب خاص' : `${order.itemsCount} منتج`}</span>
         {needsFee && <StatusChip label="محتاج سعر توصيل" color="var(--color-warning)" />}
         {showCustomer && needsDriver && <StatusChip label="محتاج مندوب" color="var(--color-warning)" />}
         <span className="flex-1" />
@@ -113,8 +140,34 @@ export function OrderTimeline({ order }: { order: Order }) {
   );
 }
 
-/** Items grouped by store. `onRemoveItem` (admin) shows a remove button per item. */
+/** Items grouped by store, or request details when this is a custom order. */
 export function OrderItemsCard({ order, onRemoveItem }: { order: Order; onRemoveItem?: (item: OrderItem) => void }) {
+  if (order.isCustomOrder || !order.stores || order.stores.length === 0) {
+    return (
+      <SoftCard className="overflow-hidden p-4">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-line">
+          <Sparkles className="size-5 text-[#9333EA]" />
+          <span className="flex-1 font-extrabold text-ink">تفاصيل الطلب الخاص</span>
+          <StatusChip label="طلب خاص" color="#9333EA" />
+        </div>
+        <div className="pt-3">
+          <p className="text-xs font-bold text-ink-3 mb-1.5">الطلب المطلوب من الزبون:</p>
+          <div className="rounded-xl bg-surface-alt p-3.5 text-sm text-ink font-medium whitespace-pre-wrap leading-relaxed">
+            {order.note || 'مفيش تفاصيل إضافية مكتوبة.'}
+          </div>
+        </div>
+        <div className="mt-3 flex items-center justify-between text-xs text-ink-2 pt-2 border-t border-line">
+          <span>سعر المنتجات:</span>
+          {order.subtotal > 0 ? (
+            <span className="font-extrabold text-ink">{formatPrice(order.subtotal)}</span>
+          ) : (
+            <span className="text-warning font-bold">هيتحدد بعد الشراء والتأكيد</span>
+          )}
+        </div>
+      </SoftCard>
+    );
+  }
+
   return (
     <SoftCard className="overflow-hidden">
       {order.stores.map((g, gi) => (
@@ -155,9 +208,16 @@ export function OrderTotalsCard({ order }: { order: Order }) {
       {value}
     </div>
   );
+  const productsValue =
+    order.isCustomOrder && order.subtotal === 0 && order.status === 'Pending' ? (
+      <span className="text-[13px] text-warning">هيتحدد بعد الشراء</span>
+    ) : (
+      <span className="text-ink">{formatPrice(order.subtotal)}</span>
+    );
+
   return (
     <SoftCard className="p-4">
-      <Row label="المنتجات" value={<span className="text-ink">{formatPrice(order.subtotal)}</span>} />
+      <Row label="المنتجات" value={productsValue} />
       <Row
         label="التوصيل"
         value={order.deliveryFee == null ? <span className="text-[13px] text-warning">هيتحدد من الإدارة</span> : <span className="text-ink">{formatPrice(order.deliveryFee)}</span>}

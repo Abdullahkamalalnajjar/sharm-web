@@ -5,9 +5,10 @@ import { useLocation, useParams } from 'react-router';
 import { ordersApi } from '@/api';
 import { keys, useMyOrder } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
-import { Button, ErrorView, Loading, SoftCard } from '@/components/ui';
+import { Button, ErrorView, Loading, SoftCard, StatusChip } from '@/components/ui';
 import { orderStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
+import { RateOrderCard } from '@/features/ratings/Ratings';
 import { confirm } from '@/store/ui';
 
 import { OrderAddressCard, OrderDriverCard, OrderItemsCard, OrderStatusBadge, OrderTimeline, OrderTotalsCard, canAssignDriver } from './OrderWidgets';
@@ -42,16 +43,20 @@ export function MyOrderPage() {
               <SoftCard className="flex items-center gap-3 p-4 bg-success/10">
                 <PartyPopper className="size-7 text-success shrink-0" />
                 <p className="font-bold text-ink leading-relaxed">
-                  طلبك وصل! 🎉
+                  {order.data.isCustomOrder ? 'طلبك الخاص وصل! 🎉' : 'طلبك وصل! 🎉'}
                   <br />
-                  الإدارة هتراجعه وتحدد سعر التوصيل.
+                  {order.data.isCustomOrder
+                    ? 'الإدارة هتراجع طلبك الخاص وتحدد تكلفة المنتجات والتوصيل.'
+                    : 'الإدارة هتراجعه وتحدد سعر التوصيل.'}
                 </p>
               </SoftCard>
             )}
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex items-center gap-2 pt-1 flex-wrap">
               <h2 className="flex-1 text-lg font-extrabold text-ink">{orderStatus(order.data.status).customerMessage}</h2>
+              {order.data.isCustomOrder && <StatusChip label="طلب خاص" color="#9333EA" />}
               <OrderStatusBadge status={order.data.status} />
             </div>
+            {order.data.canRate && <RateOrderCard order={order.data} />}
             <div className="grid gap-3 md:grid-cols-2 md:items-start">
               <div className="flex flex-col gap-3">
                 <OrderTimeline order={order.data} />

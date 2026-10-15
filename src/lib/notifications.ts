@@ -1,4 +1,4 @@
-import { Bike, Bell, CircleCheck, CheckCircle2, ReceiptText, XCircle, type LucideIcon } from 'lucide-react';
+import { Bike, Bell, CircleCheck, CheckCircle2, Gift, ReceiptText, XCircle, type LucideIcon } from 'lucide-react';
 
 import type { AppRole } from '@/types';
 
@@ -17,6 +17,8 @@ export function notificationLook(event: string): { Icon: LucideIcon; color: stri
     case 'Cancelled':
     case 'DriverRemoved':
       return { Icon: XCircle, color: 'var(--color-danger)' };
+    case 'earned':
+      return { Icon: Gift, color: 'var(--color-accent)' };
     default:
       return { Icon: ReceiptText, color: 'var(--color-series-1)' };
   }
@@ -24,6 +26,7 @@ export function notificationLook(event: string): { Icon: LucideIcon; color: stri
 
 /** The page a notification opens for this role, or null (e.g. a driver whose order was taken away). */
 export function notificationTarget(role: AppRole, n: { type: string; event: string; data: Record<string, string> }): string | null {
+  if (n.type === 'loyalty') return role === 'customer' ? '/points' : null;
   const orderId = n.type === 'order' ? Number(n.data.orderId) : NaN;
   if (!Number.isFinite(orderId)) return null;
   switch (role) {

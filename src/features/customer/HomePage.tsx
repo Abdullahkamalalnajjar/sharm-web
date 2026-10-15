@@ -6,7 +6,7 @@ import { Button, EmptyView, ErrorView, Loading, CountPill } from '@/components/u
 import { HOME_OFFERS } from '@/lib/home-content';
 import { useBrowse } from '@/store/ui';
 
-import { AreaGrid, FeaturedSlider, NearestPanel, OffersCarousel, SearchBand, SectionHead, ServiceGrid } from './HomeSections';
+import { AreaGrid, CustomOrderBanner, FeaturedSlider, NearestPanel, OffersCarousel, SearchBand, SectionHead, ServiceGrid } from './HomeSections';
 import { StoreCard } from './StoreBits';
 
 export function HomePage() {
@@ -53,6 +53,8 @@ export function HomePage() {
       {!filtering && <OffersCarousel offers={HOME_OFFERS} categories={categories} />}
 
       <ServiceGrid stores={all} categories={categories} />
+
+      {!filtering && <CustomOrderBanner />}
 
       {locating || stores.isLoading ? (
         <Loading />

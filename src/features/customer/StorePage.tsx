@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { BookOpen, Plus, Sandwich } from 'lucide-react';
+import { BookOpen, ChevronLeft, Plus, Sandwich } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/layout/AppShell';
 import { AppImage, EmptyView, ErrorView, Loading, Price, SectionHeader, SoftCard, StatusChip } from '@/components/ui';
 import { formatPrice } from '@/lib/format';
 import { categoryOf } from '@/lib/meta';
+import { RatingBadge } from '@/features/ratings/Ratings';
 import type { Product, Store } from '@/types';
 
 import { ProductSheet } from './ProductSheet';
@@ -82,6 +83,14 @@ function StoreHeader({ store }: { store: Store }) {
             أقل طلب <Price value={store.minOrderAmount} className="text-xs" />
           </p>
         )}
+        <Link to={`/store/${store.id}/ratings`} className="mt-1.5 inline-flex items-center gap-1 text-xs hover:underline">
+          {store.ratingsCount > 0 ? (
+            <RatingBadge average={store.ratingAverage} count={store.ratingsCount} />
+          ) : (
+            <span className="text-ink-3">لسه مفيش تقييمات</span>
+          )}
+          <ChevronLeft className="size-4 text-ink-3" />
+        </Link>
       </div>
     </SoftCard>
   );

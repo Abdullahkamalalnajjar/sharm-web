@@ -11,10 +11,11 @@ import {
   MapPin,
   Navigation,
   Search,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 import { formatPrice } from '@/lib/format';
 import type { HomeOffer } from '@/lib/home-content';
@@ -203,6 +204,7 @@ interface ServiceTile {
 
 export function ServiceGrid({ stores, categories }: { stores: NearbyStore[]; categories: StoreCategory[] }) {
   const { categoryId: selected, openOnly, setCategoryId, setOpenOnly } = useBrowse();
+  const navigate = useNavigate();
   const openCount = stores.filter((s) => s.isOpen).length;
 
   const tiles: ServiceTile[] = [
@@ -242,6 +244,16 @@ export function ServiceGrid({ stores, categories }: { stores: NearbyStore[]; cat
       badgeColor: openCount > 0 ? 'var(--color-success)' : 'var(--color-ink-3)',
       selected: openOnly,
       onClick: () => setOpenOnly(!openOnly),
+    },
+    {
+      key: 'custom-order',
+      label: 'طلب خاص',
+      Icon: Sparkles,
+      color: '#A855F7',
+      badge: 'جديد',
+      badgeColor: '#9333EA',
+      selected: false,
+      onClick: () => navigate('/custom-order'),
     },
   ];
 
@@ -283,6 +295,54 @@ export function ServiceGrid({ stores, categories }: { stores: NearbyStore[]; cat
           </button>
         ))}
       </div>
+    </section>
+  );
+}
+
+// ---------- Custom order banner ----------
+
+export function CustomOrderBanner() {
+  return (
+    <section className="container-site mt-6">
+      <Link
+        to="/custom-order"
+        className="group relative block overflow-hidden rounded-[24px] p-5 sm:p-6 text-white shadow-[0_4px_18px_rgb(0_0_0/0.18)] transition-all hover:scale-[1.01] hover:shadow-[0_8px_26px_rgb(0_0_0/0.25)]"
+        style={{
+          background: 'linear-gradient(135deg, #7C3AED 0%, #B91C1C 60%, #E11D48 100%)',
+        }}
+      >
+        <span className="pointer-events-none absolute -top-14 -end-14 size-44 rounded-full bg-white/15 blur-2xl transition-transform group-hover:scale-125" />
+        <span className="pointer-events-none absolute -bottom-8 start-1/4 size-32 rounded-full bg-black/15 blur-xl" />
+
+        <div className="relative z-[1] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <span className="grid size-12 sm:size-14 shrink-0 place-items-center rounded-2xl bg-white/20 backdrop-blur-md shadow-inner text-highlight">
+              <Sparkles className="size-6 sm:size-7" />
+            </span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-highlight px-2.5 py-0.5 text-[11px] font-black text-[#3a2600]">
+                  خدمة شرم الخاصة
+                </span>
+                <span className="text-xs font-bold text-white/80">اطلب أي حاجة</span>
+              </div>
+              <h3 className="mt-1 text-lg sm:text-xl font-black text-white leading-tight">
+                محتاج طلب من مكان مش في القايمة؟
+              </h3>
+              <p className="mt-1 text-[13px] text-white/90 line-clamp-2 max-w-xl">
+                صيدلية، سوبرماركت، مخبز، أو أي مكان تاني... اكتبلنا طلبك وهنبعتلك مندوب يشتريلك حاجتك ويوصلهالك لحد عندك.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+            <span className="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2.5 text-sm font-extrabold text-[#7C3AED] shadow-sm transition-transform group-hover:-translate-x-1">
+              <span>اطلب دلوقتي</span>
+              <ArrowLeft className="size-4 rtl:-scale-x-100" />
+            </span>
+          </div>
+        </div>
+      </Link>
     </section>
   );
 }

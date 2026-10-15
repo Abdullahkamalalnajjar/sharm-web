@@ -6,8 +6,9 @@ import { useParams } from 'react-router';
 import { ordersApi } from '@/api';
 import { keys, useAdminOrder } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
-import { Button, ErrorView, IconWell, Loading, SoftCard } from '@/components/ui';
-import { ReasonDialog } from '@/features/owner/Dialogs';
+import { Button, ErrorView, IconWell, Loading, SoftCard, StatusChip } from '@/components/ui';
+import { CustomerPointsCard } from '@/features/loyalty/LoyaltyAdmin';
+import { NumberDialog, ReasonDialog } from '@/features/owner/Dialogs';
 import {
   OrderAddressCard,
   OrderDriverCard,
@@ -35,6 +36,7 @@ export function AdminOrderPage() {
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [feeDialog, setFeeDialog] = useState<'confirm' | 'edit' | null>(null);
+  const [subtotalOpen, setSubtotalOpen] = useState(false);
   const [reasonOpen, setReasonOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -81,13 +83,15 @@ export function AdminOrderPage() {
           <ErrorView message={(order.error as Error)?.message ?? 'حصل خطأ'} onRetry={() => order.refetch()} />
         ) : (
           <>
-            <div className="flex items-center gap-2 pb-3">
+            <div className="flex items-center gap-2 pb-3 flex-wrap">
               <span className="flex-1 text-ink-2">{formatOrderDate(o.createdUtc)}</span>
+              {o.isCustomOrder && <StatusChip label="طلب خاص" color="#9333EA" />}
               <OrderStatusBadge status={o.status} />
             </div>
             <div className="grid gap-3 md:grid-cols-2 md:items-start">
               <div className="flex flex-col gap-3">
                 <OrderAddressCard order={o} customer={o.customer} showActions />
+                {o.customer?.userId && <CustomerPointsCard customerId={o.customer.userId} />}
                 {canAssignDriver(o) ? (
                   o.driver ? (
                     <OrderDriverCard
@@ -114,11 +118,25 @@ export function AdminOrderPage() {
               <div className="flex flex-col gap-3">
                 <OrderItemsCard order={o} onRemoveItem={canEditItems && !busy ? (item) => removeItem(o, item) : undefined} />
                 <OrderTotalsCard order={o} />
-                {o.status === 'Confirmed' && (
-                  <Button variant="ghost" size="sm" className="self-start" icon={<Pencil className="size-4" />} disabled={busy} onClick={() => setFeeDialog('edit')}>
-                    تعديل سعر التوصيل
-                  </Button>
-                )}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {o.isCustomOrder && active && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-[#9333EA] border-[#9333EA]/40 hover:bg-[#9333EA]/10"
+                      icon={<Pencil className="size-4" />}
+                      disabled={busy}
+                      onClick={() => setSubtotalOpen(true)}
+                    >
+                      تعديل سعر المنتجات
+                    </Button>
+                  )}
+                  {o.status === 'Confirmed' && (
+                    <Button variant="ghost" size="sm" icon={<Pencil className="size-4" />} disabled={busy} onClick={() => setFeeDialog('edit')}>
+                      تعديل سعر التوصيل
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </>
@@ -159,6 +177,14 @@ export function AdminOrderPage() {
             ? run(() => ordersApi.setDeliveryFee(id, deliveryFee, taxPercent), 'سعر التوصيل اتعدّل')
             : run(() => ordersApi.confirm(id, deliveryFee, taxPercent), 'الأوردر اتأكد')
         }
+      />
+      <NumberDialog
+        open={subtotalOpen}
+        title={`سعر منتجات الطلب الخاص #${o?.number ?? ''}`}
+        label="سعر المنتجات (ج.م)"
+        initial={o?.subtotal}
+        onClose={() => setSubtotalOpen(false)}
+        onSubmit={(subtotal) => run(() => ordersApi.setCustomSubtotal(id, subtotal), 'سعر المنتجات اتعدّل')}
       />
       <ReasonDialog open={reasonOpen} onClose={() => setReasonOpen(false)} onSubmit={(reason) => run(() => ordersApi.cancel(id, reason || null), 'الأوردر اتلغى')} />
       <DriverPicker

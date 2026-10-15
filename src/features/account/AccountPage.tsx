@@ -1,4 +1,4 @@
-import { Bike, ChevronLeft, LogOut, MapPin, ReceiptText, Store, UserRound, type LucideIcon } from 'lucide-react';
+import { Bike, ChevronLeft, Gift, LogOut, MapPin, ReceiptText, Sparkles, Store, UserRound, type LucideIcon } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { TabHeader } from '@/components/layout/AppShell';
@@ -35,8 +35,10 @@ export function AccountPage() {
       <SoftCard className="mt-4 overflow-hidden">
         {session.role === 'customer' && (
           <>
+            <Tile icon={Sparkles} title="طلب خاص" subtitle="اطلب أي حاجة من خارج المنيو" onClick={() => navigate('/custom-order')} />
             <Tile icon={MapPin} title="عناويني" subtitle="أضف أو عدّل أماكن التوصيل" onClick={() => navigate('/addresses')} />
             <Tile icon={ReceiptText} title="طلباتي" subtitle="تابع طلباتك الحالية والسابقة" onClick={() => navigate('/orders')} />
+            <Tile icon={Gift} title="نقاطي" subtitle="اكسب نقط مع كل أوردر" onClick={() => navigate('/points')} />
           </>
         )}
         {session.role === 'storeOwner' && <Tile icon={Store} title="محلاتي" subtitle="إدارة المحلات والمنيو" onClick={() => navigate('/owner')} />}

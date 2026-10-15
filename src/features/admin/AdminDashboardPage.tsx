@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 
 import { useAdminDashboard, useTodayReport } from '@/api/queries';
 import { Button, ErrorView, IconWell, Loading, SectionHeader, SoftCard } from '@/components/ui';
+import { LoyaltySettingsCard } from '@/features/loyalty/LoyaltyAdmin';
 import { compactNumber, formatFullDate, formatPrice } from '@/lib/format';
 import { ORDER_STATUSES, categoryLook, storeStatus } from '@/lib/meta';
 import { useAuth } from '@/store/auth';
@@ -104,6 +105,7 @@ export function AdminDashboardPage() {
                   كل المحلات
                 </Button>
               </div>
+              <LoyaltySettingsCard />
             </div>
 
             <SoftCard className="p-4">
