@@ -4,8 +4,22 @@ import type {
   AddressInput,
   AdminDashboard,
   Cart,
+  DeliveryQuote,
   DailyReport,
   Driver,
+  DriverOffer,
+  DriverSignUpInput,
+  DriverWallet,
+  MenuImportResult,
+  PayoutMethod,
+  StoreSettingsInput,
+  StoreWallet,
+  VehicleType,
+  WalletEntry,
+  WalletParty,
+  WalletsOverview,
+  Withdrawal,
+  WithdrawalStatus,
   Menu,
   MonthlyReport,
   NearbyStore,
@@ -19,6 +33,8 @@ import type {
   ProductInput,
   Store,
   StoreInput,
+  StoreOrder,
+  StoreOrdersFilter,
   StoreStatus,
   StoreCategory,
   StoreRatingsPage,
@@ -39,6 +55,19 @@ export const authApi = {
     authenticate('/identity/token/generate', { email: email.trim(), password }),
   signUp: (input: { email: string; password: string; role: string; city?: string | null; phoneNumber?: string | null }) =>
     authenticate('/identity/signup', { ...input, email: input.email.trim() }),
+  /** A driver signs up with their ID card photo; the account waits for the admin's approval. */
+  signUpDriver: async (input: DriverSignUpInput) => {
+    const tokens = await api.postForm<Tokens>('/api/driver/signup', {
+      email: input.email.trim(),
+      password: input.password,
+      fullName: input.fullName.trim(),
+      phoneNumber: input.phoneNumber.trim(),
+      vehicleType: input.vehicleType,
+      nationalIdImage: input.nationalIdImage,
+    });
+    tokenStorage.save(tokens);
+    return tokens;
+  },
   logout: () => tokenStorage.clear(),
 };
 
@@ -57,11 +86,17 @@ export const storesApi = {
   update: (storeId: number, input: StoreInput) => api.put<Store>(`/api/stores/${storeId}`, input),
   uploadLogo: (storeId: number, file: File) => api.upload<Store>(`/api/stores/${storeId}/logo`, file),
   removeLogo: (storeId: number) => api.delete<Store>(`/api/stores/${storeId}/logo`),
+  uploadCover: (storeId: number, file: File) => api.upload<Store>(`/api/stores/${storeId}/cover`, file),
+  removeCover: (storeId: number) => api.delete<Store>(`/api/stores/${storeId}/cover`),
+  /** Delivery times (UTC) a customer can schedule an order from this store for. */
+  scheduleSlots: (storeId: number) => api.get<string[]>(`/api/stores/${storeId}/schedule-slots`),
   setOpen: (storeId: number, isOpen: boolean) => api.patch<void>(`/api/stores/${storeId}/open-status`, { isOpen }),
 
   all: (status?: StoreStatus | null) => api.get<Store[]>('/api/stores/admin', { status }),
   approve: (storeId: number) => api.post<void>(`/api/stores/${storeId}/approve`),
   suspend: (storeId: number) => api.post<void>(`/api/stores/${storeId}/suspend`),
+  /** Commission and scheduled orders (admin only; affects new orders). */
+  updateSettings: (storeId: number, input: StoreSettingsInput) => api.put<Store>(`/api/stores/${storeId}/settings`, input),
 };
 
 // ---------- Store categories ----------
@@ -94,10 +129,20 @@ export const catalogApi = {
   menu: (storeId: number) => api.get<Menu>(`${store(storeId)}/menu`),
   managedMenu: (storeId: number) => api.get<Menu>(`${store(storeId)}/manage/menu`),
 
-  createCategory: (storeId: number, name: string, displayOrder: number) =>
-    api.post<void>(`${store(storeId)}/categories`, { name, displayOrder }),
-  updateCategory: (storeId: number, categoryId: number, name: string, displayOrder: number) =>
-    api.put<void>(`${store(storeId)}/categories/${categoryId}`, { name, displayOrder }),
+  /** `parentId` makes it a sub-category of that main category. Translations: "" clears. */
+  createCategory: (
+    storeId: number,
+    input: { name: string; displayOrder: number; parentId?: number | null; nameEn?: string; nameRu?: string },
+  ) => api.post<void>(`${store(storeId)}/categories`, input),
+  updateCategory: (storeId: number, categoryId: number, input: { name: string; displayOrder: number; nameEn?: string; nameRu?: string }) =>
+    api.put<void>(`${store(storeId)}/categories/${categoryId}`, input),
+  /** Into main category `parentId`, or out to a main category (null). */
+  moveCategory: (storeId: number, categoryId: number, parentId: number | null) =>
+    api.put<void>(`${store(storeId)}/categories/${categoryId}/parent`, { parentId }),
+  /** The menu as an .xlsx sheet (an empty template when there are no products). */
+  exportMenu: (storeId: number) => api.blob(`${store(storeId)}/manage/menu/excel`),
+  /** Adds or updates products from the sheet; nothing is saved if a row has errors. */
+  importMenu: (storeId: number, file: File) => api.postForm<MenuImportResult>(`${store(storeId)}/manage/menu/excel`, { file }),
   setCategoryActive: (storeId: number, categoryId: number, isActive: boolean) =>
     api.patch<void>(`${store(storeId)}/categories/${categoryId}/active`, { isActive }),
   deleteCategory: (storeId: number, categoryId: number) =>
@@ -168,9 +213,13 @@ export const addressesApi = {
 // ---------- Cart ----------
 
 export const cartApi = {
-  get: () => api.get<Cart>('/api/cart'),
-  add: (productId: number, optionIds: number[], quantity: number, note?: string | null) =>
-    api.post<Cart>('/api/cart/items', { productId, optionIds, quantity, note: note ?? null }),
+  /** `scheduled`: checking out for later, so a closed store that takes scheduled orders is fine. */
+  get: (scheduled = false) => api.get<Cart>('/api/cart', scheduled ? { scheduled: true } : undefined),
+  /** One store per cart: another store's product fails with `Cart.DifferentStore` unless `replaceCart` empties it first. */
+  add: (productId: number, optionIds: number[], quantity: number, note?: string | null, replaceCart = false) =>
+    api.post<Cart>('/api/cart/items', { productId, optionIds, quantity, note: note ?? null, replaceCart }),
+  /** Distance from the cart's store to this address and the delivery fee it costs. */
+  deliveryQuote: (addressId: number) => api.get<DeliveryQuote>('/api/cart/delivery-quote', { addressId }),
   update: (itemId: number, quantity: number, note?: string | null) =>
     api.patch<Cart>(`/api/cart/items/${itemId}`, { quantity, note: note ?? null }),
   remove: (itemId: number) => api.delete<Cart>(`/api/cart/items/${itemId}`),
@@ -182,7 +231,9 @@ export const cartApi = {
 const adminOrders = '/api/admin/orders';
 
 export const ordersApi = {
-  place: (addressId: number, note?: string | null) => api.post<Order>('/api/orders', { addressId, note: note ?? null }),
+  /** `scheduledFor`: one of the store's schedule slots (UTC ISO); null = as soon as possible. */
+  place: (addressId: number, note?: string | null, scheduledFor?: string | null) =>
+    api.post<Order>('/api/orders', { addressId, note: note ?? null, scheduledFor: scheduledFor ?? null }),
   placeCustom: (addressId: number, requestDetails: string, paymentMethod?: string) =>
     api.post<number>('/api/orders/custom', { addressId, requestDetails, paymentMethod: paymentMethod ?? 'Cash' }),
   mine: () => api.get<OrderSummary[]>('/api/orders/mine'),
@@ -195,7 +246,7 @@ export const ordersApi = {
 
   all: (status?: OrderStatus | null) => api.get<OrderSummary[]>(adminOrders, { status }),
   byId: (id: number) => api.get<Order>(`${adminOrders}/${id}`),
-  /** `taxPercent` (e.g. 14 = 14%) is charged on the products only, not the delivery fee. */
+  /** Confirms now; a store that has not answered is accepted on its behalf. `taxPercent` is on the products only. */
   confirm: (id: number, deliveryFee: number, taxPercent: number) =>
     api.post<Order>(`${adminOrders}/${id}/confirm`, { deliveryFee, taxPercent }),
   setDeliveryFee: (id: number, deliveryFee: number, taxPercent: number) =>
@@ -204,6 +255,8 @@ export const ordersApi = {
     api.put<Order>(`${adminOrders}/${id}/custom-subtotal`, { newSubtotal }),
   /** `driverId` null takes the order back from its driver. */
   assignDriver: (id: number, driverId: number | null) => api.put<Order>(`${adminOrders}/${id}/driver`, { driverId }),
+  /** The store did not answer: accept on its behalf. */
+  acceptForStore: (id: number) => api.post<Order>(`${adminOrders}/${id}/store-accept`),
   startDelivery: (id: number) => api.post<Order>(`${adminOrders}/${id}/out-for-delivery`),
   markDelivered: (id: number) => api.post<Order>(`${adminOrders}/${id}/delivered`),
   cancel: (id: number, reason?: string | null) => api.post<Order>(`${adminOrders}/${id}/cancel`, { reason: reason ?? null }),
@@ -223,12 +276,24 @@ const me = '/api/driver';
 
 export const driversApi = {
   all: () => api.get<Driver[]>(adminDrivers),
-  create: (input: { fullName: string; phoneNumber: string; email: string; password: string }) =>
+  create: (input: { fullName: string; phoneNumber: string; email: string; password: string; vehicleType?: VehicleType | null }) =>
     api.post<Driver>(adminDrivers, input),
-  update: (id: number, input: { fullName: string; phoneNumber: string }) => api.put<Driver>(`${adminDrivers}/${id}`, input),
+  update: (id: number, input: { fullName: string; phoneNumber: string; vehicleType?: VehicleType | null }) =>
+    api.put<Driver>(`${adminDrivers}/${id}`, input),
+  /** Activating a driver who signed up also approves them. */
   setActive: (id: number, active: boolean) => api.post<Driver>(`${adminDrivers}/${id}/${active ? 'activate' : 'deactivate'}`),
+  /** The ID card photo a driver signed up with (private: downloaded with the admin's token). */
+  nationalIdImage: (id: number) => api.blob(`${adminDrivers}/${id}/national-id`),
 
   me: () => api.get<Driver>(`${me}/me`),
+  /** Switch new order offers on or off. */
+  setAvailable: (isAvailable: boolean) => api.put<Driver>(`${me}/me/availability`, { isAvailable }),
+  /** Orders waiting for a driver (no customer contact details until accepted). */
+  offers: () => api.get<DriverOffer[]>(`${me}/offers`),
+  /** Take the order; fails with 409 if another driver was faster. */
+  accept: (id: number) => api.post<Order>(`${me}/orders/${id}/accept`),
+  /** Turn down an offer, or give back an order before pickup. */
+  reject: (id: number) => api.post<null>(`${me}/orders/${id}/reject`),
   /** Active orders by default; `history` for delivered and cancelled ones. */
   myOrders: (history: boolean) => api.get<Order[]>(`${me}/orders`, { history }),
   myOrder: (id: number) => api.get<Order>(`${me}/orders/${id}`),
@@ -277,4 +342,53 @@ export const loyaltyApi = {
   /** Positive adds, negative takes (not below zero). */
   adjust: (customerId: string, points: number, reason: string) =>
     api.post<PointsAccount>(`${adminLoyalty}/customers/${customerId}/adjust`, { points, reason }),
+};
+
+// ---------- Store orders (the store's side) ----------
+
+const storeOrders = '/api/store-orders';
+
+export const storeOrdersApi = {
+  list: (filter: StoreOrdersFilter) => api.get<StoreOrder[]>(storeOrders, { filter }),
+  byId: (id: number) => api.get<StoreOrder>(`${storeOrders}/${id}`),
+  accept: (id: number) => api.post<StoreOrder>(`${storeOrders}/${id}/accept`),
+  /** The order is cancelled; the reason reaches the customer and the admin. */
+  reject: (id: number, reason: string | null) => api.post<StoreOrder>(`${storeOrders}/${id}/reject`, { reason }),
+  /** Confirmed → being prepared. */
+  startPreparing: (id: number) => api.post<StoreOrder>(`${storeOrders}/${id}/preparing`),
+  markReady: (id: number) => api.post<StoreOrder>(`${storeOrders}/${id}/ready`),
+};
+
+// ---------- Wallets ----------
+
+export const walletsApi = {
+  // Store (its owner or the admin)
+  storeWallet: (storeId: number) => api.get<StoreWallet>(`/api/stores/${storeId}/wallet`),
+  /** Newest first; `beforeId` (the last id you have) loads older ones. */
+  storeEntries: (storeId: number, beforeId?: number) =>
+    api.get<WalletEntry[]>(`/api/stores/${storeId}/wallet/entries`, { beforeId }),
+  storeWithdrawals: (storeId: number) => api.get<Withdrawal[]>(`/api/stores/${storeId}/withdrawals`),
+  requestWithdrawal: (storeId: number, amount: number, method: PayoutMethod, paymentDetails: string | null) =>
+    api.post<Withdrawal>(`/api/stores/${storeId}/withdrawals`, { amount, method, paymentDetails }),
+  cancelWithdrawal: (storeId: number, id: number) => api.post<Withdrawal>(`/api/stores/${storeId}/withdrawals/${id}/cancel`),
+
+  // Driver
+  myWallet: () => api.get<DriverWallet>(`${me}/wallet`),
+  myEntries: (beforeId?: number) => api.get<WalletEntry[]>(`${me}/wallet/entries`, { beforeId }),
+
+  // Admin
+  overview: () => api.get<WalletsOverview>('/api/admin/wallets'),
+  entries: (party?: WalletParty | null, partyId?: number | null, beforeId?: number) =>
+    api.get<WalletEntry[]>('/api/admin/wallets/entries', { party, partyId, beforeId }),
+  withdrawals: (status?: WithdrawalStatus | null) => api.get<Withdrawal[]>('/api/admin/withdrawals', { status }),
+  /** The money was sent; `reference` is the transfer number. */
+  pay: (id: number, reference: string | null) => api.post<Withdrawal>(`/api/admin/withdrawals/${id}/pay`, { note: reference }),
+  /** The reason is shown to the store. */
+  reject: (id: number, reason: string | null) => api.post<Withdrawal>(`/api/admin/withdrawals/${id}/reject`, { note: reason }),
+  driverWallet: (driverId: number) => api.get<DriverWallet>(`${adminDrivers}/${driverId}/wallet`),
+  recordCashHandIn: (driverId: number, amount: number, note: string | null) =>
+    api.post<DriverWallet>(`${adminDrivers}/${driverId}/cash-hand-ins`, { amount, note }),
+  /** Positive raises the balance, negative lowers it; the reason is required. */
+  adjust: (party: WalletParty, partyId: number, amount: number, note: string) =>
+    api.post<WalletEntry>('/api/admin/wallets/adjustments', { party, partyId, amount, note }),
 };

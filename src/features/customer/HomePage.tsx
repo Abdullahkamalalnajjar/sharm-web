@@ -22,7 +22,7 @@ export function HomePage() {
   let list = all;
   if (categoryId !== null) list = list.filter((s) => s.categoryId === categoryId);
   if (openOnly) list = list.filter((s) => s.isOpen);
-  if (query) list = list.filter((s) => s.name.toLowerCase().includes(query));
+  if (query) list = list.filter((s) => [s.name, s.nameEn, s.nameRu].some((n) => n?.toLowerCase().includes(query)));
 
   const filtering = query !== '' || openOnly || categoryId !== null;
   const open = all.filter((s) => s.isOpen);
@@ -47,7 +47,7 @@ export function HomePage() {
 
   return (
     <div>
-      <h1 className="sr-only">شرم - {location?.title ?? ''}</h1>
+      <h1 className="sr-only">MARID Egypt - {location?.title ?? ''}</h1>
       <SearchBand />
 
       {!filtering && <OffersCarousel offers={HOME_OFFERS} categories={categories} />}

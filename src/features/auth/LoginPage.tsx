@@ -25,7 +25,7 @@ export function Logo() {
           <Flame className="size-4" />
         </span>
       </div>
-      <h1 className="mt-4 text-[32px] font-black text-ink leading-tight">شرم</h1>
+      <h1 className="mt-4 text-[32px] font-black text-ink leading-tight">MARID Egypt</h1>
       <p className="text-ink-2 font-semibold">أكل، سوبر ماركت، وصيدليات لحد باب البيت</p>
     </div>
   );

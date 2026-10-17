@@ -11,7 +11,9 @@ import type { OrderStatus } from '@/types';
 
 const FILTERS: [string, OrderStatus | 'all'][] = [
   ['جديدة', 'Pending'],
-  ['متأكدة', 'Confirmed'],
+  ['مقبولة', 'Confirmed'],
+  ['بتتجهز', 'Processing'],
+  ['جاهزة للتسليم', 'ReadyForPickup'],
   ['في الطريق', 'OutForDelivery'],
   ['اتوصلت', 'Delivered'],
   ['ملغية', 'Cancelled'],

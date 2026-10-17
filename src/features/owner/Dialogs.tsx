@@ -7,28 +7,53 @@ import { Button, InlineError, Sheet, TextField } from '@/components/ui';
 export interface CategoryValues {
   name: string;
   displayOrder: number;
+  nameEn: string;
+  nameRu: string;
+  /** The main category it is inside; null = a main category. */
+  parentId: number | null;
 }
 
+/**
+ * Add or edit a menu category. `mainCategories` lets it be put inside a main category as a
+ * sub-category; leave it empty when it cannot be nested (it has sub-categories itself).
+ */
 export function CategoryDialog({
   open,
   onClose,
   onSubmit,
   initial,
+  mainCategories = [],
 }: {
   open: boolean;
   onClose: () => void;
   onSubmit: (v: CategoryValues) => Promise<void> | void;
   initial?: Partial<CategoryValues>;
+  mainCategories?: { id: number; name: string }[];
 }) {
   return (
     <Sheet open={open} onClose={onClose} title={initial?.name ? 'تعديل القسم' : 'قسم جديد'}>
-      {open && <CategoryForm key={JSON.stringify(initial)} initial={initial} onSubmit={onSubmit} onClose={onClose} />}
+      {open && (
+        <CategoryForm key={JSON.stringify(initial)} initial={initial} mainCategories={mainCategories} onSubmit={onSubmit} onClose={onClose} />
+      )}
     </Sheet>
   );
 }
 
-function CategoryForm({ initial, onSubmit, onClose }: { initial?: Partial<CategoryValues>; onSubmit: (v: CategoryValues) => Promise<void> | void; onClose: () => void }) {
+function CategoryForm({
+  initial,
+  mainCategories,
+  onSubmit,
+  onClose,
+}: {
+  initial?: Partial<CategoryValues>;
+  mainCategories: { id: number; name: string }[];
+  onSubmit: (v: CategoryValues) => Promise<void> | void;
+  onClose: () => void;
+}) {
   const [name, setName] = useState(initial?.name ?? '');
+  const [nameEn, setNameEn] = useState(initial?.nameEn ?? '');
+  const [nameRu, setNameRu] = useState(initial?.nameRu ?? '');
+  const [parentId, setParentId] = useState<number | null>(initial?.parentId ?? null);
   const [order, setOrder] = useState(String(initial?.displayOrder ?? 0));
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -38,14 +63,33 @@ function CategoryForm({ initial, onSubmit, onClose }: { initial?: Partial<Catego
     if (!name.trim()) return setError('اسم القسم مطلوب');
     if (!Number.isInteger(Number(order))) return setError('الترتيب لازم يكون رقم');
     setBusy(true);
-    await onSubmit({ name: name.trim(), displayOrder: Number(order) });
+    await onSubmit({ name: name.trim(), displayOrder: Number(order), nameEn: nameEn.trim(), nameRu: nameRu.trim(), parentId });
     setBusy(false);
     onClose();
   }
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
-      <TextField name="name" label="اسم القسم" autoFocus value={name} onChange={(e) => setName(e.target.value)} />
+      <TextField name="name" label="اسم القسم (عربي)" autoFocus value={name} onChange={(e) => setName(e.target.value)} />
+      <TextField name="nameEn" ltr label="Name (English) — اختياري" value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
+      <TextField name="nameRu" ltr label="Название (Русский) — اختياري" value={nameRu} onChange={(e) => setNameRu(e.target.value)} />
+      {mainCategories.length > 0 && (
+        <label className="block">
+          <span className="block text-[13px] font-bold text-ink-2 mb-1.5">جوه قسم</span>
+          <select
+            className="field"
+            value={parentId ?? ''}
+            onChange={(e) => setParentId(e.target.value === '' ? null : Number(e.target.value))}
+          >
+            <option value="">قسم رئيسي</option>
+            {mainCategories.map((c) => (
+              <option key={c.id} value={c.id}>
+                فرعي من: {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <TextField name="order" type="number" ltr label="الترتيب" value={order} onChange={(e) => setOrder(e.target.value)} />
       {error && <InlineError message={error} />}
       <div className="mt-2 flex justify-end gap-2">
@@ -242,15 +286,20 @@ export function ReasonDialog({
   open,
   onClose,
   onSubmit,
+  title = 'إلغاء الأوردر',
+  placeholder = 'مثلاً: المحل مقفول',
 }: {
   open: boolean;
   onClose: () => void;
   onSubmit: (reason: string) => Promise<void> | void;
+  /** Also the submit button's label. */
+  title?: string;
+  placeholder?: string;
 }) {
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   return (
-    <Sheet open={open} onClose={onClose} title="إلغاء الأوردر">
+    <Sheet open={open} onClose={onClose} title={title}>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
@@ -262,13 +311,13 @@ export function ReasonDialog({
         }}
         className="flex flex-col gap-3"
       >
-        <TextField name="reason" label="السبب (اختياري)" placeholder="مثلاً: المحل مقفول" maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} />
+        <TextField name="reason" label="السبب (اختياري)" placeholder={placeholder} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} />
         <div className="mt-2 flex justify-end gap-2">
           <Button type="button" variant="ghost" size="md" onClick={onClose}>
             رجوع
           </Button>
           <Button type="submit" variant="danger" size="md" loading={busy}>
-            إلغاء الأوردر
+            {title}
           </Button>
         </div>
       </form>

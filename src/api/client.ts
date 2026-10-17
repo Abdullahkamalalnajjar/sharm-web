@@ -200,6 +200,21 @@ export const api = {
     form.append('file', file);
     return send<T>({ method: 'PUT', url, data: form, headers: { 'Content-Type': 'multipart/form-data' } });
   },
+  /** Posts multipart/form-data: text fields and files. */
+  postForm: <T>(url: string, fields: Record<string, string | Blob>) => {
+    const form = new FormData();
+    for (const [key, value] of Object.entries(fields)) form.append(key, value);
+    return send<T>({ method: 'POST', url, data: form, headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+  /** Downloads a file that needs the signed-in user's token (e.g. an ID photo or an Excel sheet). */
+  blob: async (url: string): Promise<Blob> => {
+    try {
+      const res = await http.request<Blob>({ method: 'GET', url, responseType: 'blob' });
+      return res.data;
+    } catch (e) {
+      throw toApiError(e);
+    }
+  },
 };
 
 export const errorMessage = (e: unknown): string => toApiError(e).message;

@@ -12,6 +12,7 @@ import {
   Sparkles,
   Store,
   UserRound,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
@@ -50,6 +51,7 @@ const NAV: Record<AppRole, NavItem[]> = {
   ],
   storeOwner: [
     { to: '/owner', label: 'محلاتي', icon: Store, end: true },
+    { to: '/owner/orders', label: 'الطلبات', icon: ReceiptText },
     { to: '/account', label: 'حسابي', icon: UserRound },
   ],
   admin: [
@@ -57,10 +59,12 @@ const NAV: Record<AppRole, NavItem[]> = {
     { to: '/admin/orders', label: 'الأوردرات', icon: ReceiptText },
     { to: '/admin/stores', label: 'المحلات', icon: Store },
     { to: '/admin/drivers', label: 'المندوبين', icon: Bike },
+    { to: '/admin/finance', label: 'المالية', icon: Wallet, desktopOnly: true },
     { to: '/admin/reports', label: 'الإحصائيات', icon: BarChart3, desktopOnly: true },
   ],
   driver: [
     { to: '/driver', label: 'أوردراتي', icon: Bike, end: true },
+    { to: '/driver/wallet', label: 'فلوسي', icon: Wallet },
     { to: '/account', label: 'حسابي', icon: UserRound },
   ],
 };

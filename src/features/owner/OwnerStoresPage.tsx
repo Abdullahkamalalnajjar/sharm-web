@@ -1,4 +1,4 @@
-import { BookOpen, Pencil, Store, PlusSquare } from 'lucide-react';
+import { BookOpen, Pencil, Store, PlusSquare, Wallet } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 
@@ -81,6 +81,9 @@ export function OwnerStoreCard({ store, basePath }: { store: StoreModel; basePat
         <Switch checked={store.isOpen} disabled={!isActive} onChange={toggleOpen} label="مفتوح" />
         <span className="font-bold text-ink">{store.isOpen ? 'مفتوح' : 'مقفول'}</span>
         <span className="flex-1" />
+        <Button variant="ghost" size="sm" icon={<Wallet className="size-4" />} onClick={() => navigate(`${basePath}/stores/${store.id}/wallet`)}>
+          المحفظة
+        </Button>
         <Button variant="ghost" size="sm" icon={<Pencil className="size-4" />} onClick={() => navigate(`${basePath}/stores/${store.id}/edit`)}>
           تعديل
         </Button>

@@ -1,9 +1,9 @@
-import { Bike, CheckCircle2, ChevronLeft, Hourglass, LayoutGrid, LogOut, Package, PlusSquare, SlidersHorizontal, Store, TrendingUp, UserRoundSearch, Users, type LucideIcon } from 'lucide-react';
+import { Bike, CheckCircle2, ChevronLeft, Hourglass, Landmark, LayoutGrid, LogOut, Package, PlusSquare, SlidersHorizontal, Store, TrendingUp, UserRoundSearch, Users, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { useAdminDashboard, useTodayReport } from '@/api/queries';
-import { Button, ErrorView, IconWell, Loading, SectionHeader, SoftCard } from '@/components/ui';
+import { useAdminDashboard, useTodayReport, useWalletsOverview } from '@/api/queries';
+import { Button, ErrorView, IconWell, Loading, SectionHeader, SoftCard, StatusChip } from '@/components/ui';
 import { LoyaltySettingsCard } from '@/features/loyalty/LoyaltyAdmin';
 import { compactNumber, formatFullDate, formatPrice } from '@/lib/format';
 import { ORDER_STATUSES, categoryLook, storeStatus } from '@/lib/meta';
@@ -64,12 +64,13 @@ export function AdminDashboardPage() {
             <div className="flex flex-col gap-4">
               <TodayCard onOpen={() => navigate('/admin/reports')} />
               <OrdersStrip dashboard={d} onOpen={openOrders} />
+              <FinanceCard onOpen={() => navigate('/admin/finance')} />
               {d.unassignedOrders > 0 && (
                 <AttentionBanner
                   icon={UserRoundSearch}
                   title={d.unassignedOrders === 1 ? 'أوردر واحد محتاج مندوب' : `${d.unassignedOrders} أوردرات محتاجة مندوب`}
-                  subtitle="اتأكدت ومستنية تختار مين يوصّلها"
-                  onClick={() => openOrders('Confirmed')}
+                  subtitle="معروضة على المناديب ومحدش قبلها لسه، أو اختار مندوب"
+                  onClick={() => openOrders('all')}
                 />
               )}
               {d.pendingStores > 0 && (
@@ -208,6 +209,27 @@ function OrdersStrip({ dashboard: d, onOpen }: { dashboard: AdminDashboard; onOp
           );
         })}
       </div>
+    </SoftCard>
+  );
+}
+
+/** Money at a glance; opens the finance page (withdrawals to pay, balances, transactions). */
+function FinanceCard({ onOpen }: { onOpen: () => void }) {
+  const o = useWalletsOverview().data;
+  const pending = o?.pendingWithdrawalsCount ?? 0;
+  return (
+    <SoftCard as="button" onClick={onOpen} className="flex items-center gap-3 p-4 text-start">
+      <IconWell icon={Landmark} size={44} color="var(--color-success)" />
+      <span className="min-w-0 flex-1">
+        <span className="block font-extrabold text-ink">المالية</span>
+        <span className="block text-xs text-ink-2">
+          {o
+            ? `للمحلات ${formatPrice(o.owedToStores)} • كاش مع المناديب ${formatPrice(o.cashWithDrivers)}`
+            : 'المحافظ وطلبات السحب والحركات'}
+        </span>
+      </span>
+      {pending > 0 && <StatusChip label={`${pending} طلب سحب`} color="var(--color-warning)" />}
+      <ChevronLeft className="size-5 text-ink-3" />
     </SoftCard>
   );
 }

@@ -1,23 +1,26 @@
 import clsx from 'clsx';
-import { Bike, CheckCheck, Eye, EyeOff, Lock, Mail, Phone, UserRound, UserRoundPlus } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { BadgeCheck, Bike, CheckCheck, Eye, EyeOff, IdCard, Lock, Mail, Phone, UserRound, UserRoundPlus, Wallet } from 'lucide-react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router';
 
 import { driversApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import { useAdminDrivers } from '@/api/queries';
 import { TabHeader } from '@/components/layout/AppShell';
-import { Button, EmptyView, ErrorView, IconWell, InlineError, Loading, Sheet, SoftCard, StatusChip, Switch, TextField } from '@/components/ui';
+import { Button, Chip, EmptyView, ErrorView, IconWell, InlineError, Loading, Sheet, SoftCard, Spinner, StatusChip, Switch, TextField } from '@/components/ui';
 import { telHref } from '@/features/orders/OrderWidgets';
+import { VEHICLE_TYPES, vehicleLabel } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { confirm, showMessage } from '@/store/ui';
-import type { Driver } from '@/types';
+import type { Driver, VehicleType } from '@/types';
 
-/** The admin's drivers: add them, edit them, turn them on or off. */
+/** The admin's drivers: review the ones who signed up, add them, edit them, turn them on or off. */
 export function AdminDriversPage() {
   const drivers = useAdminDrivers();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Driver | null | undefined>(undefined); // undefined = closed, null = new
+  const [idOf, setIdOf] = useState<Driver | null>(null);
 
   const refresh = () => qc.invalidateQueries({ queryKey: ['admin'] });
 
@@ -33,10 +36,13 @@ export function AdminDriversPage() {
     ) {
       return;
     }
-    if (await runAction(() => driversApi.setActive(d.id, !d.isActive), d.isActive ? 'المندوب اتوقف' : 'المندوب اتفعّل')) refresh();
+    const success = d.isActive ? 'المندوب اتوقف' : d.isApproved ? 'المندوب اتفعّل' : 'المندوب اتقبل واتفعّل';
+    if (await runAction(() => driversApi.setActive(d.id, !d.isActive), success)) refresh();
   }
 
-  const list = drivers.data ?? [];
+  const all = drivers.data ?? [];
+  const waiting = all.filter((d) => !d.isApproved);
+  const list = all.filter((d) => d.isApproved);
   const active = list.filter((d) => d.isActive).length;
   const busy = list.filter((d) => d.isActive && d.activeOrders > 0).length;
 
@@ -54,10 +60,20 @@ export function AdminDriversPage() {
         <Loading />
       ) : drivers.isError ? (
         <ErrorView message={(drivers.error as Error).message} onRetry={() => drivers.refetch()} />
-      ) : list.length === 0 ? (
+      ) : all.length === 0 ? (
         <EmptyView icon={Bike} message={'لسه مفيش مندوبين.\nضيف أول مندوب عشان توزّع عليه الأوردرات.'} />
       ) : (
         <>
+          {waiting.length > 0 && (
+            <>
+              <p className="mb-2 px-1 font-extrabold text-ink-2">مستنيين المراجعة ({waiting.length})</p>
+              <div className="mb-5 grid gap-3 md:grid-cols-2">
+                {waiting.map((d) => (
+                  <WaitingDriverCard key={d.id} driver={d} onViewId={() => setIdOf(d)} onApprove={() => toggle(d)} />
+                ))}
+              </div>
+            </>
+          )}
           <div className="grid grid-cols-3 gap-2.5">
             <Stat label="مفعّلين" value={active} color="var(--color-success)" />
             <Stat label="معاهم أوردرات" value={busy} color="var(--color-series-1)" />
@@ -80,6 +96,7 @@ export function AdminDriversPage() {
       </div>
 
       <DriverFormSheet open={editing !== undefined} driver={editing ?? null} onClose={() => setEditing(undefined)} onSaved={refresh} />
+      <NationalIdSheet driver={idOf} onClose={() => setIdOf(null)} />
     </div>
   );
 }
@@ -96,13 +113,87 @@ function Stat({ label, value, color }: { label: string; value: number; color: st
   );
 }
 
+/** A driver who signed up in the app: check the ID card, then approve (activates them). */
+function WaitingDriverCard({ driver: d, onViewId, onApprove }: { driver: Driver; onViewId: () => void; onApprove: () => void }) {
+  const vehicle = vehicleLabel(d.vehicleType);
+  return (
+    <SoftCard className="p-3.5 bg-warning/10">
+      <div className="flex items-center gap-3">
+        <IconWell icon={Bike} size={46} color="var(--color-warning)" />
+        <span className="min-w-0 flex-1">
+          <span className="block font-extrabold text-ink">{d.fullName}</span>
+          <span className="block text-[13px] text-ink-2" dir="ltr">
+            {d.phoneNumber}
+          </span>
+          {vehicle && <span className="block text-xs text-ink-3">{vehicle}</span>}
+        </span>
+        <StatusChip label="جديد" color="var(--color-warning)" />
+      </div>
+      <div className="mt-3 flex gap-2.5">
+        {d.hasNationalIdImage && (
+          <Button variant="outline" className="flex-1" icon={<IdCard className="size-4" />} onClick={onViewId}>
+            شوف البطاقة
+          </Button>
+        )}
+        <Button className="flex-1" icon={<BadgeCheck className="size-4" />} onClick={onApprove}>
+          اقبل وفعّل
+        </Button>
+      </div>
+    </SoftCard>
+  );
+}
+
+/** The ID card photo a driver signed up with (downloaded with the admin's token, not cached). */
+function NationalIdSheet({ driver, onClose }: { driver: Driver | null; onClose: () => void }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!driver) return;
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    setUrl(null);
+    setError(null);
+    driversApi
+      .nationalIdImage(driver.id)
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setUrl(objectUrl);
+      })
+      .catch((e) => !cancelled && setError(errorMessage(e)));
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [driver]);
+
+  return (
+    <Sheet open={driver !== null} onClose={onClose} title={driver ? `بطاقة ${driver.fullName}` : undefined}>
+      {error ? (
+        <InlineError message="مقدرناش نحمّل صورة البطاقة" />
+      ) : url ? (
+        <img src={url} alt="" className="w-full rounded-card" />
+      ) : (
+        <div className="grid h-40 place-items-center">
+          <Spinner />
+        </div>
+      )}
+    </Sheet>
+  );
+}
+
 function DriverCard({ driver: d, onEdit, onToggle }: { driver: Driver; onEdit: () => void; onToggle: () => void }) {
+  const navigate = useNavigate();
   const free = d.activeOrders === 0;
   const [label, color] = !d.isActive
     ? ['متوقف', 'var(--color-ink-3)']
-    : free
-      ? ['فاضي', 'var(--color-success)']
-      : [`معاه ${d.activeOrders} أوردر`, 'var(--color-series-1)'];
+    : !free
+      ? [`معاه ${d.activeOrders} أوردر`, 'var(--color-series-1)']
+      : d.isAvailable
+        ? ['فاضي', 'var(--color-success)']
+        : ['مش متاح', 'var(--color-warning)'];
+  const vehicle = vehicleLabel(d.vehicleType);
 
   return (
     <SoftCard className={clsx('p-3.5', !d.isActive && 'opacity-60')}>
@@ -118,6 +209,7 @@ function DriverCard({ driver: d, onEdit, onToggle }: { driver: Driver; onEdit: (
               {d.email}
             </span>
           )}
+          {vehicle && <span className="block text-xs text-ink-3">{vehicle}</span>}
         </span>
         <StatusChip label={label} color={color} />
       </button>
@@ -126,6 +218,9 @@ function DriverCard({ driver: d, onEdit, onToggle }: { driver: Driver; onEdit: (
         <CheckCheck className="size-4 text-ink-3" />
         <span className="text-ink-2">{d.deliveredOrders} أوردر اتوصّل</span>
         <span className="flex-1" />
+        <button type="button" title="الحساب" onClick={() => navigate(`/admin/drivers/${d.id}/wallet`)} className="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
+          <Wallet className="size-[18px]" />
+        </button>
         <a href={telHref(d.phoneNumber)} title="اتصل" className="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
           <Phone className="size-[18px]" />
         </a>
@@ -135,7 +230,7 @@ function DriverCard({ driver: d, onEdit, onToggle }: { driver: Driver; onEdit: (
   );
 }
 
-/** Create a driver (with their login) or edit an existing one's name and phone. */
+/** Create a driver (with their login) or edit an existing one's name, phone and vehicle. */
 function DriverFormSheet({ open, driver, onClose, onSaved }: { open: boolean; driver: Driver | null; onClose: () => void; onSaved: () => void }) {
   return (
     <Sheet open={open} onClose={onClose} title={driver ? 'تعديل المندوب' : 'مندوب جديد'}>
@@ -148,6 +243,7 @@ function DriverForm({ driver, onClose, onSaved }: { driver: Driver | null; onClo
   const isNew = driver === null;
   const [name, setName] = useState(driver?.fullName ?? '');
   const [phone, setPhone] = useState(driver?.phoneNumber ?? '');
+  const [vehicle, setVehicle] = useState<VehicleType | null>(driver?.vehicleType ?? null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
@@ -163,8 +259,8 @@ function DriverForm({ driver, onClose, onSaved }: { driver: Driver | null; onClo
     setError(null);
     setBusy(true);
     try {
-      if (isNew) await driversApi.create({ fullName: name.trim(), phoneNumber: phone.trim(), email: email.trim(), password });
-      else await driversApi.update(driver.id, { fullName: name.trim(), phoneNumber: phone.trim() });
+      if (isNew) await driversApi.create({ fullName: name.trim(), phoneNumber: phone.trim(), email: email.trim(), password, vehicleType: vehicle });
+      else await driversApi.update(driver.id, { fullName: name.trim(), phoneNumber: phone.trim(), vehicleType: vehicle });
       showMessage(isNew ? 'المندوب اتضاف' : 'البيانات اتحفظت');
       onSaved();
       onClose();
@@ -178,6 +274,13 @@ function DriverForm({ driver, onClose, onSaved }: { driver: Driver | null; onClo
     <form onSubmit={submit} className="flex flex-col gap-3">
       <TextField name="name" label="الاسم" maxLength={100} start={<UserRound className="size-5" />} value={name} onChange={(e) => setName(e.target.value)} />
       <TextField name="phone" type="tel" ltr label="رقم الموبايل" maxLength={20} start={<Phone className="size-5" />} value={phone} onChange={(e) => setPhone(e.target.value)} />
+      <div className="flex flex-wrap gap-2">
+        {VEHICLE_TYPES.map((v) => (
+          <Chip key={v.value} selected={vehicle === v.value} onClick={() => setVehicle(vehicle === v.value ? null : v.value)} icon={<v.Icon className="size-4" />}>
+            {v.label}
+          </Chip>
+        ))}
+      </div>
       {isNew && (
         <>
           <p className="mt-1 text-[13px] font-bold text-ink-2">بيانات الدخول لتطبيق المندوب</p>

@@ -1,5 +1,5 @@
-import { BookOpen, FolderPlus, MoreVertical, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { BookOpen, CircleCheck, CircleX, FileDown, FileUp, FolderPlus, MoreVertical, Plus } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router';
 
@@ -11,9 +11,9 @@ import { MenuItem } from '@/features/addresses/AddressesPage';
 import { formatPrice } from '@/lib/format';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
-import type { MenuCategory } from '@/types';
+import type { MenuCategory, MenuImportResult } from '@/types';
 
-import { CategoryDialog } from './Dialogs';
+import { CategoryDialog, type CategoryValues } from './Dialogs';
 
 export function ManageMenuPage() {
   const storeId = Number(useParams().id);
@@ -24,17 +24,61 @@ export function ManageMenuPage() {
   const basePath = useLocation().pathname.startsWith('/admin') ? '/admin' : '/owner';
   const [categoryDialog, setCategoryDialog] = useState<{ category: MenuCategory | null } | null>(null);
   const [menuFor, setMenuFor] = useState<MenuCategory | null>(null);
+  const [importResult, setImportResult] = useState<MenuImportResult | null>(null);
+  const [excelBusy, setExcelBusy] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
 
-  const reload = () => qc.invalidateQueries({ queryKey: keys.managedMenu(storeId) });
+  const reload = () => {
+    qc.invalidateQueries({ queryKey: keys.managedMenu(storeId) });
+    qc.invalidateQueries({ queryKey: keys.menu(storeId) });
+  };
   const categories = menu.data?.categories ?? [];
+  const hasSubs = (c: MenuCategory) => categories.some((x) => x.parentId === c.id);
 
-  async function saveCategory(v: { name: string; displayOrder: number }) {
+  async function saveCategory(v: CategoryValues) {
     const c = categoryDialog?.category;
-    const ok = await runAction(() =>
-      c ? catalogApi.updateCategory(storeId, c.id, v.name, v.displayOrder) : catalogApi.createCategory(storeId, v.name, v.displayOrder),
-    );
+    const ok = await runAction(async () => {
+      if (!c) {
+        await catalogApi.createCategory(storeId, v);
+        return;
+      }
+      await catalogApi.updateCategory(storeId, c.id, { name: v.name, displayOrder: v.displayOrder, nameEn: v.nameEn, nameRu: v.nameRu });
+      if (!hasSubs(c) && v.parentId !== c.parentId) await catalogApi.moveCategory(storeId, c.id, v.parentId);
+    });
     if (ok) reload();
   }
+
+  /** Downloads the menu (or the empty template) as an Excel sheet. */
+  async function exportExcel() {
+    setExcelBusy(true);
+    await runAction(async () => {
+      const blob = await catalogApi.exportMenu(storeId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `menu-${storeId}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+    setExcelBusy(false);
+  }
+
+  async function importExcel(file: File) {
+    setExcelBusy(true);
+    let result: MenuImportResult | null = null;
+    await runAction(async () => {
+      result = await catalogApi.importMenu(storeId, file);
+    });
+    setExcelBusy(false);
+    if (result) {
+      setImportResult(result);
+      if ((result as MenuImportResult).imported) reload();
+    }
+  }
+
+  // A category with sub-categories stays a main one; it cannot go inside itself.
+  const mainChoices = (c: MenuCategory | null) =>
+    c && hasSubs(c) ? [] : categories.filter((x) => x.parentId === null && x.id !== c?.id).map((x) => ({ id: x.id, name: x.name }));
 
   async function categoryAction(action: 'edit' | 'toggle' | 'delete', c: MenuCategory) {
     setMenuFor(null);
@@ -52,10 +96,29 @@ export function ManageMenuPage() {
       <PageHeader
         title={store.data ? `منيو ${store.data.name}` : 'المنيو'}
         actions={
-          <Button size="sm" className="hidden md:inline-flex" icon={<FolderPlus className="size-4" />} onClick={() => setCategoryDialog({ category: null })}>
-            قسم جديد
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" icon={<FileDown className="size-4" />} loading={excelBusy} onClick={exportExcel} title="المنيو الحالي، أو template فاضي تملاه">
+              نزّل المنيو Excel
+            </Button>
+            <Button size="sm" variant="outline" icon={<FileUp className="size-4" />} disabled={excelBusy} onClick={() => fileInput.current?.click()} title="يضيف ويحدّث المنتجات مرة واحدة">
+              ارفع ملف Excel
+            </Button>
+            <Button size="sm" className="hidden md:inline-flex" icon={<FolderPlus className="size-4" />} onClick={() => setCategoryDialog({ category: null })}>
+              قسم جديد
+            </Button>
+          </div>
         }
+      />
+      <input
+        ref={fileInput}
+        type="file"
+        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = '';
+          if (file) importExcel(file);
+        }}
       />
       <div className="px-4">
         {menu.isLoading ? (
@@ -67,11 +130,13 @@ export function ManageMenuPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {categories.map((c) => (
-              <SoftCard key={c.id} className="overflow-hidden">
+              // Sub-categories are indented under their main category.
+              <SoftCard key={c.id} className={`overflow-hidden ${c.parentId !== null ? 'ms-6' : ''}`}>
                 <div className="flex items-center gap-2 px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="truncate font-extrabold text-ink">{c.name}</span>
+                      {c.parentId !== null && <StatusChip label="فرعي" color="var(--color-series-3)" />}
                       {!c.isActive && <StatusChip label="مخفي" color="var(--color-ink-3)" />}
                     </div>
                     <span className="text-sm text-ink-2">{c.products.length} منتج</span>
@@ -137,8 +202,56 @@ export function ManageMenuPage() {
         open={categoryDialog !== null}
         onClose={() => setCategoryDialog(null)}
         onSubmit={saveCategory}
-        initial={categoryDialog?.category ? { name: categoryDialog.category.name, displayOrder: categoryDialog.category.displayOrder } : { displayOrder: categories.length + 1 }}
+        mainCategories={mainChoices(categoryDialog?.category ?? null)}
+        initial={
+          categoryDialog?.category
+            ? {
+                name: categoryDialog.category.name,
+                displayOrder: categoryDialog.category.displayOrder,
+                nameEn: categoryDialog.category.nameEn ?? '',
+                nameRu: categoryDialog.category.nameRu ?? '',
+                parentId: categoryDialog.category.parentId,
+              }
+            : { displayOrder: categories.length + 1 }
+        }
       />
+
+      <Sheet open={importResult !== null} onClose={() => setImportResult(null)} title={importResult?.imported ? 'المنيو اتحدّث' : 'في أخطاء في الملف'}>
+        {importResult && (
+          <div className="flex flex-col gap-3">
+            {importResult.imported ? (
+              <div className="flex items-start gap-3">
+                <CircleCheck className="size-8 shrink-0 text-success" />
+                <div className="text-ink">
+                  <p>{importResult.productsCreated} منتج جديد</p>
+                  <p>{importResult.productsUpdated} منتج اتحدّث</p>
+                  {importResult.categoriesCreated > 0 && <p>{importResult.categoriesCreated} قسم جديد</p>}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 text-ink-2">
+                  <CircleX className="size-6 shrink-0 text-danger" />
+                  محدش اتحفظ. صلّح الصفوف دي وارفع الملف تاني:
+                </div>
+                <ul className="max-h-80 overflow-y-auto text-sm">
+                  {importResult.errors.map((e, i) => (
+                    <li key={i} className="py-1">
+                      <span className="font-extrabold">صف {e.rowNumber}: </span>
+                      {e.message}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            <div className="flex justify-end">
+              <Button size="md" onClick={() => setImportResult(null)}>
+                تمام
+              </Button>
+            </div>
+          </div>
+        )}
+      </Sheet>
     </div>
   );
 }

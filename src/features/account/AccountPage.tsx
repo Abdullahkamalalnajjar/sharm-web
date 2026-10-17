@@ -14,7 +14,7 @@ export function AccountPage() {
   const navigate = useNavigate();
 
   if (!session) {
-    return <LoginRequired title="حسابي" icon={UserRound} message={'أهلاً بيك في شرم 👋\nسجّل دخول أو اعمل حساب جديد في ثانية.'} />;
+    return <LoginRequired title="حسابي" icon={UserRound} message={'أهلاً بيك في MARID Egypt 👋\nسجّل دخول أو اعمل حساب جديد في ثانية.'} />;
   }
 
   return (

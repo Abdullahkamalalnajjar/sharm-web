@@ -165,9 +165,28 @@ function LineTile({ line }: { line: CartLine }) {
   );
 }
 
+/** The store is closed now but takes scheduled orders: the cart can be ordered for later. */
+export function isSchedulableOnly(cart: Cart): boolean {
+  const store = cart.stores[0];
+  return (
+    cart.stores.length === 1 &&
+    store.allowsScheduledOrders &&
+    store.lines.some((l) => l.issue === 'StoreClosed') &&
+    store.lines.every((l) => l.issue === 'None' || l.issue === 'StoreClosed')
+  );
+}
+
 function CheckoutBar({ cart }: { cart: Cart }) {
+  const schedulableOnly = isSchedulableOnly(cart);
   const hasUnavailable = cart.stores.some((s) => s.lines.some((l) => l.issue !== 'None'));
-  const blocker = hasUnavailable ? 'شيل المنتجات اللي مش متاحة عشان تكمّل' : !cart.canCheckout ? 'فيه محل لسه ماوصلش لأقل طلب' : null;
+  const blocker = schedulableOnly
+    ? 'المحل مقفول دلوقتي، بس تقدر تطلب لميعاد النهارده أو بكرة'
+    : hasUnavailable
+      ? 'شيل المنتجات اللي مش متاحة عشان تكمّل'
+      : !cart.canCheckout
+        ? 'فيه محل لسه ماوصلش لأقل طلب'
+        : null;
+  const canGo = cart.canCheckout || schedulableOnly;
 
   return (
     <SoftCard className="p-4 lg:sticky lg:top-20">
@@ -177,11 +196,11 @@ function CheckoutBar({ cart }: { cart: Cart }) {
         <span className="me-2">المجموع</span>
         <Price value={cart.subtotal} className="text-lg" />
       </div>
-      <p className="text-[11px] text-ink-3 mt-0.5">سعر التوصيل بيتحسب لما تأكد الطلب</p>
+      <p className="text-[11px] text-ink-3 mt-0.5">سعر التوصيل حسب المسافة، هتشوفه قبل ما تأكد</p>
       {blocker && <p className="mt-1.5 text-xs text-warning font-semibold">{blocker}</p>}
-      <Link to="/checkout" className={clsx(!cart.canCheckout && 'pointer-events-none')}>
-        <Button block className="mt-3" disabled={!cart.canCheckout}>
-          كمّل الطلب
+      <Link to={schedulableOnly ? '/checkout?schedule=1' : '/checkout'} className={clsx(!canGo && 'pointer-events-none')}>
+        <Button block className="mt-3" disabled={!canGo}>
+          {schedulableOnly ? 'اطلب لميعاد' : 'كمّل الطلب'}
         </Button>
       </Link>
     </SoftCard>

@@ -1,30 +1,48 @@
 import { Banknote, Bike, CheckCheck, MapPin, PackageCheck, Store, XCircle, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import { driversApi } from '@/api';
 import { keys, useDriverOrder } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
-import { Button, ErrorView, IconWell, Loading, Price, SoftCard } from '@/components/ui';
+import { Button, ErrorView, IconWell, Loading, Price, SoftCard, StatusChip } from '@/components/ui';
 import { OrderAddressCard, OrderItemsCard, OrderTimeline } from '@/features/orders/OrderWidgets';
 import { formatPrice } from '@/lib/format';
+import { isAwaitingPickup } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
 import type { Order } from '@/types';
 
 /** One order for the driver: pick-up list by store, the customer's address and phone,
- *  the cash to collect, and the next step ("استلمت" then "وصّلت"). */
+ *  the cash to collect, and the next step ("استلمت" then "وصّلت"). Before pickup the driver can give it back. */
 export function DriverOrderPage() {
   const id = Number(useParams().id);
   const order = useDriverOrder(id);
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
 
+  /** Give the order back before pickup: it goes to the other drivers. */
+  async function giveBack(o: Order) {
+    if (!(await confirm(`مش هتقدر توصّل أوردر #${o.number}؟ هيرجع للمناديب التانيين.`, 'رجّع الأوردر'))) return;
+    setBusy(true);
+    const done = await runAction(() => driversApi.reject(o.id), 'الأوردر رجع');
+    setBusy(false);
+    if (done) {
+      qc.invalidateQueries({ queryKey: ['driver'] });
+      navigate('/driver');
+    }
+  }
+
   async function step(o: Order) {
-    const pickingUp = o.status === 'Confirmed';
+    const pickingUp = isAwaitingPickup(o.status);
     const ok = await confirm(
-      pickingUp ? `استلمت كل حاجة من ${o.stores.length === 1 ? 'المحل' : `الـ ${o.stores.length} محلات`}؟` : `سلّمت الأوردر للزبون وحصّلت ${formatPrice(o.total)}؟`,
+      pickingUp
+        ? o.isCustomOrder
+          ? 'اشتريت كل المطلوب في الطلب الخاص؟'
+          : `استلمت كل حاجة من ${o.stores.length === 1 ? 'المحل' : `الـ ${o.stores.length} محلات`}؟`
+        : `سلّمت الأوردر للزبون وحصّلت ${formatPrice(o.total)}؟`,
       pickingUp ? 'استلمت' : 'وصّلت',
     );
     if (!ok) return;
@@ -38,7 +56,8 @@ export function DriverOrderPage() {
   }
 
   const o = order.data;
-  const actionable = o?.status === 'Confirmed' || o?.status === 'OutForDelivery';
+  const beforePickup = o ? isAwaitingPickup(o.status) : false;
+  const actionable = beforePickup || o?.status === 'OutForDelivery';
 
   return (
     <div className="mx-auto max-w-3xl pb-28">
@@ -51,6 +70,20 @@ export function DriverOrderPage() {
         ) : (
           <div className="flex flex-col gap-3">
             <StepBanner order={o} />
+            {beforePickup && !o.isCustomOrder && (
+              <div>
+                <StatusChip
+                  label={
+                    o.status === 'ReadyForPickup'
+                      ? 'الأوردر جاهز للاستلام 📦'
+                      : o.status === 'Processing'
+                        ? 'المحل بيجهّز الأوردر'
+                        : 'المحل لسه مبدأش يجهّز'
+                  }
+                  color={o.status === 'ReadyForPickup' ? 'var(--color-success)' : 'var(--color-warning)'}
+                />
+              </div>
+            )}
             <SoftCard className="flex items-center gap-3 p-4">
               <IconWell icon={Banknote} size={46} color="var(--color-accent)" />
               <div className="min-w-0 flex-1">
@@ -80,10 +113,15 @@ export function DriverOrderPage() {
       {o && actionable && (
         <div className="fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-bg via-bg/95 to-transparent px-4 pt-4 pb-[max(env(safe-area-inset-bottom),12px)]">
           <div className="mx-auto max-w-3xl">
-            {o.status === 'Confirmed' ? (
-              <Button block loading={busy} icon={<PackageCheck className="size-5" />} onClick={() => step(o)}>
-                استلمت الأوردر
-              </Button>
+            {beforePickup ? (
+              <div className="flex gap-2.5">
+                <Button variant="outline" className="border-danger/50 text-danger hover:bg-danger/10" disabled={busy} onClick={() => giveBack(o)}>
+                  رجّعه
+                </Button>
+                <Button className="flex-1" loading={busy} icon={<PackageCheck className="size-5" />} onClick={() => step(o)}>
+                  استلمت الأوردر
+                </Button>
+              </div>
             ) : (
               <Button block variant="success" loading={busy} icon={<CheckCheck className="size-5" />} onClick={() => step(o)}>
                 وصّلت الأوردر
@@ -108,8 +146,13 @@ function Title({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
 /** What the driver should do now, in one line. */
 function StepBanner({ order }: { order: Order }) {
   const [Icon, color, title, body]: [LucideIcon, string, string, string] =
-    order.status === 'Confirmed'
-      ? [Store, 'var(--color-warning)', 'روح استلم الأوردر', `من ${order.stores.map((s) => s.storeName).join(' و ')}`]
+    isAwaitingPickup(order.status)
+      ? [
+          Store,
+          'var(--color-warning)',
+          'روح استلم الأوردر',
+          order.isCustomOrder ? 'طلب خاص — اشتري المطلوب' : `من ${order.stores.map((s) => s.storeName).join(' و ')}`,
+        ]
       : order.status === 'OutForDelivery'
         ? [Bike, 'var(--color-series-1)', 'في الطريق للزبون', 'سلّم الأوردر وحصّل المبلغ كاش']
         : order.status === 'Delivered'

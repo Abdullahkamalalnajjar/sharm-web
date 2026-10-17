@@ -21,10 +21,22 @@ import {
   PawPrint,
   Store,
   WashingMachine,
+  ChefHat,
+  Package,
+  Car,
   type LucideIcon,
 } from 'lucide-react';
 
-import type { CartLineIssue, CategoryRef, OrderStatus, StoreStatus } from '@/types';
+import type {
+  CartLineIssue,
+  CategoryRef,
+  OrderStatus,
+  PayoutMethod,
+  StoreStatus,
+  VehicleType,
+  WalletEntryKind,
+  WithdrawalStatus,
+} from '@/types';
 
 export interface CategoryLook {
   Icon: LucideIcon;
@@ -89,7 +101,7 @@ export const ORDER_STATUSES: OrderStatusMeta[] = [
   {
     value: 'Pending',
     label: 'مستني المراجعة',
-    customerMessage: 'طلبك وصل وبنراجعه',
+    customerMessage: 'طلبك وصل، مستنيين المحل يأكده',
     Icon: Hourglass,
     color: 'var(--color-warning)',
     isActive: true,
@@ -97,9 +109,25 @@ export const ORDER_STATUSES: OrderStatusMeta[] = [
   {
     value: 'Confirmed',
     label: 'اتأكد',
-    customerMessage: 'طلبك اتأكد وبيتجهز',
+    customerMessage: 'طلبك اتأكد',
     Icon: CircleCheck,
     color: 'var(--color-series-3)',
+    isActive: true,
+  },
+  {
+    value: 'Processing',
+    label: 'بيتجهز',
+    customerMessage: 'المحل بيجهّز طلبك',
+    Icon: ChefHat,
+    color: 'var(--color-series-2)',
+    isActive: true,
+  },
+  {
+    value: 'ReadyForPickup',
+    label: 'جاهز للتسليم',
+    customerMessage: 'طلبك جاهز ومستني المندوب',
+    Icon: Package,
+    color: 'var(--color-accent)',
     isActive: true,
   },
   {
@@ -130,6 +158,44 @@ export const ORDER_STATUSES: OrderStatusMeta[] = [
 
 export const orderStatus = (value: OrderStatus): OrderStatusMeta =>
   ORDER_STATUSES.find((s) => s.value === value) ?? ORDER_STATUSES[0];
+
+/** Confirmed and not picked up yet: the driver and the price can still change. */
+export const isAwaitingPickup = (status: OrderStatus) =>
+  status === 'Confirmed' || status === 'Processing' || status === 'ReadyForPickup';
+
+export const VEHICLE_TYPES: { value: VehicleType; label: string; Icon: LucideIcon }[] = [
+  { value: 'Bicycle', label: 'عجلة', Icon: Bike },
+  { value: 'Motorcycle', label: 'موتوسيكل', Icon: Bike },
+  { value: 'Car', label: 'عربية', Icon: Car },
+];
+
+export const vehicleLabel = (v: VehicleType | null | undefined) => VEHICLE_TYPES.find((t) => t.value === v)?.label ?? null;
+
+export const WALLET_ENTRY_LABEL: Record<WalletEntryKind, string> = {
+  OrderEarning: 'أرباح أوردر',
+  Payout: 'سحب اتدفع',
+  CashCollected: 'كاش من الزبون',
+  DeliveryEarning: 'أجرة التوصيل',
+  PurchaseCost: 'مشتريات طلب خاص',
+  CashHandIn: 'سلّم للإدارة',
+  Adjustment: 'تسوية من الإدارة',
+};
+
+export const PAYOUT_METHODS: { value: PayoutMethod; label: string; detailsHint: string }[] = [
+  { value: 'InstaPay', label: 'إنستاباي', detailsHint: 'عنوان إنستاباي أو رقم الموبايل' },
+  { value: 'BankTransfer', label: 'تحويل بنكي', detailsHint: 'اسم البنك ورقم الحساب' },
+  { value: 'Wallet', label: 'محفظة موبايل', detailsHint: 'رقم المحفظة' },
+  { value: 'Cash', label: 'كاش', detailsHint: 'هتستلمه منين؟ (اختياري)' },
+];
+
+export const payoutLabel = (m: PayoutMethod) => PAYOUT_METHODS.find((x) => x.value === m)?.label ?? m;
+
+export const WITHDRAWAL_STATUS: Record<WithdrawalStatus, { label: string; color: string }> = {
+  Pending: { label: 'مستني الإدارة', color: 'var(--color-warning)' },
+  Paid: { label: 'اتدفع', color: 'var(--color-success)' },
+  Rejected: { label: 'اترفض', color: 'var(--color-danger)' },
+  Cancelled: { label: 'اتلغى', color: 'var(--color-text-muted)' },
+};
 
 export const CART_ISSUE_MESSAGE: Record<CartLineIssue, string | null> = {
   None: null,

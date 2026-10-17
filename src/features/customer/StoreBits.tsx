@@ -3,9 +3,10 @@ import { MapPin, Navigation, Plus, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { AppImage, Price, StatusChip } from '@/components/ui';
+import { localized } from '@/lib/localized';
 import { SHARM_AREAS, categoryOf } from '@/lib/meta';
 import { RatingBadge } from '@/features/ratings/Ratings';
-import type { CategoryRef, NearbyStore } from '@/types';
+import type { CategoryRef, NearbyStore, Store } from '@/types';
 
 /** Store cover filling its (relative) parent: the logo when there is one, else a dark tint of the category color with its icon. */
 export function Cover({ category, logoUrl, className, iconSize = 56 }: { category: CategoryRef; logoUrl: string | null; className?: string; iconSize?: number }) {
@@ -68,10 +69,10 @@ export function OpenStoreCard({ store }: { store: NearbyStore }) {
       to={`/store/${store.id}`}
       className="relative block w-[166px] h-[210px] shrink-0 overflow-hidden rounded-card border border-line hover:border-surface-high snap-start"
     >
-      <Cover category={store} logoUrl={store.logoUrl} />
+      <Cover category={store} logoUrl={store.coverUrl ?? store.logoUrl} />
       <div className="absolute inset-0 scrim" />
       <div className="absolute inset-0 p-3 flex flex-col">
-        <h3 className="font-extrabold text-white text-[15px] truncate">{store.name}</h3>
+        <h3 className="font-extrabold text-white text-[15px] truncate">{localized(store.name, store.nameEn, store.nameRu)}</h3>
         {store.minOrderAmount > 0 ? (
           <Price value={store.minOrderAmount} prefix="من" className="text-[12.5px]" />
         ) : (
@@ -107,10 +108,13 @@ export function StoreCard({ store }: { store: NearbyStore }) {
   return (
     <Link to={`/store/${store.id}`} className="card block overflow-hidden hover:border-surface-high transition-colors">
       <div className="relative h-[150px]">
-        <Cover category={store} logoUrl={store.logoUrl} className={clsx(!store.isOpen && 'opacity-45')} />
+        <Cover category={store} logoUrl={store.coverUrl ?? store.logoUrl} className={clsx(!store.isOpen && 'opacity-45')} />
         <div className="absolute inset-0 scrim" />
         <div className="absolute top-3 start-3">
-          <StatusChip label={store.isOpen ? 'مفتوح' : 'مقفول'} color={store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'} />
+          <StatusChip
+            label={store.isOpen ? 'مفتوح' : store.allowsScheduledOrders ? 'مقفول • اطلب لبعدين' : 'مقفول'}
+            color={store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'}
+          />
         </div>
         {store.distanceKm !== null && (
           <span className="absolute top-3 end-3 pill bg-black/55 text-white">
@@ -118,7 +122,7 @@ export function StoreCard({ store }: { store: NearbyStore }) {
             {store.distanceKm.toFixed(1)} كم
           </span>
         )}
-        <h3 className="absolute inset-x-3.5 bottom-2.5 text-lg font-black text-white truncate">{store.name}</h3>
+        <h3 className="absolute inset-x-3.5 bottom-2.5 text-lg font-black text-white truncate">{localized(store.name, store.nameEn, store.nameRu)}</h3>
       </div>
       <div className="flex items-center gap-2.5 px-3.5 py-3">
         <div className="min-w-0 flex-1">
@@ -151,3 +155,6 @@ export function StoreCard({ store }: { store: NearbyStore }) {
 export const areaIcon = MapPin;
 export const areas = SHARM_AREAS;
 export const plusIcon = Plus;
+
+/** Open now, or closed but taking orders for later. */
+export const canTakeOrders = (store: Store) => store.canAcceptOrders || (store.status === 'Active' && store.allowsScheduledOrders);

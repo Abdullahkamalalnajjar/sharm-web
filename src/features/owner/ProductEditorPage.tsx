@@ -17,6 +17,7 @@ import type { MenuCategory, Product, ProductInput, ProductOption, ProductOptionG
 
 import { OptionDialog, OptionGroupDialog, type OptionGroupValues, type OptionValues } from './Dialogs';
 import { ImagePickerField, noImageEdit, type ImageEdit } from './ImagePicker';
+import { TranslationFields, translationInput, translationValues } from './TranslationFields';
 
 /** Create a product, or edit it together with its option groups and options. */
 export function ProductEditorPage() {
@@ -42,6 +43,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
   const [description, setDescription] = useState(initial?.description ?? '');
   const [price, setPrice] = useState(initial ? String(initial.price) : '');
   const [order, setOrder] = useState(String(initial?.displayOrder ?? 0));
+  const [translations, setTranslations] = useState(() => translationValues(initial ?? undefined));
   const [image, setImage] = useState<ImageEdit>(noImageEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +66,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
       price: priceValue,
       description: description.trim() || null,
       displayOrder: Number(order),
+      ...translationInput(translations),
     };
     setSaving(true);
     setError(null);
@@ -141,13 +144,14 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
             <select value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))} className="field appearance-none">
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name}
+                  {c.parentId !== null ? `    ↳ ${c.name}` : c.name}
                 </option>
               ))}
             </select>
           </label>
           <TextField name="name" label="اسم المنتج" value={name} onChange={(e) => setName(e.target.value)} />
           <TextArea name="description" label="وصف (اختياري)" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
+          <TranslationFields value={translations} onChange={setTranslations} />
           <div className="grid grid-cols-[1fr_110px] gap-3">
             <TextField name="price" type="number" inputMode="decimal" ltr label="السعر (ج.م)" value={price} onChange={(e) => setPrice(e.target.value)} />
             <TextField name="order" type="number" ltr label="الترتيب" value={order} onChange={(e) => setOrder(e.target.value)} />

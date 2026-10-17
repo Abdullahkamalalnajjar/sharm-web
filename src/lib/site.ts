@@ -2,9 +2,9 @@
 // Fill these in when the app is published / the contact channels exist. Anything left null is hidden.
 
 export const SITE = {
-  name: 'شرم',
-  tagline: 'شرم بين إيديك! مطاعم، سوبر ماركت وصيدليات لحد باب البيت في شرم الشيخ.',
-  footerNote: 'حمّل التطبيق واطلب من مطاعم ومحلات شرم، وتابع حالة طلبك بالإشعارات أول بأول.',
+  name: 'MARID Egypt',
+  tagline: 'MARID Egypt بين إيديك! مطاعم، سوبر ماركت وصيدليات لحد باب البيت في شرم الشيخ.',
+  footerNote: 'حمّل التطبيق واطلب من مطاعم ومحلات MARID Egypt، وتابع حالة طلبك بالإشعارات أول بأول.',
   year: new Date().getFullYear(),
 };
 

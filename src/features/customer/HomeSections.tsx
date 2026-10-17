@@ -21,6 +21,7 @@ import { formatPrice } from '@/lib/format';
 import type { HomeOffer } from '@/lib/home-content';
 import { AppImage } from '@/components/ui';
 import { SHARM_AREAS, categoryLook, categoryOf } from '@/lib/meta';
+import { localized } from '@/lib/localized';
 import { useBrowse } from '@/store/ui';
 import type { NearbyStore, StoreCategory } from '@/types';
 
@@ -322,7 +323,7 @@ export function CustomOrderBanner() {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-highlight px-2.5 py-0.5 text-[11px] font-black text-[#3a2600]">
-                  خدمة شرم الخاصة
+                  خدمة MARID Egypt الخاصة
                 </span>
                 <span className="text-xs font-bold text-white/80">اطلب أي حاجة</span>
               </div>
@@ -367,15 +368,15 @@ export function FeaturedSlider({ stores }: { stores: NearbyStore[] }) {
               >
                 {/* Blurred copy of the cover as the backdrop. */}
                 <div className="absolute inset-0 scale-[1.2] blur-[28px] saturate-[1.2] opacity-90">
-                  <Cover category={s} logoUrl={s.logoUrl} iconSize={0} />
+                  <Cover category={s} logoUrl={s.coverUrl ?? s.logoUrl} iconSize={0} />
                 </div>
                 <div className="absolute inset-0 bg-black/25" />
                 <div className="absolute inset-y-4 inset-x-[18%] overflow-hidden rounded-2xl sm:inset-y-5 sm:inset-x-[28%]">
-                  <Cover category={s} logoUrl={s.logoUrl} iconSize={96} />
+                  <Cover category={s} logoUrl={s.coverUrl ?? s.logoUrl} iconSize={96} />
                 </div>
                 <div className="absolute inset-x-0 bottom-0 flex items-end gap-2 bg-gradient-to-t from-black/80 to-transparent p-4 pt-10 text-white">
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-lg font-black drop-shadow md:text-2xl">{s.name}</h3>
+                    <h3 className="truncate text-lg font-black drop-shadow md:text-2xl">{localized(s.name, s.nameEn, s.nameRu)}</h3>
                     <p className="flex items-center gap-1.5 text-xs font-semibold text-white/85 md:text-sm">
                       <meta.Icon className="size-3.5" style={{ color: meta.color }} />
                       {meta.label}
@@ -422,7 +423,7 @@ export function PlaceTile({ store }: { store: NearbyStore }) {
       className="tile-scrim group/tile relative block aspect-[16/10] overflow-hidden rounded-[15px] bg-black/20 text-white shadow-[0_3px_10px_rgb(0_0_0/0.15)]"
     >
       <div className={clsx('absolute inset-0 transition-transform duration-300 group-hover/tile:scale-[1.04]', !store.isOpen && 'opacity-50 grayscale-[0.4]')}>
-        <Cover category={store} logoUrl={store.logoUrl} />
+        <Cover category={store} logoUrl={store.coverUrl ?? store.logoUrl} />
       </div>
       <span className="absolute top-2 end-2 z-[1] grid size-[46px] place-items-center overflow-hidden rounded-xl border-2 border-white bg-white" style={{ color: meta.color }}>
         <meta.Icon className="size-6" />
@@ -433,9 +434,15 @@ export function PlaceTile({ store }: { store: NearbyStore }) {
           store.isOpen ? 'bg-highlight text-[#3a2600]' : 'bg-black/70 text-white',
         )}
       >
-        {store.isOpen ? (store.minOrderAmount > 0 ? `أقل طلب ${formatPrice(store.minOrderAmount)}` : 'مفتوح') : 'مقفول دلوقتي'}
+        {store.isOpen
+          ? store.minOrderAmount > 0
+            ? `أقل طلب ${formatPrice(store.minOrderAmount)}`
+            : 'مفتوح'
+          : store.allowsScheduledOrders
+            ? 'مقفول • اطلب لبعدين'
+            : 'مقفول دلوقتي'}
       </span>
-      <span className="absolute inset-x-3 bottom-2 z-[1] truncate text-[1.1rem] font-black [text-shadow:0_1px_4px_rgb(0_0_0/0.5)]">{store.name}</span>
+      <span className="absolute inset-x-3 bottom-2 z-[1] truncate text-[1.1rem] font-black [text-shadow:0_1px_4px_rgb(0_0_0/0.5)]">{localized(store.name, store.nameEn, store.nameRu)}</span>
     </Link>
   );
 }

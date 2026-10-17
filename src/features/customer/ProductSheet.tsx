@@ -3,13 +3,16 @@ import { Check, Circle, CircleDot, Minus, Plus, Square, SquareCheck } from 'luci
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { useCartMutations } from '@/api/queries';
-import { errorMessage } from '@/api/client';
+import { useCart, useCartMutations } from '@/api/queries';
+import { ApiError, errorMessage } from '@/api/client';
 import { AppImage, Button, InlineError, Price, Sheet, StatusChip } from '@/components/ui';
 import { formatPrice } from '@/lib/format';
+import { localized } from '@/lib/localized';
 import { isSignedIn } from '@/store/auth';
-import { useLoginPrompt, useToasts } from '@/store/ui';
+import { confirm, useLoginPrompt, useToasts } from '@/store/ui';
 import type { Product, ProductOptionGroup, Store } from '@/types';
+
+import { canTakeOrders } from './StoreBits';
 
 /** Mirrors the backend price rules so the UI can show the price live and explain what is missing. */
 export function priceFor(product: Product, selected: Set<number>): { price: number; error: string | null } {
@@ -53,13 +56,14 @@ function ProductSheetBody({ product, store, onClose }: { product: Product; store
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const { add } = useCartMutations();
+  const cart = useCart();
   const openLogin = useLoginPrompt((s) => s.open);
   const toast = useToasts((s) => s.show);
   const navigate = useNavigate();
 
   const pricing = priceFor(product, selected);
   const total = pricing.price * quantity;
-  const canAdd = pricing.error === null && store.canAcceptOrders;
+  const canAdd = pricing.error === null && canTakeOrders(store);
 
   function toggle(group: ProductOptionGroup, optionId: number) {
     setSelected((prev) => {
@@ -84,7 +88,15 @@ function ProductSheetBody({ product, store, onClose }: { product: Product; store
     }
     setError(null);
     try {
-      await add.mutateAsync({ productId: product.id, optionIds: [...selected], quantity });
+      try {
+        await add.mutateAsync({ productId: product.id, optionIds: [...selected], quantity });
+      } catch (e) {
+        if (!(e instanceof ApiError) || !e.errors.some((x) => x.code === 'Cart.DifferentStore')) throw e;
+        // One store per cart: offer to start over with this store.
+        const current = cart.data?.stores[0]?.storeName ?? 'محل تاني';
+        if (!(await confirm(`سلتك فيها منتجات من ${current}.\nتفضّيها وتبدأ من ${store.name}؟`, 'فضّي السلة'))) return;
+        await add.mutateAsync({ productId: product.id, optionIds: [...selected], quantity, replaceCart: true });
+      }
       onClose();
       toast(`${product.name} اتضاف للسلة`, { action: { label: 'عرض السلة', onClick: () => navigate('/cart') } });
     } catch (e) {
@@ -100,8 +112,10 @@ function ProductSheetBody({ product, store, onClose }: { product: Product; store
             <AppImage url={product.imageUrl} alt={product.name} fallback={null} />
           </div>
         )}
-        <h3 className="text-[22px] font-extrabold text-ink">{product.name}</h3>
-        {product.description && <p className="text-ink-2">{product.description}</p>}
+        <h3 className="text-[22px] font-extrabold text-ink">{localized(product.name, product.nameEn, product.nameRu)}</h3>
+        {product.description && (
+          <p className="text-ink-2">{localized(product.description, product.descriptionEn, product.descriptionRu)}</p>
+        )}
         <Price value={product.price} className="mt-1.5 block text-lg" />
 
         {product.optionGroups.map((group) => (
@@ -137,7 +151,12 @@ function ProductSheetBody({ product, store, onClose }: { product: Product; store
       </div>
 
       <div className="border-t border-line px-5 pt-3 pb-[max(env(safe-area-inset-bottom),12px)]">
-        {!store.canAcceptOrders ? (
+        {!store.canAcceptOrders && canTakeOrders(store) && (
+          <p className="mb-2 text-sm text-warning font-semibold">
+            المحل مقفول دلوقتي، هتختار ميعاد التوصيل وانت بتأكد الطلب
+          </p>
+        )}
+        {!canTakeOrders(store) ? (
           <p className="mb-2 text-sm text-danger font-semibold">المحل مقفول دلوقتي</p>
         ) : pricing.error ? (
           <p className="mb-2 text-sm text-danger font-semibold">{pricing.error}</p>

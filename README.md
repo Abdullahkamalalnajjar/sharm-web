@@ -14,11 +14,12 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-API calls (`/api`, `/identity`, `/uploads`) are proxied by the Vite dev server to the backend set in
-`vite.config.ts` (`API_PROXY_TARGET` env var overrides it). To point at a local API:
+API calls (`/api`, `/identity`, `/uploads`) are proxied by the Vite dev server to the local backend
+`https://localhost:5003` (set in `vite.config.ts`; `API_PROXY_TARGET` env var overrides it). To point at
+the hosted API instead:
 
 ```bash
-API_PROXY_TARGET=https://localhost:5003 npm run dev
+API_PROXY_TARGET=https://api-sharm.tryasp.net npm run dev
 ```
 
 Production build: `npm run build` → `dist/`. Set `VITE_API_BASE_URL` in `.env.production` to the API

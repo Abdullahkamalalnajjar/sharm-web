@@ -39,7 +39,7 @@ export const HOME_OFFERS: HomeOffer[] = [
   },
   {
     id: 'pharmacy',
-    title: 'صيدليات شرم',
+    title: 'صيدليات MARID Egypt',
     subtitle: 'دواك يوصلك من أقرب صيدلية',
     highlight: 'على مدار اليوم',
     categoryIcon: 'pharmacy',

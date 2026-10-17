@@ -28,7 +28,11 @@ import { ManageMenuPage } from '@/features/owner/ManageMenuPage';
 import { OwnerStoresPage } from '@/features/owner/OwnerStoresPage';
 import { ProductEditorPage } from '@/features/owner/ProductEditorPage';
 import { StoreFormPage } from '@/features/owner/StoreFormPage';
+import { StoreOrderPage, StoreOrdersPage } from '@/features/owner/StoreOrdersPage';
 import { StoreRatingsPage } from '@/features/ratings/Ratings';
+import { AdminFinancePage } from '@/features/wallets/AdminFinancePage';
+import { DriverWalletPage } from '@/features/wallets/DriverWalletPage';
+import { StoreWalletPage } from '@/features/wallets/StoreWalletPage';
 
 export function App() {
   return (
@@ -55,9 +59,12 @@ export function App() {
         {/* Store owner */}
         <Route element={<RequireRole role="storeOwner" />}>
           <Route path="owner" element={<OwnerStoresPage />} />
+          <Route path="owner/orders" element={<StoreOrdersPage />} />
+          <Route path="owner/orders/:id" element={<StoreOrderPage />} />
           <Route path="owner/stores/new" element={<StoreFormPage />} />
           <Route path="owner/stores/:id/edit" element={<StoreFormPage />} />
           <Route path="owner/stores/:id/menu" element={<ManageMenuPage />} />
+          <Route path="owner/stores/:id/wallet" element={<StoreWalletPage />} />
           <Route path="owner/stores/:id/products/new" element={<ProductEditorPage />} />
           <Route path="owner/stores/:id/products/:productId" element={<ProductEditorPage />} />
         </Route>
@@ -71,6 +78,9 @@ export function App() {
           <Route path="admin/drivers" element={<AdminDriversPage />} />
           <Route path="admin/reports" element={<AdminReportsPage />} />
           <Route path="admin/categories" element={<AdminCategoriesPage />} />
+          <Route path="admin/finance" element={<AdminFinancePage />} />
+          <Route path="admin/stores/:id/wallet" element={<StoreWalletPage isAdmin />} />
+          <Route path="admin/drivers/:id/wallet" element={<DriverWalletPage />} />
           <Route path="admin/stores/new" element={<StoreFormPage isAdmin />} />
           <Route path="admin/stores/:id/edit" element={<StoreFormPage isAdmin />} />
           <Route path="admin/stores/:id/menu" element={<ManageMenuPage />} />
@@ -82,6 +92,7 @@ export function App() {
         <Route element={<RequireRole role="driver" />}>
           <Route path="driver" element={<DriverHomePage />} />
           <Route path="driver/orders/:id" element={<DriverOrderPage />} />
+          <Route path="driver/wallet" element={<DriverWalletPage />} />
         </Route>
 
         {/* Auth */}

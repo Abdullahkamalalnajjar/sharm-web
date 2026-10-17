@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import {
   Banknote,
   Bike,
+  Clock,
   Mail,
   Map,
   MapPin,
@@ -18,14 +19,23 @@ import {
 
 import { Button, IconWell, Price, SoftCard, StatusChip } from '@/components/ui';
 import { addressDetails, formatOrderDate, formatPrice } from '@/lib/format';
-import { ORDER_STATUSES, orderStatus } from '@/lib/meta';
+import { formatScheduledTime } from '@/lib/localized';
+import { ORDER_STATUSES, isAwaitingPickup, orderStatus } from '@/lib/meta';
 import type { Order, OrderCustomer, OrderDriver, OrderItem, OrderSummary } from '@/types';
 
 export const telHref = (phone: string) => `tel:${phone.replace(/\s/g, '')}`;
 export const mapHref = (lat: number, lng: number) => `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 
 /** The admin can pick or change the driver until the order is delivered. */
-export const canAssignDriver = (o: Order) => o.status === 'Confirmed' || o.status === 'OutForDelivery';
+export const canAssignDriver = (o: Order) => isAwaitingPickup(o.status) || o.status === 'OutForDelivery';
+
+/** Confirmed but no driver took it yet (offered to the drivers; the admin can also pick one). */
+export const needsDriver = (o: { status: Order['status'] }, hasDriver: boolean) => isAwaitingPickup(o.status) && !hasDriver;
+
+/** "⏰ مجدول بكرة ٨:٣٠ م": an order the customer scheduled for later. */
+export function ScheduledChip({ value }: { value: string }) {
+  return <StatusChip label={`⏰ مجدول ${formatScheduledTime(value)}`} color="var(--color-accent)" />;
+}
 
 export function OrderStatusBadge({ status }: { status: Order['status'] }) {
   const meta = orderStatus(status);
@@ -36,7 +46,7 @@ export function OrderStatusBadge({ status }: { status: Order['status'] }) {
 export function OrderSummaryCard({ order, onClick, showCustomer }: { order: OrderSummary; onClick: () => void; showCustomer?: boolean }) {
   const meta = orderStatus(order.status);
   const needsFee = order.status === 'Pending' && order.deliveryFee == null;
-  const needsDriver = order.status === 'Confirmed' && order.driverName == null;
+  const missingDriver = needsDriver(order, order.driverName != null);
   return (
     <SoftCard as="button" onClick={onClick} className="p-3.5">
       <div className="flex items-center gap-3">
@@ -81,7 +91,9 @@ export function OrderSummaryCard({ order, onClick, showCustomer }: { order: Orde
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-ink-2">{order.isCustomOrder ? 'طلب خاص' : `${order.itemsCount} منتج`}</span>
         {needsFee && <StatusChip label="محتاج سعر توصيل" color="var(--color-warning)" />}
-        {showCustomer && needsDriver && <StatusChip label="محتاج مندوب" color="var(--color-warning)" />}
+        {showCustomer && order.status === 'Pending' && order.storeDecision === 'Pending' && <StatusChip label="مستني المحل" color="var(--color-warning)" />}
+        {order.scheduledForUtc && meta.isActive && <ScheduledChip value={order.scheduledForUtc} />}
+        {showCustomer && missingDriver && <StatusChip label="محتاج مندوب" color="var(--color-warning)" />}
         <span className="flex-1" />
         <Price value={order.total} className="text-base" />
       </div>
@@ -104,16 +116,29 @@ export function OrderTimeline({ order }: { order: Order }) {
     );
   }
 
-  const steps = [
+  const steps: { status: Order['status']; title: string; time: string | null | undefined }[] = [
     { status: 'Pending', title: 'الطلب وصل', time: order.createdUtc },
     { status: 'Confirmed', title: 'اتأكد', time: order.confirmedUtc },
+    // Custom orders have no store preparing them.
+    ...(order.isCustomOrder
+      ? []
+      : [
+          { status: 'Processing' as const, title: 'بيتجهز', time: order.processingUtc },
+          { status: 'ReadyForPickup' as const, title: 'جاهز للتسليم', time: order.readyUtc },
+        ]),
     { status: 'OutForDelivery', title: 'خرج للتوصيل', time: order.outForDeliveryUtc },
     { status: 'Delivered', title: 'اتوصّل', time: order.deliveredUtc },
-  ] as const;
+  ];
   const current = steps.findIndex((s) => s.status === order.status);
 
   return (
     <SoftCard className="p-4">
+      {order.scheduledForUtc && (
+        <p className="mb-3 flex items-center gap-2.5 font-extrabold text-ink">
+          <Clock className="size-5 text-accent" />
+          التوصيل {formatScheduledTime(order.scheduledForUtc)}
+        </p>
+      )}
       {steps.map((step, i) => {
         const meta = ORDER_STATUSES.find((s) => s.value === step.status)!;
         const done = i <= current;
@@ -219,7 +244,7 @@ export function OrderTotalsCard({ order }: { order: Order }) {
     <SoftCard className="p-4">
       <Row label="المنتجات" value={productsValue} />
       <Row
-        label="التوصيل"
+        label={order.deliveryDistanceKm != null ? `التوصيل (${order.deliveryDistanceKm.toFixed(1)} كم)` : 'التوصيل'}
         value={order.deliveryFee == null ? <span className="text-[13px] text-warning">هيتحدد من الإدارة</span> : <span className="text-ink">{formatPrice(order.deliveryFee)}</span>}
       />
       {order.taxPercent > 0 && (

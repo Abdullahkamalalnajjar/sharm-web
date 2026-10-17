@@ -1,4 +1,4 @@
-import { MapPin, Store } from 'lucide-react';
+import { Image, MapPin, Percent, Store } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router';
@@ -14,6 +14,7 @@ import type { Store as StoreModel, StoreInput } from '@/types';
 
 import { ImagePickerField, noImageEdit, type ImageEdit } from './ImagePicker';
 import { MapPicker } from '../addresses/MapPicker';
+import { TranslationFields, translationInput, translationValues } from './TranslationFields';
 /** Create / edit a store. The admin can register a store for an owner (by email); it is approved right away. */
 export function StoreFormPage({ isAdmin = false }: { isAdmin?: boolean }) {
   const params = useParams();
@@ -38,7 +39,10 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
   const [lat, setLat] = useState(String(store?.latitude ?? SHARM_AREAS[0].latitude));
   const [lng, setLng] = useState(String(store?.longitude ?? SHARM_AREAS[0].longitude));
   const [ownerEmail, setOwnerEmail] = useState('');
+  const [commission, setCommission] = useState('0');
+  const [translations, setTranslations] = useState(() => translationValues(store ?? undefined));
   const [logo, setLogo] = useState<ImageEdit>(noImageEdit);
+  const [cover, setCover] = useState<ImageEdit>(noImageEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +61,9 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
     if (Number.isNaN(latValue) || latValue < -90 || latValue > 90) return setError('Latitude غير صحيح');
     if (Number.isNaN(lngValue) || lngValue < -180 || lngValue > 180) return setError('Longitude غير صحيح');
     if (isAdmin && !isEdit && ownerEmail.trim() && !ownerEmail.includes('@')) return setError('إيميل صاحب المحل غير صحيح');
+    const commissionValue = Number(commission);
+    if (isAdmin && !isEdit && (commission.trim() === '' || Number.isNaN(commissionValue) || commissionValue < 0 || commissionValue > 100))
+      return setError('العمولة لازم تكون من 0 لـ 100');
 
     const input: StoreInput = {
       name: name.trim(),
@@ -68,6 +75,8 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
       longitude: lngValue,
       minOrderAmount: minOrderValue,
       ...(isAdmin && !isEdit && ownerEmail.trim() ? { ownerEmail: ownerEmail.trim() } : {}),
+      ...(isAdmin && !isEdit ? { commissionPercent: commissionValue } : {}),
+      ...translationInput(translations),
     };
 
     setSaving(true);
@@ -75,6 +84,8 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
       const saved = isEdit ? await storesApi.update(store.id, input) : await storesApi.create(input);
       if (logo.kind === 'picked') await storesApi.uploadLogo(saved.id, logo.file);
       else if (logo.kind === 'removed' && store?.logoUrl) await storesApi.removeLogo(saved.id);
+      if (cover.kind === 'picked') await storesApi.uploadCover(saved.id, cover.file);
+      else if (cover.kind === 'removed' && store?.coverUrl) await storesApi.removeCover(saved.id);
       qc.invalidateQueries({ queryKey: ['stores'] });
       qc.invalidateQueries({ queryKey: ['admin'] });
       showMessage(isEdit ? 'اتحفظت التعديلات' : isAdmin ? 'المحل اتسجل واتفعّل' : 'المحل اتسجل وهو مستني موافقة الأدمن');
@@ -90,6 +101,14 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
       <PageHeader title={isEdit ? 'تعديل المحل' : 'محل جديد'} />
       <form onSubmit={submit} className="px-4 flex flex-col gap-3">
         <ImagePickerField label="لوجو المحل" currentUrl={store?.logoUrl} edit={logo} onChange={setLogo} placeholderIcon={Store} aspect="aspect-[2.2]" />
+        <ImagePickerField
+          label="صورة الغلاف (بتظهر فوق في صفحة المحل)"
+          currentUrl={store?.coverUrl}
+          edit={cover}
+          onChange={setCover}
+          placeholderIcon={Image}
+          aspect="aspect-[2.4]"
+        />
 
         <p className="mt-1 text-sm font-extrabold text-ink">القسم</p>
         {categories.isLoading ? (
@@ -133,9 +152,25 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
             onChange={(e) => setOwnerEmail(e.target.value)}
           />
         )}
+        {isAdmin && !isEdit && (
+          <TextField
+            name="commission"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            max={100}
+            ltr
+            label="العمولة %"
+            hint="نسبة التطبيق من سعر المنتجات، بتتخصم من حساب المحل. تقدر تغيّرها بعدين من إعدادات المحل."
+            start={<Percent className="size-4" />}
+            value={commission}
+            onChange={(e) => setCommission(e.target.value)}
+          />
+        )}
 
         <TextField name="name" label="اسم المحل" value={name} onChange={(e) => setName(e.target.value)} />
         <TextArea name="description" label="وصف (اختياري)" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
+        <TranslationFields value={translations} onChange={setTranslations} />
         <TextField name="phone" type="tel" ltr label="رقم التليفون" value={phone} onChange={(e) => setPhone(e.target.value)} />
         <TextField name="address" label="العنوان" value={address} onChange={(e) => setAddress(e.target.value)} />
         <TextField name="minOrder" type="number" inputMode="decimal" min={0} label="أقل قيمة للطلب (ج.م)" value={minOrder} onChange={(e) => setMinOrder(e.target.value)} />

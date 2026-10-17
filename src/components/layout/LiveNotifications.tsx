@@ -67,10 +67,23 @@ export function useLiveNotifications() {
     const refresh = (n: LiveNotification) => {
       qc.invalidateQueries({ queryKey: ['notifications'] });
       if (n.type === 'loyalty') qc.invalidateQueries({ queryKey: ['points'] });
+      if (n.type === 'wallet') {
+        qc.invalidateQueries({ queryKey: ['wallets'] });
+        return;
+      }
+      if (n.type === 'driver') {
+        // A driver signed up (admin) or got approved (driver).
+        qc.invalidateQueries({ queryKey: ['admin', 'drivers'] });
+        qc.invalidateQueries({ queryKey: ['driver'] });
+        return;
+      }
       if (n.type !== 'order') return;
       qc.invalidateQueries({ queryKey: ['admin'] });
       qc.invalidateQueries({ queryKey: ['orders'] });
       qc.invalidateQueries({ queryKey: ['driver'] });
+      qc.invalidateQueries({ queryKey: ['store-orders'] });
+      // Delivered orders, withdrawals and hand-ins change the wallets; offers and approvals change the driver app.
+      qc.invalidateQueries({ queryKey: ['wallets'] });
     };
 
     hub.on('notification', (n: LiveNotification) => {

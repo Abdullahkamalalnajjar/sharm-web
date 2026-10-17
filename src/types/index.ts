@@ -39,6 +39,17 @@ export interface Store {
   /** Customers' average stars (0 when unrated) and how many rated. */
   ratingAverage: number;
   ratingsCount: number;
+  /** Optional translations of `name` / `description` (see `localized`). */
+  nameEn: string | null;
+  nameRu: string | null;
+  descriptionEn: string | null;
+  descriptionRu: string | null;
+  /** The wide header image of the store page. */
+  coverUrl: string | null;
+  /** Customers can order for later today or tomorrow (admin setting). */
+  allowsScheduledOrders: boolean;
+  /** The app's % of the products; null for customers (admin setting). */
+  commissionPercent: number | null;
 }
 
 export interface NearbyStore {
@@ -55,6 +66,11 @@ export interface NearbyStore {
   distanceKm: number | null;
   ratingAverage: number;
   ratingsCount: number;
+  nameEn: string | null;
+  nameRu: string | null;
+  coverUrl: string | null;
+  /** A closed store that allows it still takes orders for later. */
+  allowsScheduledOrders: boolean;
 }
 
 export interface StoreInput {
@@ -68,6 +84,19 @@ export interface StoreInput {
   minOrderAmount: number;
   /** Admin only: register the store for this owner. */
   ownerEmail?: string;
+  /** Admin only, when creating: the store's commission % (later changed from its settings). */
+  commissionPercent?: number;
+  /** Translations: null keeps the current one, "" clears it. */
+  nameEn?: string | null;
+  nameRu?: string | null;
+  descriptionEn?: string | null;
+  descriptionRu?: string | null;
+}
+
+/** Admin settings of a store; they affect new orders only. */
+export interface StoreSettingsInput {
+  commissionPercent: number;
+  allowsScheduledOrders: boolean;
 }
 
 export interface ProductOption {
@@ -98,14 +127,31 @@ export interface Product {
   isAvailable: boolean;
   displayOrder: number;
   optionGroups: ProductOptionGroup[];
+  nameEn: string | null;
+  nameRu: string | null;
+  descriptionEn: string | null;
+  descriptionRu: string | null;
 }
 
+/** A menu section. Sub-categories follow their main category, with `parentId` set. */
 export interface MenuCategory {
   id: number;
   name: string;
   displayOrder: number;
   isActive: boolean;
   products: Product[];
+  parentId: number | null;
+  nameEn: string | null;
+  nameRu: string | null;
+}
+
+/** What a menu Excel import did; nothing is saved when `errors` is not empty. */
+export interface MenuImportResult {
+  imported: boolean;
+  productsCreated: number;
+  productsUpdated: number;
+  categoriesCreated: number;
+  errors: { rowNumber: number; message: string }[];
 }
 
 export interface Menu {
@@ -120,6 +166,11 @@ export interface ProductInput {
   description: string | null;
   imageUrl?: string | null;
   displayOrder: number;
+  /** Translations: null keeps the current one, "" clears it. */
+  nameEn?: string | null;
+  nameRu?: string | null;
+  descriptionEn?: string | null;
+  descriptionRu?: string | null;
 }
 
 export interface Address {
@@ -175,6 +226,8 @@ export interface CartStoreGroup {
   subtotal: number;
   meetsMinimum: boolean;
   lines: CartLine[];
+  /** Takes orders for later, even while closed now. */
+  allowsScheduledOrders: boolean;
 }
 
 export interface Cart {
@@ -186,7 +239,8 @@ export interface Cart {
 
 export const EMPTY_CART: Cart = { stores: [], itemsCount: 0, subtotal: 0, canCheckout: false };
 
-export type OrderStatus = 'Pending' | 'Confirmed' | 'OutForDelivery' | 'Delivered' | 'Cancelled';
+/** Confirmed = "Accepted"; ReadyForPickup = "Handover". */
+export type OrderStatus = 'Pending' | 'Confirmed' | 'Processing' | 'ReadyForPickup' | 'OutForDelivery' | 'Delivered' | 'Cancelled';
 
 export interface OrderAddress {
   label: string;
@@ -251,6 +305,8 @@ export interface Order {
   paymentMethod?: string;
   subtotal: number;
   deliveryFee: number | null;
+  /** Store → customer distance the fee was calculated from (null for custom orders). */
+  deliveryDistanceKm?: number | null;
   /** Set by the admin with the delivery fee (e.g. 14 = 14%); charged on the products only, not the delivery fee. */
   taxPercent: number;
   taxAmount: number;
@@ -264,6 +320,15 @@ export interface Order {
   driverAssignedUtc: string | null;
   /** Delivered and not a custom order: the customer can rate its stores. */
   canRate?: boolean;
+  /** The order is confirmed as soon as the store accepts (or the admin confirms it). */
+  storeDecision?: StoreDecision;
+  adminApprovedUtc?: string | null;
+  /** When the store marked it ready for pickup. */
+  readyUtc?: string | null;
+  /** When the store started preparing it. */
+  processingUtc?: string | null;
+  /** The delivery time the customer asked for; null = as soon as possible. */
+  scheduledForUtc?: string | null;
 }
 
 export interface OrderSummary {
@@ -280,6 +345,10 @@ export interface OrderSummary {
   customerEmail: string | null;
   /** Admin only. */
   driverName: string | null;
+  storeDecision?: StoreDecision;
+  adminApproved?: boolean;
+  isReady?: boolean;
+  scheduledForUtc?: string | null;
 }
 
 export interface PlaceCustomOrderRequest {
@@ -328,6 +397,46 @@ export interface Driver {
   activeOrders: number;
   deliveredOrders: number;
   createdUtc: string;
+  /** False while a driver who signed up waits for the admin (activating approves them). */
+  isApproved: boolean;
+  /** The driver's own switch for new order offers. */
+  isAvailable: boolean;
+  vehicleType: VehicleType | null;
+  /** Signed up with an ID card photo the admin can view. */
+  hasNationalIdImage: boolean;
+}
+
+export type VehicleType = 'Bicycle' | 'Motorcycle' | 'Car';
+
+/** An order waiting for a driver, before they take it: no customer contact details. */
+export interface DriverOffer {
+  orderId: number;
+  number: string;
+  status: OrderStatus;
+  createdUtc: string;
+  isCustomOrder: boolean;
+  storeName: string | null;
+  storeAddress: string | null;
+  storeLatitude: number | null;
+  storeLongitude: number | null;
+  dropOffArea: string;
+  dropOffLatitude: number;
+  dropOffLongitude: number;
+  deliveryDistanceKm: number | null;
+  deliveryFee: number | null;
+  total: number;
+  itemsCount: number;
+  isReady: boolean;
+  scheduledForUtc: string | null;
+}
+
+export interface DriverSignUpInput {
+  email: string;
+  password: string;
+  fullName: string;
+  phoneNumber: string;
+  vehicleType: VehicleType;
+  nationalIdImage: File;
 }
 
 // ---------- Reports ----------
@@ -462,6 +571,13 @@ export interface Session {
 
 // ---------- Ratings ----------
 
+/** What delivering the cart to an address costs: 40 EGP up to 3 km, then 8.5 per km, 270 from 27 km. */
+export interface DeliveryQuote {
+  storeId: number;
+  distanceKm: number;
+  deliveryFee: number;
+}
+
 export interface StoreRating {
   id: number;
   stars: number;
@@ -501,4 +617,134 @@ export interface PointsAccount {
   rule: LoyaltySettings;
   items: PointsTransaction[];
   hasMore: boolean;
+}
+
+// ---------- Store orders ----------
+
+/** The store's answer to an order. Custom orders and older orders need none. */
+export type StoreDecision = 'NotRequired' | 'Pending' | 'Accepted' | 'Rejected';
+
+/** New: waiting for the store; Active: accepted, not picked up; Done: picked up, delivered or cancelled. */
+export type StoreOrdersFilter = 'New' | 'Active' | 'Done';
+
+/** What a store sees of an order: items and note, not the customer's details. */
+export interface StoreOrder {
+  id: number;
+  number: string;
+  storeId: number;
+  storeName: string;
+  status: OrderStatus;
+  storeDecision: StoreDecision;
+  adminApproved: boolean;
+  createdUtc: string;
+  readyUtc: string | null;
+  note: string | null;
+  itemsCount: number;
+  subtotal: number;
+  items: OrderItem[];
+  driver: OrderDriver | null;
+  cancellationReason: string | null;
+  canAccept: boolean;
+  canMarkReady: boolean;
+  /** Confirmed and not started: show "ابدأ التجهيز". */
+  canStartPreparing: boolean;
+  processingUtc: string | null;
+  scheduledForUtc: string | null;
+  /** The app's commission taken from the products; `storeEarnings` = subtotal − commission. */
+  commissionPercent: number;
+  commissionAmount: number;
+  storeEarnings: number;
+}
+
+// ---------- Wallets ----------
+
+/** A store's balance is what the app owes it; a driver's is what they owe the app. */
+export type WalletParty = 'Store' | 'Driver';
+
+export type WalletEntryKind =
+  | 'OrderEarning'
+  | 'Payout'
+  | 'CashCollected'
+  | 'DeliveryEarning'
+  | 'PurchaseCost'
+  | 'CashHandIn'
+  | 'Adjustment';
+
+/** One account line; `amount` is signed. */
+export interface WalletEntry {
+  id: number;
+  party: WalletParty;
+  partyId: number;
+  /** Admin list only. */
+  partyName: string | null;
+  kind: WalletEntryKind;
+  amount: number;
+  orderId: number | null;
+  orderNumber: string | null;
+  withdrawalId: number | null;
+  note: string | null;
+  createdUtc: string;
+}
+
+export interface StoreWallet {
+  storeId: number;
+  storeName: string;
+  /** What the app owes the store. */
+  balance: number;
+  pendingWithdrawals: number;
+  /** Balance minus pending withdrawals: what can still be requested. */
+  available: number;
+  totalEarned: number;
+  totalPaidOut: number;
+  deliveredOrders: number;
+  recent: WalletEntry[];
+}
+
+export interface DriverWallet {
+  driverId: number;
+  driverName: string;
+  deliveredOrders: number;
+  todayDeliveredOrders: number;
+  totalEarnings: number;
+  todayEarnings: number;
+  /** Customers' cash not handed in yet. */
+  cashInHand: number;
+  /** What the driver owes the app after keeping their fees; negative = the app owes them. */
+  amountToHandIn: number;
+  recent: WalletEntry[];
+}
+
+export type PayoutMethod = 'InstaPay' | 'BankTransfer' | 'Wallet' | 'Cash';
+export type WithdrawalStatus = 'Pending' | 'Paid' | 'Rejected' | 'Cancelled';
+
+export interface Withdrawal {
+  id: number;
+  storeId: number;
+  storeName: string;
+  amount: number;
+  method: PayoutMethod;
+  paymentDetails: string | null;
+  status: WithdrawalStatus;
+  /** The transfer reference, or the rejection reason. */
+  adminNote: string | null;
+  createdUtc: string;
+  processedUtc: string | null;
+}
+
+export interface PartyBalance {
+  party: WalletParty;
+  id: number;
+  name: string;
+  balance: number;
+  pendingWithdrawals: number;
+}
+
+export interface WalletsOverview {
+  owedToStores: number;
+  cashWithDrivers: number;
+  commissionEarned: number;
+  pendingWithdrawalsCount: number;
+  pendingWithdrawalsAmount: number;
+  stores: PartyBalance[];
+  drivers: PartyBalance[];
 }

@@ -1,15 +1,18 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { addressesApi, adminApi, cartApi, catalogApi, driversApi, loyaltyApi, notificationsApi, ordersApi, reportsApi, storeCategoriesApi, storesApi } from '@/api';
+import { addressesApi, adminApi, cartApi, catalogApi, driversApi, loyaltyApi, notificationsApi, ordersApi, reportsApi, storeCategoriesApi, storeOrdersApi, storesApi, walletsApi } from '@/api';
 import { SHARM_AREAS } from '@/lib/meta';
 import { useAuth } from '@/store/auth';
 import { useBrowse } from '@/store/ui';
-import type { Address, Cart, OrderStatus, Report } from '@/types';
+import type { Address, Cart, OrderStatus, Report, StoreOrdersFilter, WithdrawalStatus } from '@/types';
 import { EMPTY_CART } from '@/types';
 
 export const keys = {
+  storeOrders: (filter: StoreOrdersFilter) => ['store-orders', 'list', filter] as const,
+  storeOrder: (id: number) => ['store-orders', 'one', id] as const,
   storeRatings: (storeId: number) => ['stores', 'ratings', storeId] as const,
   myPoints: ['points', 'me'] as const,
+  deliveryQuote: (addressId: number, storeId: number | undefined) => ['cart', 'delivery-quote', addressId, storeId] as const,
   loyaltySettings: ['admin', 'loyalty', 'settings'] as const,
   customerPoints: (customerId: string) => ['admin', 'loyalty', 'customer', customerId] as const,
   addresses: ['addresses'] as const,
@@ -35,6 +38,16 @@ export const keys = {
   driverProfile: ['driver', 'me'] as const,
   driverOrders: (history: boolean) => ['driver', 'orders', history] as const,
   driverOrder: (id: number) => ['driver', 'orders', 'one', id] as const,
+  driverOffers: ['driver', 'offers'] as const,
+  scheduledCart: ['cart', 'scheduled'] as const,
+  scheduleSlots: (storeId: number) => ['stores', 'schedule-slots', storeId] as const,
+  storeWallet: (storeId: number) => ['wallets', 'store', storeId] as const,
+  storeWithdrawals: (storeId: number) => ['wallets', 'store', storeId, 'withdrawals'] as const,
+  myDriverWallet: ['wallets', 'driver', 'me'] as const,
+  adminDriverWallet: (driverId: number) => ['wallets', 'driver', driverId] as const,
+  walletsOverview: ['wallets', 'admin', 'overview'] as const,
+  adminWithdrawals: (status: WithdrawalStatus | null) => ['wallets', 'admin', 'withdrawals', status] as const,
+  adminWalletEntries: ['wallets', 'admin', 'entries'] as const,
 };
 
 const useIsCustomer = () => {
@@ -120,20 +133,32 @@ export function useCart() {
   const enabled = useIsCustomer();
   return useQuery({
     queryKey: keys.cart,
-    queryFn: cartApi.get,
+    queryFn: () => cartApi.get(),
     enabled,
     placeholderData: enabled ? undefined : EMPTY_CART,
   });
 }
 
+/** The cart priced for a scheduled order (a closed store that takes them is not an issue). */
+export function useScheduledCart(enabled: boolean) {
+  return useQuery({ queryKey: keys.scheduledCart, queryFn: () => cartApi.get(true), enabled });
+}
+
+/** Delivery times (UTC ISO strings) a customer can schedule an order from this store for. */
+export const useScheduleSlots = (storeId: number | undefined) =>
+  useQuery({ queryKey: keys.scheduleSlots(storeId ?? 0), queryFn: () => storesApi.scheduleSlots(storeId!), enabled: Boolean(storeId) });
+
 /** Every change replaces the cart with the server's re-priced copy. */
 export function useCartMutations() {
   const qc = useQueryClient();
-  const apply = (cart: Cart) => qc.setQueryData(keys.cart, cart);
+  const apply = (cart: Cart) => {
+    qc.setQueryData(keys.cart, cart);
+    qc.invalidateQueries({ queryKey: keys.scheduledCart });
+  };
 
   const add = useMutation({
-    mutationFn: (v: { productId: number; optionIds: number[]; quantity: number }) =>
-      cartApi.add(v.productId, v.optionIds, v.quantity),
+    mutationFn: (v: { productId: number; optionIds: number[]; quantity: number; replaceCart?: boolean }) =>
+      cartApi.add(v.productId, v.optionIds, v.quantity, null, v.replaceCart),
     onSuccess: apply,
   });
   const setQuantity = useMutation({
@@ -242,6 +267,9 @@ export const useDriverOrders = (history: boolean) =>
 export const useDriverOrder = (id: number) =>
   useQuery({ queryKey: keys.driverOrder(id), queryFn: () => driversApi.myOrder(id) });
 
+export const useDriverOffers = (enabled = true) =>
+  useQuery({ queryKey: keys.driverOffers, queryFn: driversApi.offers, enabled });
+
 export function useRefreshDriver() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: ['driver'] });
@@ -300,3 +328,42 @@ export const useCustomerPoints = (customerId: string | undefined) =>
     queryFn: () => loyaltyApi.customer(customerId!),
     enabled: Boolean(customerId),
   });
+
+/** The delivery fee for the current cart to an address; recalculated when the cart's store changes. */
+export function useDeliveryQuote(addressId: number | undefined) {
+  const storeId = useCart().data?.stores[0]?.storeId;
+  return useQuery({
+    queryKey: keys.deliveryQuote(addressId ?? 0, storeId),
+    queryFn: () => cartApi.deliveryQuote(addressId!),
+    enabled: Boolean(addressId && storeId),
+  });
+}
+
+// ---------- Store orders ----------
+
+export const useStoreOrders = (filter: StoreOrdersFilter) =>
+  useQuery({ queryKey: keys.storeOrders(filter), queryFn: () => storeOrdersApi.list(filter) });
+
+export const useStoreOrder = (id: number) => useQuery({ queryKey: keys.storeOrder(id), queryFn: () => storeOrdersApi.byId(id) });
+
+// ---------- Wallets ----------
+
+export const useStoreWallet = (storeId: number) =>
+  useQuery({ queryKey: keys.storeWallet(storeId), queryFn: () => walletsApi.storeWallet(storeId) });
+export const useStoreWithdrawals = (storeId: number) =>
+  useQuery({ queryKey: keys.storeWithdrawals(storeId), queryFn: () => walletsApi.storeWithdrawals(storeId) });
+export const useMyDriverWallet = () => useQuery({ queryKey: keys.myDriverWallet, queryFn: walletsApi.myWallet });
+export const useAdminDriverWallet = (driverId: number) =>
+  useQuery({ queryKey: keys.adminDriverWallet(driverId), queryFn: () => walletsApi.driverWallet(driverId) });
+export const useWalletsOverview = (enabled = true) =>
+  useQuery({ queryKey: keys.walletsOverview, queryFn: walletsApi.overview, enabled });
+export const useAdminWithdrawals = (status: WithdrawalStatus | null) =>
+  useQuery({ queryKey: keys.adminWithdrawals(status), queryFn: () => walletsApi.withdrawals(status) });
+export const useAdminWalletEntries = () =>
+  useQuery({ queryKey: keys.adminWalletEntries, queryFn: () => walletsApi.entries() });
+
+/** Reloads every wallet view after a change (withdrawal, hand-in, adjustment). */
+export function useRefreshWallets() {
+  const qc = useQueryClient();
+  return () => qc.invalidateQueries({ queryKey: ['wallets'] });
+}

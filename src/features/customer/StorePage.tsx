@@ -7,12 +7,13 @@ import { useCart, useMenu, useStore } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { AppImage, EmptyView, ErrorView, Loading, Price, SectionHeader, SoftCard, StatusChip } from '@/components/ui';
 import { formatPrice } from '@/lib/format';
+import { localized } from '@/lib/localized';
 import { categoryOf } from '@/lib/meta';
 import { RatingBadge } from '@/features/ratings/Ratings';
 import type { Product, Store } from '@/types';
 
 import { ProductSheet } from './ProductSheet';
-import { StoreAvatar } from './StoreBits';
+import { StoreAvatar, canTakeOrders } from './StoreBits';
 
 export function StorePage() {
   const id = Number(useParams().id);
@@ -27,7 +28,7 @@ export function StorePage() {
 
   return (
     <div className="pb-24">
-      <PageHeader title={store.data?.name ?? ''} />
+      <PageHeader title={store.data ? localized(store.data.name, store.data.nameEn, store.data.nameRu) : ''} />
       <div className="px-4 mx-auto max-w-3xl">
         {store.isLoading ? (
           <Loading />
@@ -43,9 +44,18 @@ export function StorePage() {
             ) : menu.data!.categories.length === 0 ? (
               <EmptyView icon={BookOpen} message="المنيو لسه فاضي" />
             ) : (
+              // Sub-categories follow their main category as smaller headings.
               menu.data!.categories.map((category) => (
                 <section key={category.id}>
-                  <SectionHeader title={category.name} pill={`${category.products.length}`} className="px-1" />
+                  {category.parentId !== null ? (
+                    <h3 className="px-3 pt-3 pb-2 font-extrabold text-ink-2">{localized(category.name, category.nameEn, category.nameRu)}</h3>
+                  ) : (
+                    <SectionHeader
+                      title={localized(category.name, category.nameEn, category.nameRu)}
+                      pill={`${category.products.length + menu.data!.categories.filter((c) => c.parentId === category.id).reduce((n, c) => n + c.products.length, 0)}`}
+                      className="px-1"
+                    />
+                  )}
                   <div className="grid gap-3 md:grid-cols-2">
                     {category.products.map((p) => (
                       <ProductTile key={p.id} product={p} store={store.data!} onOpen={() => p.isAvailable && setProduct(p)} />
@@ -66,33 +76,45 @@ export function StorePage() {
 function StoreHeader({ store }: { store: Store }) {
   const meta = categoryOf(store);
   return (
-    <SoftCard className="p-4 flex items-center gap-3.5">
-      <StoreAvatar category={store} logoUrl={store.logoUrl} size={68} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <h2 className="truncate text-lg font-extrabold text-ink">{store.name}</h2>
-          <StatusChip label={store.isOpen ? 'مفتوح' : 'مقفول'} color={store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'} />
+    <>
+      {store.coverUrl && (
+        <div className="mb-3 aspect-[2.4] overflow-hidden rounded-card">
+          <AppImage url={store.coverUrl} alt="" fallback={null} className="size-full" />
         </div>
-        {store.description && <p className="line-clamp-2 text-[13px] text-ink-2">{store.description}</p>}
-        <p className="mt-1.5 flex items-center gap-1 text-xs text-ink-3 truncate">
-          <meta.Icon className="size-3.5" style={{ color: meta.color }} />
-          {meta.label} • {store.address}
-        </p>
-        {store.minOrderAmount > 0 && (
-          <p className="mt-1 text-xs text-ink-2">
-            أقل طلب <Price value={store.minOrderAmount} className="text-xs" />
-          </p>
-        )}
-        <Link to={`/store/${store.id}/ratings`} className="mt-1.5 inline-flex items-center gap-1 text-xs hover:underline">
-          {store.ratingsCount > 0 ? (
-            <RatingBadge average={store.ratingAverage} count={store.ratingsCount} />
-          ) : (
-            <span className="text-ink-3">لسه مفيش تقييمات</span>
+      )}
+      <SoftCard className="p-4 flex items-center gap-3.5">
+        <StoreAvatar category={store} logoUrl={store.logoUrl} size={68} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h2 className="truncate text-lg font-extrabold text-ink">{localized(store.name, store.nameEn, store.nameRu)}</h2>
+            <StatusChip
+              label={store.isOpen ? 'مفتوح' : canTakeOrders(store) ? 'مقفول • اطلب لبعدين' : 'مقفول'}
+              color={store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'}
+            />
+          </div>
+          {store.description && (
+            <p className="line-clamp-2 text-[13px] text-ink-2">{localized(store.description, store.descriptionEn, store.descriptionRu)}</p>
           )}
-          <ChevronLeft className="size-4 text-ink-3" />
-        </Link>
-      </div>
-    </SoftCard>
+          <p className="mt-1.5 flex items-center gap-1 text-xs text-ink-3 truncate">
+            <meta.Icon className="size-3.5" style={{ color: meta.color }} />
+            {meta.label} • {store.address}
+          </p>
+          {store.minOrderAmount > 0 && (
+            <p className="mt-1 text-xs text-ink-2">
+              أقل طلب <Price value={store.minOrderAmount} className="text-xs" />
+            </p>
+          )}
+          <Link to={`/store/${store.id}/ratings`} className="mt-1.5 inline-flex items-center gap-1 text-xs hover:underline">
+            {store.ratingsCount > 0 ? (
+              <RatingBadge average={store.ratingAverage} count={store.ratingsCount} />
+            ) : (
+              <span className="text-ink-3">لسه مفيش تقييمات</span>
+            )}
+            <ChevronLeft className="size-4 text-ink-3" />
+          </Link>
+        </div>
+      </SoftCard>
+    </>
   );
 }
 
@@ -106,8 +128,10 @@ function ProductTile({ product, store, onOpen }: { product: Product; store: Stor
         <AppImage url={product.imageUrl} alt={product.name} fallback={null} className="absolute inset-0" />
       </div>
       <div className="min-w-0 flex-1">
-        <h3 className="truncate text-[15px] font-extrabold text-ink">{product.name}</h3>
-        {product.description && <p className="line-clamp-2 text-[12.5px] text-ink-2">{product.description}</p>}
+        <h3 className="truncate text-[15px] font-extrabold text-ink">{localized(product.name, product.nameEn, product.nameRu)}</h3>
+        {product.description && (
+          <p className="line-clamp-2 text-[12.5px] text-ink-2">{localized(product.description, product.descriptionEn, product.descriptionRu)}</p>
+        )}
         <div className="mt-2 flex items-center gap-2 flex-wrap">
           <Price value={product.price} prefix={hasOptions ? 'من' : undefined} />
           {hasOptions && <span className="text-[11px] font-semibold text-ink-3">{product.optionGroups.length} اختيارات</span>}
