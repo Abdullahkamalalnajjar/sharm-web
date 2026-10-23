@@ -6,12 +6,13 @@ import { Button, EmptyView, ErrorView, Loading, CountPill } from '@/components/u
 import { HOME_OFFERS } from '@/lib/home-content';
 import { useBrowse } from '@/store/ui';
 
-import { AreaGrid, CustomOrderBanner, FeaturedSlider, NearestPanel, OffersCarousel, SearchBand, SectionHead, ServiceGrid } from './HomeSections';
+import { AreaGrid, CategoryArc, HomeHeader, NearestPanel, OffersCarousel, OpenNowCarousel, SectionHead } from './HomeSections';
+import { SHOWCASE_GRID } from './Showcase';
 import { StoreCard } from './StoreBits';
 
 export function HomePage() {
   const { location, isLoading: locating } = useDeliveryLocation();
-  const { categoryId, openOnly, search, clearFilters } = useBrowse();
+  const { categoryId, openOnly, search, clearFilters, setOpenOnly } = useBrowse();
   const categories = useStoreCategories().data ?? [];
   // One query for every store; category / open / search filter on the client so the tiles can show counts.
   const stores = useStores(location, null);
@@ -25,7 +26,9 @@ export function HomePage() {
   if (query) list = list.filter((s) => [s.name, s.nameEn, s.nameRu].some((n) => n?.toLowerCase().includes(query)));
 
   const filtering = query !== '' || openOnly || categoryId !== null;
-  const open = all.filter((s) => s.isOpen);
+  // Picking a category on the arc keeps the promos and the open-now row (of that category); search and "open only" hide them.
+  const browsing = query === '' && !openOnly;
+  const inCategory = categoryId === null ? all : all.filter((s) => s.categoryId === categoryId);
   const nearest = all
     .filter((s) => s.distanceKm !== null)
     .sort((a, b) => a.distanceKm! - b.distanceKm!)
@@ -48,13 +51,10 @@ export function HomePage() {
   return (
     <div>
       <h1 className="sr-only">MARID Egypt - {location?.title ?? ''}</h1>
-      <SearchBand />
+      <HomeHeader categories={categories} />
+      <CategoryArc categories={categories} />
 
-      {!filtering && <OffersCarousel offers={HOME_OFFERS} categories={categories} />}
-
-      <ServiceGrid stores={all} categories={categories} />
-
-      {!filtering && <CustomOrderBanner />}
+      {browsing && <OffersCarousel offers={HOME_OFFERS} categories={categories} />}
 
       {locating || stores.isLoading ? (
         <Loading />
@@ -64,10 +64,16 @@ export function HomePage() {
         </div>
       ) : (
         <>
-          {!filtering && (
+          {browsing && (
             <>
-              <FeaturedSlider stores={open} />
-              {nearest.length > 0 && <NearestPanel stores={nearest} onAll={scrollToList} />}
+              <OpenNowCarousel
+                stores={inCategory}
+                onAll={() => {
+                  setOpenOnly(true);
+                  scrollToList();
+                }}
+              />
+              {!filtering && nearest.length > 0 && <NearestPanel stores={nearest} onAll={scrollToList} />}
             </>
           )}
 
@@ -101,7 +107,7 @@ export function HomePage() {
                 <div className="-mt-1 mb-3">
                   <CountPill>{list.length} محل</CountPill>
                 </div>
-                <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+                <div className={SHOWCASE_GRID}>
                   {list.map((s) => (
                     <StoreCard key={s.id} store={s} />
                   ))}

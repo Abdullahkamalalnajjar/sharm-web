@@ -11,6 +11,7 @@ import { AdminReportsPage } from '@/features/admin/AdminReportsPage';
 import { AdminOrderPage } from '@/features/admin/AdminOrderPage';
 import { AdminOrdersPage } from '@/features/admin/AdminOrdersPage';
 import { AdminStoresPage } from '@/features/admin/AdminStoresPage';
+import { StoreEmployeesPage } from '@/features/admin/StoreEmployeesPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { SignupPage } from '@/features/auth/SignupPage';
 import { CartPage } from '@/features/cart/CartPage';
@@ -56,12 +57,17 @@ export function App() {
         <Route path="account" element={<AccountPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
 
+        {/* Store cashier: the store's orders only */}
+        <Route element={<RequireRole role="cashier" />}>
+          <Route path="cashier" element={<StoreOrdersPage />} />
+          <Route path="cashier/orders/:id" element={<StoreOrderPage />} />
+        </Route>
+
         {/* Store owner */}
         <Route element={<RequireRole role="storeOwner" />}>
           <Route path="owner" element={<OwnerStoresPage />} />
           <Route path="owner/orders" element={<StoreOrdersPage />} />
           <Route path="owner/orders/:id" element={<StoreOrderPage />} />
-          <Route path="owner/stores/new" element={<StoreFormPage />} />
           <Route path="owner/stores/:id/edit" element={<StoreFormPage />} />
           <Route path="owner/stores/:id/menu" element={<ManageMenuPage />} />
           <Route path="owner/stores/:id/wallet" element={<StoreWalletPage />} />
@@ -84,6 +90,7 @@ export function App() {
           <Route path="admin/stores/new" element={<StoreFormPage isAdmin />} />
           <Route path="admin/stores/:id/edit" element={<StoreFormPage isAdmin />} />
           <Route path="admin/stores/:id/menu" element={<ManageMenuPage />} />
+          <Route path="admin/stores/:id/employees" element={<StoreEmployeesPage />} />
           <Route path="admin/stores/:id/products/new" element={<ProductEditorPage />} />
           <Route path="admin/stores/:id/products/:productId" element={<ProductEditorPage />} />
         </Route>

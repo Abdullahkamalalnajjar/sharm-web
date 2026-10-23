@@ -50,6 +50,12 @@ export interface Store {
   allowsScheduledOrders: boolean;
   /** The app's % of the products; null for customers (admin setting). */
   commissionPercent: number | null;
+  /** The owner's open/closed switch; `isOpen` is that AND within `opensAt`–`closesAt`. */
+  openSwitch: boolean;
+  /** Daily local (Egypt) hours, "HH:mm:ss"; both null when only the switch decides. Closing before
+   *  opening means it closes after midnight. */
+  opensAt: string | null;
+  closesAt: string | null;
 }
 
 export interface NearbyStore {
@@ -71,6 +77,10 @@ export interface NearbyStore {
   coverUrl: string | null;
   /** A closed store that allows it still takes orders for later. */
   allowsScheduledOrders: boolean;
+  /** Open right now is `isOpen`; the switch alone and the daily hours ("HH:mm:ss"). */
+  openSwitch: boolean;
+  opensAt: string | null;
+  closesAt: string | null;
 }
 
 export interface StoreInput {
@@ -131,6 +141,10 @@ export interface Product {
   nameRu: string | null;
   descriptionEn: string | null;
   descriptionRu: string | null;
+  /** % off the whole unit price (base and extras); 0 when not discounted. `price` is before it. */
+  discountPercent: number;
+  /** The base price after the discount. */
+  finalPrice: number | null;
 }
 
 /** A menu section. Sub-categories follow their main category, with `parentId` set. */
@@ -151,7 +165,11 @@ export interface MenuImportResult {
   productsCreated: number;
   productsUpdated: number;
   categoriesCreated: number;
-  errors: { rowNumber: number; message: string }[];
+  /** Add-on choices added / updated from the add-ons sheet. */
+  optionsCreated: number;
+  optionsUpdated: number;
+  /** `sheet`: "المنتجات" or "الإضافات". */
+  errors: { rowNumber: number; message: string; sheet: string }[];
 }
 
 export interface Menu {
@@ -171,6 +189,8 @@ export interface ProductInput {
   nameRu?: string | null;
   descriptionEn?: string | null;
   descriptionRu?: string | null;
+  /** 0 removes the discount; omitted keeps the current one. */
+  discountPercent?: number | null;
 }
 
 export interface Address {
@@ -329,6 +349,8 @@ export interface Order {
   processingUtc?: string | null;
   /** The delivery time the customer asked for; null = as soon as possible. */
   scheduledForUtc?: string | null;
+  /** The admin / store can change the items (add, quantity, remove) until pickup. */
+  canEditItems?: boolean;
 }
 
 export interface OrderSummary {
@@ -559,7 +581,8 @@ export interface Tokens {
   refreshToken: string;
 }
 
-export type AppRole = 'customer' | 'storeOwner' | 'admin' | 'driver';
+/** `cashier`: a store's employee (made by the admin) who works its orders, with no access to its money. */
+export type AppRole = 'customer' | 'storeOwner' | 'admin' | 'driver' | 'cashier';
 
 export interface Session {
   userId: string;
@@ -654,6 +677,8 @@ export interface StoreOrder {
   commissionPercent: number;
   commissionAmount: number;
   storeEarnings: number;
+  /** The store can change the items (add, quantity, remove) until the driver picks the order up. */
+  canEditItems?: boolean;
 }
 
 // ---------- Wallets ----------
@@ -747,4 +772,32 @@ export interface WalletsOverview {
   pendingWithdrawalsAmount: number;
   stores: PartyBalance[];
   drivers: PartyBalance[];
+}
+
+// ---------- Store employees (cashiers) ----------
+
+export interface StoreEmployee {
+  id: number;
+  storeId: number;
+  userId: string;
+  email: string | null;
+  fullName: string;
+  phoneNumber: string | null;
+  createdUtc: string;
+}
+
+export interface StoreEmployeeInput {
+  fullName: string;
+  phoneNumber: string | null;
+  /** Create: required. Update: empty keeps the current password. */
+  password?: string;
+  email?: string;
+}
+
+/** The store the signed-in cashier works at. */
+export interface MyEmployeeStore {
+  storeId: number;
+  storeName: string;
+  fullName: string;
+  logoUrl: string | null;
 }

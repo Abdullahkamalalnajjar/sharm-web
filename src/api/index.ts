@@ -40,6 +40,9 @@ import type {
   StoreRatingsPage,
   Tokens,
   YearlyReport,
+  MyEmployeeStore,
+  StoreEmployee,
+  StoreEmployeeInput,
 } from '@/types';
 
 // ---------- Auth ----------
@@ -91,6 +94,12 @@ export const storesApi = {
   /** Delivery times (UTC) a customer can schedule an order from this store for. */
   scheduleSlots: (storeId: number) => api.get<string[]>(`/api/stores/${storeId}/schedule-slots`),
   setOpen: (storeId: number, isOpen: boolean) => api.patch<void>(`/api/stores/${storeId}/open-status`, { isOpen }),
+  /** Daily local hours as "HH:mm" (owner or admin); both null clears them. */
+  setHours: (storeId: number, opensAt: string | null, closesAt: string | null) =>
+    api.put<void>(`/api/stores/${storeId}/hours`, {
+      opensAt: opensAt && `${opensAt.slice(0, 5)}:00`,
+      closesAt: closesAt && `${closesAt.slice(0, 5)}:00`,
+    }),
 
   all: (status?: StoreStatus | null) => api.get<Store[]>('/api/stores/admin', { status }),
   approve: (storeId: number) => api.post<void>(`/api/stores/${storeId}/approve`),
@@ -141,6 +150,8 @@ export const catalogApi = {
     api.put<void>(`${store(storeId)}/categories/${categoryId}/parent`, { parentId }),
   /** The menu as an .xlsx sheet (an empty template when there are no products). */
   exportMenu: (storeId: number) => api.blob(`${store(storeId)}/manage/menu/excel`),
+  /** A filled-in example menu with every column and the instructions sheet. */
+  menuSample: (storeId: number) => api.blob(`${store(storeId)}/manage/menu/excel/sample`),
   /** Adds or updates products from the sheet; nothing is saved if a row has errors. */
   importMenu: (storeId: number, file: File) => api.postForm<MenuImportResult>(`${store(storeId)}/manage/menu/excel`, { file }),
   setCategoryActive: (storeId: number, categoryId: number, isActive: boolean) =>
@@ -261,6 +272,11 @@ export const ordersApi = {
   markDelivered: (id: number) => api.post<Order>(`${adminOrders}/${id}/delivered`),
   cancel: (id: number, reason?: string | null) => api.post<Order>(`${adminOrders}/${id}/cancel`, { reason: reason ?? null }),
   removeItem: (id: number, itemId: number) => api.delete<Order>(`${adminOrders}/${id}/items/${itemId}`),
+  /** A product of the order's store (e.g. the customer called to swap one), until pickup. */
+  addItem: (id: number, productId: number, optionIds: number[], quantity: number, note: string | null) =>
+    api.post<Order>(`${adminOrders}/${id}/items`, { productId, optionIds, quantity, note }),
+  setItemQuantity: (id: number, itemId: number, quantity: number) =>
+    api.patch<Order>(`${adminOrders}/${id}/items/${itemId}`, { quantity }),
 };
 
 // ---------- Admin ----------
@@ -356,6 +372,13 @@ export const storeOrdersApi = {
   reject: (id: number, reason: string | null) => api.post<StoreOrder>(`${storeOrders}/${id}/reject`, { reason }),
   /** Confirmed → being prepared. */
   startPreparing: (id: number) => api.post<StoreOrder>(`${storeOrders}/${id}/preparing`),
+  /** E.g. the customer called to swap a product; until the driver picks the order up. */
+  addItem: (id: number, productId: number, optionIds: number[], quantity: number, note: string | null) =>
+    api.post<StoreOrder>(`${storeOrders}/${id}/items`, { productId, optionIds, quantity, note }),
+  setItemQuantity: (id: number, itemId: number, quantity: number) =>
+    api.patch<StoreOrder>(`${storeOrders}/${id}/items/${itemId}`, { quantity }),
+  /** The last item cannot be removed (reject the order instead). */
+  removeItem: (id: number, itemId: number) => api.delete<StoreOrder>(`${storeOrders}/${id}/items/${itemId}`),
   markReady: (id: number) => api.post<StoreOrder>(`${storeOrders}/${id}/ready`),
 };
 
@@ -391,4 +414,29 @@ export const walletsApi = {
   /** Positive raises the balance, negative lowers it; the reason is required. */
   adjust: (party: WalletParty, partyId: number, amount: number, note: string) =>
     api.post<WalletEntry>('/api/admin/wallets/adjustments', { party, partyId, amount, note }),
+};
+
+// ---------- Store employees (cashiers) ----------
+
+const adminEmployees = (storeId: number) => `/api/admin/stores/${storeId}/employees`;
+
+export const storeEmployeesApi = {
+  /** Admin only. */
+  list: (storeId: number) => api.get<StoreEmployee[]>(adminEmployees(storeId)),
+  create: (storeId: number, input: StoreEmployeeInput) =>
+    api.post<StoreEmployee>(adminEmployees(storeId), {
+      email: input.email,
+      password: input.password,
+      fullName: input.fullName,
+      phoneNumber: input.phoneNumber,
+    }),
+  update: (storeId: number, id: number, input: StoreEmployeeInput) =>
+    api.put<StoreEmployee>(`${adminEmployees(storeId)}/${id}`, {
+      fullName: input.fullName,
+      phoneNumber: input.phoneNumber,
+      newPassword: input.password || null,
+    }),
+  remove: (storeId: number, id: number) => api.delete<void>(`${adminEmployees(storeId)}/${id}`),
+  /** The signed-in cashier's store. */
+  myStore: () => api.get<MyEmployeeStore>('/api/store-employee/me'),
 };

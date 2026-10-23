@@ -1,4 +1,4 @@
-import { BookOpen, CircleCheck, CircleX, FileDown, FileUp, FolderPlus, MoreVertical, Plus } from 'lucide-react';
+import { BookOpen, CircleCheck, CircleX, FileDown, FileSpreadsheet, FileText, FileUp, FolderPlus, MoreVertical, Plus, type LucideIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router';
@@ -8,7 +8,7 @@ import { keys, useManagedMenu, useStore } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, EmptyView, ErrorView, Loading, Sheet, SoftCard, StatusChip, Switch } from '@/components/ui';
 import { MenuItem } from '@/features/addresses/AddressesPage';
-import { formatPrice } from '@/lib/format';
+import { applyDiscount, formatPercent, formatPrice } from '@/lib/format';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
 import type { MenuCategory, MenuImportResult } from '@/types';
@@ -26,6 +26,7 @@ export function ManageMenuPage() {
   const [menuFor, setMenuFor] = useState<MenuCategory | null>(null);
   const [importResult, setImportResult] = useState<MenuImportResult | null>(null);
   const [excelBusy, setExcelBusy] = useState(false);
+  const [excelMenu, setExcelMenu] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const reload = () => {
@@ -48,15 +49,16 @@ export function ManageMenuPage() {
     if (ok) reload();
   }
 
-  /** Downloads the menu (or the empty template) as an Excel sheet. */
-  async function exportExcel() {
+  /** Downloads an Excel sheet: the menu (or the empty template), or the filled-in example. */
+  async function download(load: () => Promise<Blob>, fileName: string) {
+    setExcelMenu(false);
     setExcelBusy(true);
     await runAction(async () => {
-      const blob = await catalogApi.exportMenu(storeId);
+      const blob = await load();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `menu-${storeId}.xlsx`;
+      a.download = fileName;
       a.click();
       URL.revokeObjectURL(url);
     });
@@ -97,11 +99,8 @@ export function ManageMenuPage() {
         title={store.data ? `منيو ${store.data.name}` : 'المنيو'}
         actions={
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" icon={<FileDown className="size-4" />} loading={excelBusy} onClick={exportExcel} title="المنيو الحالي، أو template فاضي تملاه">
-              نزّل المنيو Excel
-            </Button>
-            <Button size="sm" variant="outline" icon={<FileUp className="size-4" />} disabled={excelBusy} onClick={() => fileInput.current?.click()} title="يضيف ويحدّث المنتجات مرة واحدة">
-              ارفع ملف Excel
+            <Button size="sm" variant="outline" icon={<FileSpreadsheet className="size-4" />} loading={excelBusy} onClick={() => setExcelMenu(true)}>
+              Excel
             </Button>
             <Button size="sm" className="hidden md:inline-flex" icon={<FolderPlus className="size-4" />} onClick={() => setCategoryDialog({ category: null })}>
               قسم جديد
@@ -150,7 +149,13 @@ export function ManageMenuPage() {
                     <button type="button" onClick={() => navigate(`${basePath}/stores/${storeId}/products/${p.id}`)} className="min-w-0 flex-1 text-start">
                       <p className="truncate font-bold text-ink">{p.name}</p>
                       <p className="text-xs text-ink-2">
-                        {[formatPrice(p.price), p.optionGroups.length > 0 && `${p.optionGroups.length} مجموعة اختيارات`].filter(Boolean).join(' • ')}
+                        {[
+                          formatPrice(p.price),
+                          p.discountPercent > 0 && `خصم ${formatPercent(p.discountPercent)} ← ${formatPrice(p.finalPrice ?? applyDiscount(p.price, p.discountPercent))}`,
+                          p.optionGroups.length > 0 && `${p.optionGroups.length} مجموعة اختيارات`,
+                        ]
+                          .filter(Boolean)
+                          .join(' • ')}
                       </p>
                     </button>
                     <Switch
@@ -185,6 +190,22 @@ export function ManageMenuPage() {
           </Button>
         </div>
       </div>
+
+      <Sheet open={excelMenu} onClose={() => setExcelMenu(false)} title="المنيو Excel">
+        <div className="flex flex-col">
+          <ExcelAction icon={FileDown} title="نزّل المنيو Excel" subtitle="عدّل فيه أو املاه وارفعه" onClick={() => download(() => catalogApi.exportMenu(storeId), `menu-${storeId}.xlsx`)} />
+          <ExcelAction icon={FileText} title="نزّل ملف مثال" subtitle="منيو كامل بكل الأعمدة وشرحها" onClick={() => download(() => catalogApi.menuSample(storeId), 'menu-example.xlsx')} />
+          <ExcelAction
+            icon={FileUp}
+            title="ارفع ملف Excel"
+            subtitle="يضيف ويحدّث المنتجات مرة واحدة"
+            onClick={() => {
+              setExcelMenu(false);
+              fileInput.current?.click();
+            }}
+          />
+        </div>
+      </Sheet>
 
       <Sheet open={menuFor !== null} onClose={() => setMenuFor(null)} title={menuFor?.name}>
         {menuFor && (
@@ -226,6 +247,11 @@ export function ManageMenuPage() {
                   <p>{importResult.productsCreated} منتج جديد</p>
                   <p>{importResult.productsUpdated} منتج اتحدّث</p>
                   {importResult.categoriesCreated > 0 && <p>{importResult.categoriesCreated} قسم جديد</p>}
+                  {importResult.optionsCreated + importResult.optionsUpdated > 0 && (
+                    <p>
+                      {importResult.optionsCreated} إضافة جديدة • {importResult.optionsUpdated} إضافة اتحدّثت
+                    </p>
+                  )}
                 </div>
               </div>
             ) : (
@@ -237,7 +263,9 @@ export function ManageMenuPage() {
                 <ul className="max-h-80 overflow-y-auto text-sm">
                   {importResult.errors.map((e, i) => (
                     <li key={i} className="py-1">
-                      <span className="font-extrabold">صف {e.rowNumber}: </span>
+                      <span className="font-extrabold">
+                        {e.sheet && e.sheet !== 'المنتجات' ? `${e.sheet} • ` : ''}صف {e.rowNumber}:{' '}
+                      </span>
                       {e.message}
                     </li>
                   ))}
@@ -253,5 +281,17 @@ export function ManageMenuPage() {
         )}
       </Sheet>
     </div>
+  );
+}
+
+function ExcelAction({ icon: Icon, title, subtitle, onClick }: { icon: LucideIcon; title: string; subtitle: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="flex items-center gap-3 rounded-xl px-3 py-3 text-start hover:bg-surface-alt">
+      <Icon className="size-5 shrink-0 text-brand-ink" />
+      <span>
+        <span className="block font-bold text-ink">{title}</span>
+        <span className="block text-xs text-ink-2">{subtitle}</span>
+      </span>
+    </button>
   );
 }

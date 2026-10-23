@@ -15,7 +15,10 @@ import type { Store as StoreModel, StoreInput } from '@/types';
 import { ImagePickerField, noImageEdit, type ImageEdit } from './ImagePicker';
 import { MapPicker } from '../addresses/MapPicker';
 import { TranslationFields, translationInput, translationValues } from './TranslationFields';
-/** Create / edit a store. The admin can register a store for an owner (by email); it is approved right away. */
+/**
+ * Edit a store (owner or admin). Only the admin creates stores (`/admin/stores/new`): it can register one for
+ * an owner (by email) and it is approved right away.
+ */
 export function StoreFormPage({ isAdmin = false }: { isAdmin?: boolean }) {
   const params = useParams();
   const id = params.id ? Number(params.id) : null;
@@ -88,7 +91,7 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
       else if (cover.kind === 'removed' && store?.coverUrl) await storesApi.removeCover(saved.id);
       qc.invalidateQueries({ queryKey: ['stores'] });
       qc.invalidateQueries({ queryKey: ['admin'] });
-      showMessage(isEdit ? 'اتحفظت التعديلات' : isAdmin ? 'المحل اتسجل واتفعّل' : 'المحل اتسجل وهو مستني موافقة الأدمن');
+      showMessage(isEdit ? 'اتحفظت التعديلات' : 'المحل اتسجل واتفعّل');
       navigate(-1);
     } catch (err) {
       setError(errorMessage(err));

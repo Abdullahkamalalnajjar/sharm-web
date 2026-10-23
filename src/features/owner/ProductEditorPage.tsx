@@ -10,7 +10,7 @@ import { PageHeader } from '@/components/layout/AppShell';
 import { Button, InlineError, Loading, SectionHeader, Sheet, SoftCard, Switch, TextArea, TextField } from '@/components/ui';
 import { MenuItem } from '@/features/addresses/AddressesPage';
 import { groupRule } from '@/features/customer/ProductSheet';
-import { formatPrice } from '@/lib/format';
+import { applyDiscount, formatPrice } from '@/lib/format';
 import { runAction } from '@/lib/run-action';
 import { confirm, showMessage } from '@/store/ui';
 import type { MenuCategory, Product, ProductInput, ProductOption, ProductOptionGroup } from '@/types';
@@ -42,6 +42,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
   const [name, setName] = useState(initial?.name ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [price, setPrice] = useState(initial ? String(initial.price) : '');
+  const [discount, setDiscount] = useState(initial?.discountPercent ? String(initial.discountPercent) : '');
   const [order, setOrder] = useState(String(initial?.displayOrder ?? 0));
   const [translations, setTranslations] = useState(() => translationValues(initial ?? undefined));
   const [image, setImage] = useState<ImageEdit>(noImageEdit);
@@ -59,11 +60,15 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
     const priceValue = Number(price);
     if (!name.trim()) return setError('اسم المنتج مطلوب');
     if (Number.isNaN(priceValue) || priceValue <= 0) return setError('السعر لازم يكون أكبر من صفر');
+    // Empty = no discount.
+    const discountValue = discount.trim() === '' ? 0 : Number(discount);
+    if (Number.isNaN(discountValue) || discountValue < 0 || discountValue > 99) return setError('الخصم من 0 لـ 99%');
     if (!Number.isInteger(Number(order))) return setError('الترتيب لازم يكون رقم');
     const input: ProductInput = {
       categoryId,
       name: name.trim(),
       price: priceValue,
+      discountPercent: discountValue,
       description: description.trim() || null,
       displayOrder: Number(order),
       ...translationInput(translations),
@@ -152,10 +157,28 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
           <TextField name="name" label="اسم المنتج" value={name} onChange={(e) => setName(e.target.value)} />
           <TextArea name="description" label="وصف (اختياري)" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
           <TranslationFields value={translations} onChange={setTranslations} />
-          <div className="grid grid-cols-[1fr_110px] gap-3">
+          <div className="grid grid-cols-[1fr_1fr_90px] gap-3">
             <TextField name="price" type="number" inputMode="decimal" ltr label="السعر (ج.م)" value={price} onChange={(e) => setPrice(e.target.value)} />
+            <TextField
+              name="discount"
+              type="number"
+              inputMode="decimal"
+              min={0}
+              max={99}
+              ltr
+              label="الخصم %"
+              placeholder="0"
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value)}
+            />
             <TextField name="order" type="number" ltr label="الترتيب" value={order} onChange={(e) => setOrder(e.target.value)} />
           </div>
+          {Number(discount) > 0 && Number(discount) <= 99 && Number(price) > 0 && (
+            // The discount covers the whole unit price, extras included.
+            <p className="-mt-1 text-xs text-ink-2">
+              بعد الخصم {formatPrice(applyDiscount(Number(price), Number(discount)))} • الخصم بيتطبّق على الإضافات كمان
+            </p>
+          )}
           {error && <InlineError message={error} />}
           <Button type="submit" block loading={saving} className="mt-1">
             {product ? 'حفظ التعديلات' : 'إضافة المنتج'}

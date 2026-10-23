@@ -6,15 +6,16 @@ import { useNavigate } from 'react-router';
 import { useCart, useCartMutations } from '@/api/queries';
 import { ApiError, errorMessage } from '@/api/client';
 import { AppImage, Button, InlineError, Price, Sheet, StatusChip } from '@/components/ui';
-import { formatPrice } from '@/lib/format';
+import { applyDiscount, formatPercent, formatPrice } from '@/lib/format';
 import { localized } from '@/lib/localized';
 import { isSignedIn } from '@/store/auth';
 import { confirm, useLoginPrompt, useToasts } from '@/store/ui';
 import type { Product, ProductOptionGroup, Store } from '@/types';
 
+import { DiscountedPrice } from './Showcase';
 import { canTakeOrders } from './StoreBits';
 
-/** Mirrors the backend price rules so the UI can show the price live and explain what is missing. */
+/** Mirrors the backend price rules so the UI can show the price live and explain what is missing. Before the discount (see `applyDiscount`). */
 export function priceFor(product: Product, selected: Set<number>): { price: number; error: string | null } {
   let total = product.price;
   for (const group of product.optionGroups) {
@@ -62,7 +63,9 @@ function ProductSheetBody({ product, store, onClose }: { product: Product; store
   const navigate = useNavigate();
 
   const pricing = priceFor(product, selected);
-  const total = pricing.price * quantity;
+  // The discount is off the whole unit (base + extras), like the backend.
+  const unit = applyDiscount(pricing.price, product.discountPercent);
+  const total = unit * quantity;
   const canAdd = pricing.error === null && canTakeOrders(store);
 
   function toggle(group: ProductOptionGroup, optionId: number) {
@@ -116,7 +119,10 @@ function ProductSheetBody({ product, store, onClose }: { product: Product; store
         {product.description && (
           <p className="text-ink-2">{localized(product.description, product.descriptionEn, product.descriptionRu)}</p>
         )}
-        <Price value={product.price} className="mt-1.5 block text-lg" />
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+          <DiscountedPrice value={unit} full={product.discountPercent > 0 ? pricing.price : null} className="text-lg" />
+          {product.discountPercent > 0 && <StatusChip label={`خصم ${formatPercent(product.discountPercent)}`} color="var(--color-brand)" />}
+        </div>
 
         {product.optionGroups.map((group) => (
           <div key={group.id} className="mt-5">
@@ -177,6 +183,7 @@ function ProductSheetBody({ product, store, onClose }: { product: Product; store
           </div>
           <Button block disabled={!canAdd} loading={add.isPending} onClick={addToCart} icon={<Check className="size-5" />}>
             إضافة للسلة • {formatPrice(total)}
+            {product.discountPercent > 0 && <s className="whitespace-nowrap text-[0.8em] font-semibold opacity-70">{formatPrice(pricing.price * quantity)}</s>}
           </Button>
         </div>
       </div>

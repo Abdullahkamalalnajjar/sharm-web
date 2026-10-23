@@ -1,89 +1,99 @@
 @import 'tailwindcss';
 
-/* `dark:` follows the picked theme, not the OS setting. */
+/* `dark:` means "the dark palette is showing": data-theme holds the resolved palette
+   (src/lib/theme.ts turns the "system" choice into dark or light), never the raw choice. */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 /*
- * Two themes the visitor picks from the header (src/lib/theme.ts sets <html data-theme>).
- * The defaults below are the dark one: warm charcoal surfaces, crimson brand, amber accent.
- * [data-theme='lime'] further down swaps the same variables for white + lime.
+ * The Flutter app's two palettes (sharm_app/lib/core/theme.dart, AppPalette.dark / .light).
+ * The defaults below are the dark one ("genie lamp": maroon canvas and cards, crimson brand,
+ * gold prices and hairlines). [data-theme='light'] further down swaps the same variables for
+ * the light one (same crimson on warm off-white, white cards, maroon ink, deeper gold).
  */
 @theme {
   --font-sans: 'Cairo', ui-sans-serif, system-ui, sans-serif;
 
-  --color-bg: #191717;
-  --color-surface: #242121;
-  --color-surface-alt: #2b2727;
-  --color-surface-high: #363131;
+  --color-bg: #1c0508;
+  --color-surface: #2b0a0f;
+  --color-surface-alt: #3a1016;
+  --color-surface-high: #4a161d;
 
-  --color-brand: #cd183d;
-  --color-brand-light: #ff5c7c;
-  --color-brand-dark: #610129;
-  --color-accent: #ffb200;
-  --color-accent-dark: #e0a800;
-  /* Chips and numbers on the brand color and on photos. */
-  --color-highlight: #ffb200;
-  /* Brand-colored text and links on surfaces. */
-  --color-brand-ink: #ff5c7c;
-  /* Toast background. */
-  --color-toast: #2b2727;
+  --color-brand: #c21f35;
+  --color-brand-light: #e04358;
+  --color-brand-dark: #8e1224;
+  --color-accent: #e6b450;
+  --color-accent-dark: #c99a3a;
+  /* Chips and numbers on the brand color and on photos (app: accentOnPrimary). */
+  --color-highlight: #ffdf94;
+  /* "طلب خاص" (custom order) purple, light enough to read on maroon in dark. */
+  --color-custom: #c084fc;
+  /* Brand-colored text and links on surfaces: a lighter crimson so it passes AA on maroon (6:1). */
+  --color-brand-ink: #f06a7c;
+  /* Toast background (app: inverseSurface = surfaceAlt on dark). Toast text is white. */
+  --color-toast: #3a1016;
 
-  --color-ink: #f5f5f7;
-  --color-ink-2: #b2b2ba;
-  --color-ink-3: #7c7c86;
+  --color-ink: #fbf3e6;
+  --color-ink-2: #c9b5a6;
+  --color-ink-3: #9c8577;
 
   --color-success: #2fbf71;
-  --color-warning: #ffb020;
-  --color-danger: #ff4d4f;
+  --color-warning: #f2b23a;
+  --color-danger: #ff5a5f;
 
   --color-series-1: #ff7a45;
   --color-series-2: #34c98b;
   --color-series-3: #4c9aff;
 
-  --color-line: rgb(255 255 255 / 0.08);
+  /* Gold hairline. */
+  --color-line: rgb(230 180 80 / 0.15);
 
   --radius-card: 22px;
   --radius-field: 16px;
 
-  --shadow-card: 0 2px 10px rgb(0 0 0 / 0.35);
-  --shadow-card-hover: 0 12px 28px rgb(0 0 0 / 0.5);
+  --shadow-card: 0 2px 10px rgb(0 0 0 / 0.4);
+  --shadow-card-hover: 0 12px 28px rgb(0 0 0 / 0.55);
   --shadow-brand: 0 4px 14px color-mix(in srgb, var(--color-brand) 40%, transparent);
 }
 
-/* White canvas and cards, lime brand (white bold text passes AA-large), amber prices. */
-:root[data-theme='lime'] {
+/* Light: warm off-white canvas, white cards, crimson brand (white text 5.9:1), maroon ink. */
+:root[data-theme='light'] {
   color-scheme: light;
 
-  --color-bg: #f8fbf0;
+  --color-bg: #f8f3f1;
   --color-surface: #ffffff;
-  --color-surface-alt: #eef6dc;
-  --color-surface-high: #dcebbe;
+  --color-surface-alt: #f3eae7;
+  --color-surface-high: #ebdfdb;
 
-  --color-brand: #5a9a0a;
-  --color-brand-light: #6ba312;
-  --color-brand-dark: #3f6212;
-  --color-brand-ink: #4a7f0b;
-  --color-accent: #a86f12;
-  --color-accent-dark: #8a5a0c;
-  --color-highlight: #f7ff9e;
-  --color-toast: #1a2310;
+  --color-brand: #c21f35;
+  --color-brand-light: #e04358;
+  --color-brand-dark: #8e1224;
+  /* Crimson reads on white (5.9:1). */
+  --color-brand-ink: #c21f35;
+  /* Gold ink for prices (4.9:1 on white). */
+  --color-accent: #9a6510;
+  --color-accent-dark: #7d520c;
+  --color-highlight: #ffdf94;
+  --color-custom: #9333ea;
+  /* App: inverseSurface = textPrimary on light. */
+  --color-toast: #2a0e12;
 
-  --color-ink: #1a2310;
-  --color-ink-2: #55604a;
-  --color-ink-3: #7a846e;
+  --color-ink: #2a0e12;
+  --color-ink-2: #6b5257;
+  --color-ink-3: #977f84;
 
-  --color-success: #2e9e5b;
-  --color-warning: #c77c02;
-  --color-danger: #d63b3b;
+  --color-success: #1e9e5a;
+  --color-warning: #c77f00;
+  --color-danger: #d93a3f;
 
-  --color-series-1: #e2622f;
-  --color-series-2: #2e9e5b;
-  --color-series-3: #2f7be0;
+  --color-series-1: #e8622c;
+  --color-series-2: #1e9e5a;
+  --color-series-3: #2f7fe0;
 
-  --color-line: #e2eccd;
+  /* Maroon hairline. */
+  --color-line: rgb(142 18 36 / 0.14);
 
-  --shadow-card: 0 2px 10px rgb(63 98 18 / 0.08);
-  --shadow-card-hover: 0 12px 28px rgb(63 98 18 / 0.16);
+  --shadow-card: 0 2px 10px rgb(58 10 16 / 0.12);
+  --shadow-card-hover: 0 12px 28px rgb(58 10 16 / 0.2);
 }
 
 @layer base {

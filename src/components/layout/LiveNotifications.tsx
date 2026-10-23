@@ -8,7 +8,7 @@ import { create } from 'zustand';
 
 import { apiBaseUrl, freshAccessToken } from '@/api/client';
 import { useUnreadNotifications } from '@/api/queries';
-import { notificationLook, notificationTarget } from '@/lib/notifications';
+import { alertSound, notificationLook, notificationTarget } from '@/lib/notifications';
 import { useAuth } from '@/store/auth';
 import type { LiveNotification } from '@/types';
 
@@ -22,15 +22,20 @@ interface BannerState {
 
 let hideTimer: ReturnType<typeof setTimeout> | undefined;
 
+/** How long a banner (and its ringing) stays up unless opened or dismissed, like the app. */
+const BANNER_MS = 2 * 60_000;
+
 const useBanner = create<BannerState>((set) => ({
   current: null,
   show(current) {
     clearTimeout(hideTimer);
     set({ current });
-    hideTimer = setTimeout(() => set({ current: null }), 6000);
+    alertSound.start();
+    hideTimer = setTimeout(() => useBanner.getState().hide(), BANNER_MS);
   },
   hide() {
     clearTimeout(hideTimer);
+    alertSound.stop();
     set({ current: null });
   },
 }));
@@ -50,6 +55,10 @@ export function useLiveNotifications() {
   const role = session?.role ?? null;
   const roleRef = useRef(role);
   roleRef.current = role;
+  // useNavigate() changes on every route change under <BrowserRouter>; read it through a ref so
+  // moving between pages doesn't tear down and reopen the hub connection.
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
 
   useEffect(() => {
     if (!userId) return;
@@ -96,7 +105,7 @@ export function useLiveNotifications() {
         system.onclick = () => {
           window.focus();
           const to = roleRef.current ? notificationTarget(roleRef.current, n) : null;
-          if (to) navigate(to);
+          if (to) navigateRef.current(to);
           system.close();
         };
       }
@@ -129,14 +138,27 @@ export function useLiveNotifications() {
     };
     document.addEventListener('visibilitychange', onVisible);
 
+    // Browsers only allow sound after an interaction: prime the alert on the first one.
+    const unlockEvents = ['pointerdown', 'keydown', 'touchend'] as const;
+    const unlock = (e: Event) => {
+      // A press on the banner itself opens or dismisses it, so don't start a blocked ring there.
+      if (e.target instanceof Element && e.target.closest('[data-live-banner]')) return;
+      alertSound.unlock();
+      if (alertSound.unlocked) unlockEvents.forEach((e) => window.removeEventListener(e, unlock, true));
+    };
+    unlockEvents.forEach((e) => window.addEventListener(e, unlock, true));
+
     connect();
     return () => {
       stopped = true;
       clearTimeout(retry);
       document.removeEventListener('visibilitychange', onVisible);
+      unlockEvents.forEach((e) => window.removeEventListener(e, unlock, true));
+      // Signed out (or switched account): drop the banner and stop ringing.
+      useBanner.getState().hide();
       hub.stop();
     };
-  }, [userId, qc, navigate]);
+  }, [userId, qc]);
 }
 
 // ---------- UI ----------
@@ -147,6 +169,8 @@ export function LiveBanner() {
   const hide = useBanner((s) => s.hide);
   const role = useAuth((s) => s.session?.role);
   const navigate = useNavigate();
+  // Never keep ringing once the banner is gone from the page.
+  useEffect(() => () => alertSound.stop(), []);
   if (!current) return null;
 
   const { Icon, color } = notificationLook(current.event);
@@ -156,7 +180,8 @@ export function LiveBanner() {
     <div className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+68px)] z-[70] flex justify-center px-3">
       <div
         role="alert"
-        className="pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-[22px] border bg-surface-alt p-3 shadow-[0_10px_30px_rgb(0_0_0/0.45)] animate-sheet"
+        data-live-banner
+        className="pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-[22px] border bg-surface-alt p-3 shadow-[var(--shadow-card-hover)] animate-sheet"
         style={{ borderColor: `color-mix(in srgb, ${color} 45%, transparent)` }}
       >
         <button

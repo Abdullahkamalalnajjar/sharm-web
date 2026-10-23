@@ -6,7 +6,7 @@ import { IconWell, SoftCard, StatusChip } from '@/components/ui';
 import { LoginRequired } from '@/features/auth/LoginRequired';
 import { useAuth } from '@/store/auth';
 
-const ROLE_LABEL = { customer: 'زبون', storeOwner: 'صاحب محل', admin: 'أدمن', driver: 'مندوب' } as const;
+const ROLE_LABEL = { customer: 'زبون', storeOwner: 'صاحب محل', admin: 'أدمن', driver: 'مندوب', cashier: 'كاشير' } as const;
 
 export function AccountPage() {
   const session = useAuth((s) => s.session);

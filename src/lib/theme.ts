@@ -1,29 +1,54 @@
 import { create } from 'zustand';
 
-// The two site themes; the colors live in src/index.css under <html data-theme>.
-// index.html applies the saved one before the first paint, so there is no flash.
+// The visitor's theme choice, matching the Flutter app (sharm_app/lib/core/theme_controller.dart):
+// dark (default), light, or follow the device. The colors live in src/index.css; <html data-theme>
+// always holds the *resolved* palette ('dark' | 'light'), so the `dark:` variant keeps meaning
+// "dark palette is showing". index.html resolves the saved choice before the first paint.
 
-export type ThemeName = 'lime' | 'dark';
+export type ThemeName = 'dark' | 'light' | 'system';
+export type Palette = 'dark' | 'light';
 
-export const THEMES: { name: ThemeName; label: string; preview: { bg: string; brand: string; surface: string; accent: string } }[] = [
-  { name: 'lime', label: 'ليموني فاتح', preview: { bg: '#f8fbf0', brand: '#5a9a0a', surface: '#ffffff', accent: '#a86f12' } },
-  { name: 'dark', label: 'غامق وأحمر', preview: { bg: '#191717', brand: '#cd183d', surface: '#2b2727', accent: '#ffb200' } },
+export interface PalettePreview {
+  bg: string;
+  surface: string;
+  brand: string;
+  accent: string;
+  border: string;
+}
+
+export const PALETTES: Record<Palette, PalettePreview> = {
+  dark: { bg: '#1c0508', surface: '#2b0a0f', brand: '#c21f35', accent: '#e6b450', border: 'rgb(230 180 80 / 0.25)' },
+  light: { bg: '#f8f3f1', surface: '#ffffff', brand: '#c21f35', accent: '#9a6510', border: 'rgb(142 18 36 / 0.2)' },
+};
+
+export const THEMES: { name: ThemeName; label: string }[] = [
+  { name: 'dark', label: 'غامق' },
+  { name: 'light', label: 'فاتح' },
+  { name: 'system', label: 'زي الجهاز' },
 ];
 
 const STORAGE_KEY = 'sharm-theme';
+const media = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
 
 function savedTheme(): ThemeName {
   try {
     const v = localStorage.getItem(STORAGE_KEY);
-    return v === 'dark' || v === 'lime' ? v : 'lime';
+    if (v === 'lime') return 'light'; // the old light theme
+    return v === 'light' || v === 'system' ? v : 'dark';
   } catch {
-    return 'lime';
+    return 'dark';
   }
 }
 
+export function resolvePalette(theme: ThemeName): Palette {
+  if (theme === 'system') return media?.matches ? 'light' : 'dark';
+  return theme;
+}
+
 function apply(theme: ThemeName) {
-  document.documentElement.dataset.theme = theme;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#191717' : '#5a9a0a');
+  const palette = resolvePalette(theme);
+  document.documentElement.dataset.theme = palette;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', palette === 'dark' ? '#1c0508' : '#c21f35');
 }
 
 interface ThemeState {
@@ -43,3 +68,10 @@ export const useTheme = create<ThemeState>((set) => ({
     set({ theme });
   },
 }));
+
+// Keep the page in sync with the store (covers the lime → light migration too), and follow
+// the OS live while "system" is picked.
+apply(useTheme.getState().theme);
+media?.addEventListener('change', () => {
+  if (useTheme.getState().theme === 'system') apply('system');
+});

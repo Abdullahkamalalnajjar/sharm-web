@@ -53,7 +53,7 @@ export function MyOrderPage() {
             )}
             <div className="flex items-center gap-2 pt-1 flex-wrap">
               <h2 className="flex-1 text-lg font-extrabold text-ink">{orderStatus(order.data.status).customerMessage}</h2>
-              {order.data.isCustomOrder && <StatusChip label="طلب خاص" color="#9333EA" />}
+              {order.data.isCustomOrder && <StatusChip label="طلب خاص" color="var(--color-custom)" />}
               <OrderStatusBadge status={order.data.status} />
             </div>
             {order.data.canRate && <RateOrderCard order={order.data} />}

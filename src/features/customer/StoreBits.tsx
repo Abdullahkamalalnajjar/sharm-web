@@ -1,12 +1,15 @@
 import clsx from 'clsx';
-import { MapPin, Navigation, Plus, ShoppingBag } from 'lucide-react';
+import { MapPin, Navigation, Plus } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { AppImage, Price, StatusChip } from '@/components/ui';
+import { storeStatusLabel } from '@/lib/format';
 import { localized } from '@/lib/localized';
 import { SHARM_AREAS, categoryOf } from '@/lib/meta';
 import { RatingBadge } from '@/features/ratings/Ratings';
 import type { CategoryRef, NearbyStore, Store } from '@/types';
+
+import { ShowcaseAction, ShowcaseCard } from './Showcase';
 
 /** Store cover filling its (relative) parent: the logo when there is one, else a dark tint of the category color with its icon. */
 export function Cover({ category, logoUrl, className, iconSize = 56 }: { category: CategoryRef; logoUrl: string | null; className?: string; iconSize?: number }) {
@@ -62,36 +65,48 @@ export function RedCircle({ size = 42, icon: Icon = ArrowOut }: { size?: number;
   );
 }
 
-/** Portrait card in the "open now" carousel: name and minimum order over the cover. */
+/** Portrait card in the "open now" carousel: name and minimum order over the cover. A closed store is dimmed and marked closed. */
 export function OpenStoreCard({ store }: { store: NearbyStore }) {
   return (
     <Link
       to={`/store/${store.id}`}
-      className="relative block w-[166px] h-[210px] shrink-0 overflow-hidden rounded-card border border-line hover:border-surface-high snap-start"
+      className="relative block w-[166px] h-[210px] shrink-0 overflow-hidden rounded-card border border-line bg-surface hover:border-surface-high snap-start"
     >
-      <Cover category={store} logoUrl={store.coverUrl ?? store.logoUrl} />
+      <Cover category={store} logoUrl={store.coverUrl ?? store.logoUrl} className={clsx(!store.isOpen && 'opacity-45')} />
       <div className="absolute inset-0 scrim" />
       <div className="absolute inset-0 p-3 flex flex-col">
         <h3 className="font-extrabold text-white text-[15px] truncate">{localized(store.name, store.nameEn, store.nameRu)}</h3>
         {store.minOrderAmount > 0 ? (
-          <Price value={store.minOrderAmount} prefix="من" className="text-[12.5px]" />
+          <Price value={store.minOrderAmount} prefix="من" className="text-[12.5px] !text-highlight" />
         ) : (
           <span className="text-xs text-white/85">{store.categoryName}</span>
         )}
         <span className="flex-1" />
         <div className="flex items-center gap-1 text-white text-xs font-semibold">
-          <RatingBadge average={store.ratingAverage} count={store.ratingsCount} onDark className="me-1.5" />
-          {store.distanceKm !== null && (
-            <>
-              <Navigation className="size-3.5 text-brand-ink" />
-              {store.distanceKm.toFixed(1)} كم
-            </>
-          )}
-          <span className="flex-1" />
-          <RedCircle size={34} icon={ArrowOut} />
+          <span className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+            <RatingBadge average={store.ratingAverage} count={store.ratingsCount} onDark className="me-1.5 shrink-0" />
+            {store.distanceKm !== null && (
+              <>
+                <Navigation className="size-3.5 shrink-0 text-brand-light" />
+                <span className="truncate">{store.distanceKm.toFixed(1)} كم</span>
+              </>
+            )}
+          </span>
+          {store.isOpen ? <RedCircle size={34} icon={ArrowOut} /> : <StoreStatusChip store={store} onDark />}
         </div>
       </div>
     </Link>
+  );
+}
+
+/** "مفتوح" in green; closed states ("مقفول", "بيفتح 10:00 ص", ...) muted. */
+export function StoreStatusChip({ store, onDark, className }: { store: NearbyStore | Store; onDark?: boolean; className?: string }) {
+  return (
+    <StatusChip
+      label={storeStatusLabel(store)}
+      color={store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'}
+      className={clsx('shrink-0 whitespace-nowrap', onDark && '!text-white bg-black/55', className)}
+    />
   );
 }
 
@@ -103,52 +118,28 @@ function ArrowOut(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-/** Full-width store card for the store list. */
+/** Grid card of the store list: cover, open state badge, name, category and distance, then the rating or minimum order. */
 export function StoreCard({ store }: { store: NearbyStore }) {
   return (
-    <Link to={`/store/${store.id}`} className="card block overflow-hidden hover:border-surface-high transition-colors">
-      <div className="relative h-[150px]">
-        <Cover category={store} logoUrl={store.coverUrl ?? store.logoUrl} className={clsx(!store.isOpen && 'opacity-45')} />
-        <div className="absolute inset-0 scrim" />
-        <div className="absolute top-3 start-3">
-          <StatusChip
-            label={store.isOpen ? 'مفتوح' : store.allowsScheduledOrders ? 'مقفول • اطلب لبعدين' : 'مقفول'}
-            color={store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'}
-          />
-        </div>
-        {store.distanceKm !== null && (
-          <span className="absolute top-3 end-3 pill bg-black/55 text-white">
-            <Navigation className="size-3.5 text-brand-ink" />
-            {store.distanceKm.toFixed(1)} كم
-          </span>
-        )}
-        <h3 className="absolute inset-x-3.5 bottom-2.5 text-lg font-black text-white truncate">{localized(store.name, store.nameEn, store.nameRu)}</h3>
-      </div>
-      <div className="flex items-center gap-2.5 px-3.5 py-3">
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[12.5px] text-ink-2">{store.address}</p>
-          <div className="mt-1.5 flex items-center gap-2.5 flex-wrap">
-            <TypeTag category={store} />
-            <RatingBadge average={store.ratingAverage} count={store.ratingsCount} />
-            {store.minOrderAmount > 0 && (
-              <span className="inline-flex items-center gap-1 text-xs text-ink-2">
-                <ShoppingBag className="size-3.5 text-ink-3" />
-                أقل طلب <Price value={store.minOrderAmount} className="text-xs" />
-              </span>
-            )}
-          </div>
-        </div>
-        {store.isOpen ? (
-          <RedCircle icon={ArrowOut} />
+    <ShowcaseCard
+      to={`/store/${store.id}`}
+      dimmed={!store.isOpen}
+      image={<Cover category={store} logoUrl={store.coverUrl ?? store.logoUrl} />}
+      badge={storeStatusLabel(store)}
+      badgeClassName={store.isOpen ? 'bg-success text-white' : 'bg-surface-alt text-ink-2'}
+      title={localized(store.name, store.nameEn, store.nameRu)}
+      subtitle={[store.categoryName, store.distanceKm !== null ? `${store.distanceKm.toFixed(1)} كم` : null].filter(Boolean).join(' • ')}
+      footer={
+        store.ratingsCount > 0 ? (
+          <RatingBadge average={store.ratingAverage} count={store.ratingsCount} />
+        ) : store.minOrderAmount > 0 ? (
+          <Price value={store.minOrderAmount} prefix="من" className="text-[13px]" />
         ) : (
-          <span className="text-[11px] font-bold text-ink-3 text-center leading-tight">
-            مقفول
-            <br />
-            دلوقتي
-          </span>
-        )}
-      </div>
-    </Link>
+          <span className="text-xs font-bold text-ink-3">جديد</span>
+        )
+      }
+      action={store.isOpen ? <ShowcaseAction icon={ArrowOut} /> : undefined}
+    />
   );
 }
 

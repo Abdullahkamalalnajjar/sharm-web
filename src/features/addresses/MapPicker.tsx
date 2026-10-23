@@ -91,7 +91,7 @@ export function MapPicker({
         type="button"
         onClick={locate}
         disabled={locating}
-        className="absolute bottom-3 left-3 z-[1000] flex items-center gap-1.5 rounded-full bg-white px-3 py-2 text-xs font-extrabold text-ink shadow-md"
+        className="absolute bottom-3 left-3 z-[1000] flex items-center gap-1.5 rounded-full bg-surface px-3 py-2 text-xs font-extrabold text-ink shadow-md"
       >
         <LocateFixed className="size-4" />
         {locating ? 'بحدد...' : 'موقعي الحالي'}

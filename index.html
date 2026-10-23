@@ -3,17 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#5a9a0a" />
+    <meta name="theme-color" content="#1c0508" />
     <script>
-      // Picked theme before the first paint (src/lib/theme.ts keeps it in sync).
-      try {
-        var t = localStorage.getItem('sharm-theme');
-        t = t === 'dark' ? 'dark' : 'lime';
-        document.documentElement.dataset.theme = t;
-        if (t === 'dark') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#191717');
-      } catch (e) {
-        document.documentElement.dataset.theme = 'lime';
-      }
+      // Resolve the saved theme choice (dark | light | system) to a palette before the first
+      // paint, so there is no flash. src/lib/theme.ts keeps it in sync afterwards.
+      (function () {
+        var t = 'dark';
+        try {
+          t = localStorage.getItem('sharm-theme') || 'dark';
+          if (t === 'lime') {
+            t = 'light';
+            localStorage.setItem('sharm-theme', t);
+          }
+        } catch (e) {}
+        var p = t === 'light' ? 'light' : 'dark';
+        if (t === 'system') {
+          try {
+            p = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+          } catch (e) {}
+        }
+        document.documentElement.dataset.theme = p;
+        if (p === 'light') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#c21f35');
+      })();
     </script>
     <meta name="description" content="MARID Egypt: أكل، سوبر ماركت وصيدليات لحد باب البيت في شرم الشيخ" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

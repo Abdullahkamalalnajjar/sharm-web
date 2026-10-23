@@ -1,4 +1,4 @@
-import { Ban, BookOpen, CalendarClock, Check, Lock, LockOpen, Pencil, Percent, Phone, RotateCcw, ShoppingBag, MapPin, Crosshair, SlidersHorizontal, Wallet, type LucideIcon } from 'lucide-react';
+import { Ban, BookOpen, CalendarClock, Check, Clock, IdCard, Lock, LockOpen, Pencil, Percent, Phone, RotateCcw, ShoppingBag, MapPin, Crosshair, SlidersHorizontal, Wallet, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -6,19 +6,27 @@ import { storesApi } from '@/api';
 import { useRefreshAdmin } from '@/api/queries';
 import { Button, IconWell, Sheet, SoftCard, StatusChip, Switch } from '@/components/ui';
 import { StoreAvatar } from '@/features/customer/StoreBits';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, formatStoreHours } from '@/lib/format';
 import { categoryOf, storeStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
 import type { Store } from '@/types';
 
+import { StoreHoursDialog } from '@/features/owner/StoreHoursDialog';
+
 import { StoreSettingsDialog } from './StoreSettingsDialog';
+
+/** Open right now (`isOpen` = switch on and within the hours) as a chip. */
+function OpenChip({ store }: { store: Store }) {
+  return <StatusChip label={store.isOpen ? 'مفتوح' : 'مقفول'} color={store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'} />;
+}
+
+/** The open switch's state: the switch can be on while the store is closed for its hours. */
+const switchLabel = (store: Store) => (store.isOpen ? 'مفتوح للطلبات' : store.openSwitch ? 'برا المواعيد' : 'مقفول');
 
 /** Status as a colored dot + label; for active stores it shows open/closed instead. */
 function StatusDot({ store }: { store: Store }) {
-  if (store.status === 'Active') {
-    return <StatusChip label={store.isOpen ? 'مفتوح' : 'مقفول'} color={store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'} />;
-  }
+  if (store.status === 'Active') return <OpenChip store={store} />;
   const meta = storeStatus(store.status);
   return <StatusChip label={meta.label} color={meta.color} />;
 }
@@ -64,6 +72,7 @@ export function AdminStoreCard({ store }: { store: Store }) {
               <Meta icon={Phone} text={store.phone} ltr />
               {store.minOrderAmount > 0 && <Meta icon={ShoppingBag} text={`أقل طلب ${formatPrice(store.minOrderAmount)}`} />}
               {(store.commissionPercent ?? 0) > 0 && <Meta icon={Percent} text={`عمولة ${store.commissionPercent}%`} />}
+              {store.opensAt && store.closesAt && <Meta icon={Clock} text={formatStoreHours(store.opensAt, store.closesAt)!} />}
             </div>
           </div>
         </button>
@@ -79,8 +88,8 @@ export function AdminStoreCard({ store }: { store: Store }) {
             </>
           ) : store.status === 'Active' ? (
             <>
-              <Switch checked={store.isOpen} label="مفتوح للطلبات" onChange={(open) => run(() => storesApi.setOpen(store.id, open), open ? 'المحل اتفتح' : 'المحل اتقفل')} />
-              <span className="text-[13px] text-ink-2">{store.isOpen ? 'مفتوح للطلبات' : 'مقفول'}</span>
+              <Switch checked={store.openSwitch} label="مفتوح للطلبات" onChange={(open) => run(() => storesApi.setOpen(store.id, open), open ? 'المحل اتفتح' : 'المحل اتقفل')} />
+              <span className="text-[13px] text-ink-2">{switchLabel(store)}</span>
               <span className="flex-1" />
               <Button size="sm" variant="outline" icon={<BookOpen className="size-4" />} onClick={() => navigate(`/admin/stores/${store.id}/menu`)}>
                 المنيو
@@ -110,6 +119,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
   const meta = categoryOf(store);
   const status = storeStatus(store.status);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [hoursOpen, setHoursOpen] = useState(false);
 
   const run = async (action: () => Promise<unknown>, success: string) => {
     onClose();
@@ -129,6 +139,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
   return (
     <>
       <StoreSettingsDialog store={store} open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <StoreHoursDialog store={store} open={hoursOpen} onClose={() => setHoursOpen(false)} />
       <Sheet open={open} onClose={onClose}>
         <div className="flex items-center gap-3.5">
           <StoreAvatar category={store} logoUrl={store.logoUrl} size={56} />
@@ -136,7 +147,8 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
             <h3 className="text-[19px] font-extrabold text-ink">{store.name}</h3>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               <StatusChip label={status.label} color={status.color} />
-              {store.status === 'Active' && <StatusChip label={store.isOpen ? 'مفتوح' : 'مقفول'} color={store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'} />}
+              {store.status === 'Active' && <OpenChip store={store} />}
+              {store.status === 'Active' && store.openSwitch && !store.isOpen && <StatusChip label="برا المواعيد" color="var(--color-warning)" />}
             </div>
           </div>
         </div>
@@ -147,6 +159,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
           <InfoRow icon={Phone} label="التليفون" value={store.phone} ltr />
           <InfoRow icon={ShoppingBag} label="أقل طلب" value={store.minOrderAmount > 0 ? formatPrice(store.minOrderAmount) : 'مفيش حد أدنى'} />
           <InfoRow icon={Percent} label="العمولة" value={`${store.commissionPercent ?? 0}%`} />
+          <InfoRow icon={Clock} label="المواعيد" value={formatStoreHours(store.opensAt, store.closesAt) ?? 'مفيش (الزرار بس)'} />
           <InfoRow icon={CalendarClock} label="المجدولة" value={store.allowsScheduledOrders ? 'بياخد طلبات مجدولة' : 'مقفولة'} />
           <InfoRow icon={Crosshair} label="الإحداثيات" value={`${store.latitude.toFixed(4)}, ${store.longitude.toFixed(4)}`} ltr />
         </div>
@@ -157,10 +170,11 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
           )}
           {store.status === 'Active' && (
             <ActionTile
-              icon={store.isOpen ? Lock : LockOpen}
+              icon={store.openSwitch ? Lock : LockOpen}
               color="var(--color-ink)"
-              title={store.isOpen ? 'قفل المحل' : 'فتح المحل'}
-              onClick={() => run(() => storesApi.setOpen(store.id, !store.isOpen), store.isOpen ? 'المحل اتقفل' : 'المحل اتفتح')}
+              title={store.openSwitch ? 'قفل المحل' : 'فتح المحل'}
+              subtitle={store.openSwitch && !store.isOpen ? 'الزرار شغال بس المحل برا المواعيد' : undefined}
+              onClick={() => run(() => storesApi.setOpen(store.id, !store.openSwitch), store.openSwitch ? 'المحل اتقفل' : 'المحل اتفتح')}
             />
           )}
           <ActionTile
@@ -172,6 +186,23 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
               onClose();
               setSettingsOpen(true);
             }}
+          />
+          <ActionTile
+            icon={Clock}
+            color="var(--color-ink)"
+            title="مواعيد الفتح والقفل"
+            subtitle={formatStoreHours(store.opensAt, store.closesAt) ?? 'مفيش مواعيد، الزرار بس اللي بيتحكم'}
+            onClick={() => {
+              onClose();
+              setHoursOpen(true);
+            }}
+          />
+          <ActionTile
+            icon={IdCard}
+            color="var(--color-ink)"
+            title="حسابات الكاشير"
+            subtitle="بيشتغلوا على أوردرات المحل من غير ما يشوفوا فلوسه"
+            onClick={() => go(`/admin/stores/${store.id}/employees`)}
           />
           <ActionTile icon={Wallet} color="var(--color-ink)" title="المحفظة" subtitle="رصيده وطلبات السحب والحركات" onClick={() => go(`/admin/stores/${store.id}/wallet`)} />
           <ActionTile icon={BookOpen} color="var(--color-ink)" title="إدارة المنيو" subtitle="الأقسام والمنتجات والإضافات" onClick={() => go(`/admin/stores/${store.id}/menu`)} />

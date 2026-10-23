@@ -26,6 +26,7 @@ import type { Order, OrderItem } from '@/types';
 
 import { ChargesDialog } from './ChargesDialog';
 import { DriverPicker } from './DriverPicker';
+import { OrderItemPicker } from '@/features/orders/OrderItemPicker';
 
 /** Admin view of one order with the next step for its status:
  *  Pending → the store accepts (or the admin confirms for it); before pickup → drivers take it from their
@@ -39,6 +40,7 @@ export function AdminOrderPage() {
   const [subtotalOpen, setSubtotalOpen] = useState(false);
   const [reasonOpen, setReasonOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [itemPickerOpen, setItemPickerOpen] = useState(false);
 
   async function run(call: () => Promise<Order>, success: string) {
     setBusy(true);
@@ -62,7 +64,7 @@ export function AdminOrderPage() {
 
   const o = order.data;
   const active = o ? orderStatus(o.status).isActive : false;
-  const canEditItems = o ? o.status === 'Pending' || isAwaitingPickup(o.status) : false;
+  const canEditItems = o ? !o.isCustomOrder && (o.status === 'Pending' || isAwaitingPickup(o.status)) : false;
   const awaitingPickup = o ? isAwaitingPickup(o.status) : false;
 
   return (
@@ -86,7 +88,7 @@ export function AdminOrderPage() {
           <>
             <div className="flex items-center gap-2 pb-3 flex-wrap">
               <span className="flex-1 text-ink-2">{formatOrderDate(o.createdUtc)}</span>
-              {o.isCustomOrder && <StatusChip label="طلب خاص" color="#9333EA" />}
+              {o.isCustomOrder && <StatusChip label="طلب خاص" color="var(--color-custom)" />}
               <OrderStatusBadge status={o.status} />
             </div>
             <div className="grid gap-3 md:grid-cols-2 md:items-start">
@@ -127,14 +129,32 @@ export function AdminOrderPage() {
                 <OrderTimeline order={o} />
               </div>
               <div className="flex flex-col gap-3">
-                <OrderItemsCard order={o} onRemoveItem={canEditItems && !busy ? (item) => removeItem(o, item) : undefined} />
+                <OrderItemsCard
+                  order={o}
+                  onRemoveItem={canEditItems && !busy ? (item) => removeItem(o, item) : undefined}
+                  onQuantityChange={
+                    canEditItems && !busy ? (item, q) => run(() => ordersApi.setItemQuantity(o.id, item.id, q), 'الكمية اتعدّلت') : undefined
+                  }
+                  onAddItem={canEditItems && !busy && o.stores.length > 0 ? () => setItemPickerOpen(true) : undefined}
+                />
+                {o.stores.length > 0 && (
+                  <OrderItemPicker
+                    storeId={o.stores[0].storeId}
+                    open={itemPickerOpen}
+                    onClose={() => setItemPickerOpen(false)}
+                    onPick={(item) => {
+                      setItemPickerOpen(false);
+                      run(() => ordersApi.addItem(o.id, item.productId, item.optionIds, item.quantity, item.note), 'المنتج اتضاف للأوردر');
+                    }}
+                  />
+                )}
                 <OrderTotalsCard order={o} />
                 <div className="flex items-center gap-2 flex-wrap">
                   {o.isCustomOrder && active && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-[#9333EA] border-[#9333EA]/40 hover:bg-[#9333EA]/10"
+                      className="text-custom border-custom/40 hover:bg-custom/10"
                       icon={<Pencil className="size-4" />}
                       disabled={busy}
                       onClick={() => setSubtotalOpen(true)}

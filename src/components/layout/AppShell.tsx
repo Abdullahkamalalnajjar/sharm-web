@@ -5,6 +5,7 @@ import {
   ChevronDown,
   Home,
   LayoutDashboard,
+  LogIn,
   LogOut,
   MapPin,
   ReceiptText,
@@ -39,7 +40,12 @@ interface NavItem {
   desktopOnly?: boolean;
   /** The raised red button in the middle of the phone bar. */
   raised?: boolean;
+  /** Shown in the phone bar only (the desktop header has its own). */
+  phoneOnly?: boolean;
 }
+
+/** Signed out, the customer's "حسابي" tab is the way in. */
+const GUEST_ACCOUNT_TAB: NavItem = { to: '/login', label: 'دخول', icon: LogIn, phoneOnly: true };
 
 const NAV: Record<AppRole, NavItem[]> = {
   customer: [
@@ -62,6 +68,10 @@ const NAV: Record<AppRole, NavItem[]> = {
     { to: '/admin/finance', label: 'المالية', icon: Wallet, desktopOnly: true },
     { to: '/admin/reports', label: 'الإحصائيات', icon: BarChart3, desktopOnly: true },
   ],
+  cashier: [
+    { to: '/cashier', label: 'الطلبات', icon: ReceiptText, end: true },
+    { to: '/account', label: 'حسابي', icon: UserRound },
+  ],
   driver: [
     { to: '/driver', label: 'أوردراتي', icon: Bike, end: true },
     { to: '/driver/wallet', label: 'فلوسي', icon: Wallet },
@@ -80,7 +90,7 @@ function AreaButton() {
       aria-label="تغيير مكان التوصيل"
       className="inline-flex min-w-0 items-center gap-1.5 rounded-[10px] px-2 py-1.5 text-[1.05rem] font-extrabold text-white hover:bg-white/12 lg:mx-0 mx-auto"
     >
-      <MapPin className="size-5 shrink-0 text-accent" fill="currentColor" stroke="var(--color-brand)" strokeWidth={1.5} />
+      <MapPin className="size-5 shrink-0 text-highlight" fill="currentColor" stroke="var(--color-brand)" strokeWidth={1.5} />
       <span className="truncate max-w-[42vw] sm:max-w-[260px]">{location?.title ?? '...'}</span>
       <ChevronDown className="size-4 shrink-0 opacity-90" />
     </button>
@@ -93,7 +103,7 @@ export function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const role: AppRole = session?.role ?? 'customer';
-  const items = NAV[role];
+  const items = session ? NAV[role] : NAV.customer.map((i) => (i.to === '/account' ? GUEST_ACCOUNT_TAB : i));
   const cart = useCart();
   const cartCount = cart.data?.itemsCount ?? 0;
   const pickerOpen = useBrowse((s) => s.pickerOpen);
@@ -118,10 +128,10 @@ export function AppShell() {
             <span className="hidden text-[1.1rem] lg:inline">{SITE.name}</span>
           </NavLink>
 
-          {isCustomer && <AreaButton />}
+          {isCustomer && !isHome && <AreaButton />}
 
           <nav className="hidden items-center gap-0.5 lg:flex ms-1" aria-label="الرئيسية">
-            {items.map((item) => (
+            {items.filter((i) => !i.phoneOnly).map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}

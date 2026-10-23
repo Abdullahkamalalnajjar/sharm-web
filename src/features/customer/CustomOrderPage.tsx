@@ -4,6 +4,8 @@ import {
   Circle,
   CircleDot,
   HelpCircle,
+  LogIn,
+  Lock,
   MapPinPlus,
   Send,
   Sparkles,
@@ -16,13 +18,15 @@ import { ordersApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import { keys, useAddresses } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
-import { Button, ErrorView, IconWell, InlineError, Loading, SectionHeader, SoftCard, TextArea } from '@/components/ui';
+import { Button, EmptyView, ErrorView, IconWell, InlineError, Loading, SectionHeader, SoftCard, TextArea } from '@/components/ui';
 import { AddressFormSheet } from '@/features/addresses/AddressForm';
 import { addressIcon } from '@/features/customer/DeliveryPicker';
 import { addressDetails } from '@/lib/format';
-import { isSignedIn } from '@/store/auth';
+import { isSignedIn, useAuth } from '@/store/auth';
 import { showMessage, useLoginPrompt, useToasts } from '@/store/ui';
 import type { Address } from '@/types';
+
+import { CUSTOM_ORDER_LOGIN_REASON } from './Showcase';
 
 const SUGGESTIONS = [
   { label: 'صيدلية 💊', prompt: 'من صيدلية: ' },
@@ -45,6 +49,8 @@ export function CustomOrderPage() {
   const [error, setError] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
+
+  const signedIn = useAuth((s) => s.session !== null);
 
   const list = addresses.data ?? [];
   const selected = list.find((a) => a.id === addressId) ?? list.find((a) => a.isDefault) ?? list[0];
@@ -85,6 +91,28 @@ export function CustomOrderPage() {
       setPlacing(false);
     }
   }
+
+  // Opened directly by a guest: ask to sign in instead of a form that can't be sent.
+  if (!signedIn)
+    return (
+      <div className="mx-auto max-w-2xl">
+        <PageHeader title="طلب خاص" subtitle="اطلب أي حاجة من أي مكان في شرم" />
+        <EmptyView
+          icon={Lock}
+          message={`سجّل دخول الأول\n${CUSTOM_ORDER_LOGIN_REASON}`}
+          action={
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button size="md" icon={<LogIn className="size-4" />} onClick={() => navigate('/login', { state: { from: '/custom-order' } })}>
+                تسجيل الدخول
+              </Button>
+              <Button size="md" variant="outline" onClick={() => navigate('/signup')}>
+                حساب جديد
+              </Button>
+            </div>
+          }
+        />
+      </div>
+    );
 
   return (
     <div className="mx-auto max-w-2xl pb-32">

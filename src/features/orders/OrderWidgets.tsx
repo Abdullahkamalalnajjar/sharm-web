@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import {
+  Plus,
   Banknote,
   Bike,
   Clock,
@@ -22,6 +23,8 @@ import { addressDetails, formatOrderDate, formatPrice } from '@/lib/format';
 import { formatScheduledTime } from '@/lib/localized';
 import { ORDER_STATUSES, isAwaitingPickup, orderStatus } from '@/lib/meta';
 import type { Order, OrderCustomer, OrderDriver, OrderItem, OrderSummary } from '@/types';
+
+import { QuantityStepper } from './OrderItemPicker';
 
 export const telHref = (phone: string) => `tel:${phone.replace(/\s/g, '')}`;
 export const mapHref = (lat: number, lng: number) => `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
@@ -50,11 +53,11 @@ export function OrderSummaryCard({ order, onClick, showCustomer }: { order: Orde
   return (
     <SoftCard as="button" onClick={onClick} className="p-3.5">
       <div className="flex items-center gap-3">
-        <IconWell icon={order.isCustomOrder ? Sparkles : meta.Icon} size={42} color={order.isCustomOrder ? '#9333EA' : meta.color} />
+        <IconWell icon={order.isCustomOrder ? Sparkles : meta.Icon} size={42} color={order.isCustomOrder ? 'var(--color-custom)' : meta.color} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 flex-wrap">
             <p className="font-extrabold text-ink">أوردر #{order.number}</p>
-            {order.isCustomOrder && <StatusChip label="طلب خاص" color="#9333EA" />}
+            {order.isCustomOrder && <StatusChip label="طلب خاص" color="var(--color-custom)" />}
           </div>
           <p className="text-xs text-ink-3">{formatOrderDate(order.createdUtc)}</p>
         </div>
@@ -63,8 +66,8 @@ export function OrderSummaryCard({ order, onClick, showCustomer }: { order: Orde
       <p className="mt-3 flex items-center gap-1.5 text-ink-2 truncate">
         {order.isCustomOrder ? (
           <>
-            <Sparkles className="size-4 shrink-0 text-[#9333EA]" />
-            <span className="text-[#9333EA] font-semibold">طلب خاص (من خارج المنيو)</span>
+            <Sparkles className="size-4 shrink-0 text-custom" />
+            <span className="text-custom font-semibold">طلب خاص (من خارج المنيو)</span>
           </>
         ) : (
           <>
@@ -166,14 +169,25 @@ export function OrderTimeline({ order }: { order: Order }) {
 }
 
 /** Items grouped by store, or request details when this is a custom order. */
-export function OrderItemsCard({ order, onRemoveItem }: { order: Order; onRemoveItem?: (item: OrderItem) => void }) {
+/** The order's items by store; with the edit callbacks (admin, before pickup) lines get − / + and remove, plus "add a product". */
+export function OrderItemsCard({
+  order,
+  onRemoveItem,
+  onQuantityChange,
+  onAddItem,
+}: {
+  order: Order;
+  onRemoveItem?: (item: OrderItem) => void;
+  onQuantityChange?: (item: OrderItem, quantity: number) => void;
+  onAddItem?: () => void;
+}) {
   if (order.isCustomOrder || !order.stores || order.stores.length === 0) {
     return (
       <SoftCard className="overflow-hidden p-4">
         <div className="flex items-center gap-2 pb-2.5 border-b border-line">
-          <Sparkles className="size-5 text-[#9333EA]" />
+          <Sparkles className="size-5 text-custom" />
           <span className="flex-1 font-extrabold text-ink">تفاصيل الطلب الخاص</span>
-          <StatusChip label="طلب خاص" color="#9333EA" />
+          <StatusChip label="طلب خاص" color="var(--color-custom)" />
         </div>
         <div className="pt-3">
           <p className="text-xs font-bold text-ink-3 mb-1.5">الطلب المطلوب من الزبون:</p>
@@ -204,7 +218,11 @@ export function OrderItemsCard({ order, onRemoveItem }: { order: Order; onRemove
           </div>
           {g.items.map((item) => (
             <div key={item.id} className="flex items-start gap-2.5 px-3.5 py-1.5">
-              <span className="rounded-lg bg-surface-alt px-2 py-0.5 font-extrabold text-ink">{item.quantity}×</span>
+              {onQuantityChange ? (
+                <QuantityStepper quantity={item.quantity} onChange={(q) => onQuantityChange(item, q)} />
+              ) : (
+                <span className="rounded-lg bg-surface-alt px-2 py-0.5 font-extrabold text-ink">{item.quantity}×</span>
+              )}
               <div className="min-w-0 flex-1">
                 <p className="text-ink">{item.productName}</p>
                 {item.optionsText && <p className="text-xs text-ink-2">{item.optionsText}</p>}
@@ -221,6 +239,11 @@ export function OrderItemsCard({ order, onRemoveItem }: { order: Order; onRemove
           <div className="h-2" />
         </div>
       ))}
+      {onAddItem && (
+        <button type="button" onClick={onAddItem} className="flex w-full items-center justify-center gap-1.5 border-t border-line py-3 font-bold text-brand-ink hover:bg-surface-alt">
+          <Plus className="size-4" /> إضافة منتج للأوردر
+        </button>
+      )}
     </SoftCard>
   );
 }

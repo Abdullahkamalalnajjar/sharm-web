@@ -3,29 +3,32 @@ import {
   ArrowLeft,
   BookmarkCheck,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
   Flame,
-  LayoutGrid,
   MapPin,
-  Navigation,
   Search,
-  Sparkles,
+  SlidersHorizontal,
+  UtensilsCrossed,
+  X,
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
 
-import { formatPrice } from '@/lib/format';
+import { useDeliveryLocation } from '@/api/queries';
+import { formatPrice, storeStatusLabel } from '@/lib/format';
 import type { HomeOffer } from '@/lib/home-content';
-import { AppImage } from '@/components/ui';
-import { SHARM_AREAS, categoryLook, categoryOf } from '@/lib/meta';
+import { Button, Chip, CountPill, Sheet, Switch } from '@/components/ui';
 import { localized } from '@/lib/localized';
+import { SHARM_AREAS, categoryLook, categoryOf } from '@/lib/meta';
 import { useBrowse } from '@/store/ui';
 import type { NearbyStore, StoreCategory } from '@/types';
 
-import { Cover } from './StoreBits';
+import { ArcPicker, useOpenCustomOrder, type ArcPickerItem } from './Showcase';
+import { Cover, OpenStoreCard } from './StoreBits';
 
 // ---------- Building blocks ----------
 
@@ -64,31 +67,125 @@ export function SectionHead({ title, icon, action, onAction, to }: { title: stri
   );
 }
 
-/** Red band under the header holding the white search pill. */
-export function SearchBand() {
-  const search = useBrowse((s) => s.search);
-  const setSearch = useBrowse((s) => s.setSearch);
+/** "التوصيل لـ" over the delivery place (opens the delivery picker), the two-tone title, then search + filter. */
+export function HomeHeader({ categories }: { categories: StoreCategory[] }) {
+  const { location } = useDeliveryLocation();
+  const { search, setSearch, categoryId, openOnly, setPickerOpen } = useBrowse();
+  const [filterOpen, setFilterOpen] = useState(false);
+  const place = !location ? '...' : location.address ? `${location.title} • ${location.address.addressLine}` : location.title;
+  const filtered = openOnly || categoryId !== null;
+
   return (
-    <div className="bg-brand rounded-b-[35px] pb-[1.15rem] pt-1.5">
-      <div className="container-site">
+    <section className="container-site pt-3">
+      <button
+        type="button"
+        onClick={() => setPickerOpen(true)}
+        aria-label="تغيير مكان التوصيل"
+        className="flex max-w-full flex-col items-start rounded-xl px-0.5 py-1 text-start hover:bg-surface/60"
+      >
+        <span className="text-[12.5px] text-ink-3">التوصيل لـ</span>
+        <span className="mt-0.5 flex min-w-0 max-w-full items-center gap-1">
+          <MapPin className="size-[18px] shrink-0 text-brand" />
+          <span className="truncate text-base font-extrabold text-ink">{place}</span>
+          <ChevronDown className="size-5 shrink-0 text-ink-2" />
+        </span>
+      </button>
+
+      <h2 className="mt-4 text-[30px] leading-[1.2] md:text-[36px]">
+        <span className="font-medium text-ink-3">اطلب </span>
+        <span className="font-black text-ink">اللي نفسك فيه</span>
+      </h2>
+
+      <div className="mt-4 flex items-center gap-2.5">
         <form
           role="search"
           onSubmit={(e) => e.preventDefault()}
-          className="flex h-[50px] items-center gap-2 rounded-[25px] bg-white ps-[1.1rem] pe-1.5 shadow-[0_4px_14px_rgb(0_0_0/0.12)] dark:bg-surface-alt"
+          className="flex h-[52px] min-w-0 flex-1 items-center gap-2 rounded-[26px] border border-line bg-surface ps-4 pe-2 focus-within:border-brand"
         >
+          <Search className="size-5 shrink-0 text-ink-2" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="دوّر على مطعم أو محل..."
+            placeholder="دور على مطعم أو سوبر ماركت أو صيدلية"
             aria-label="بحث"
-            className="min-w-0 flex-1 bg-transparent text-base text-ink outline-none placeholder:text-ink-3"
+            className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-ink outline-none placeholder:font-medium placeholder:text-ink-3"
           />
-          <button type="submit" aria-label="بحث" className="grid size-[42px] shrink-0 place-items-center rounded-full text-ink-2 hover:bg-black/10 hover:text-brand-ink">
-            <Search className="size-5" />
-          </button>
+          {search && (
+            <button type="button" aria-label="امسح البحث" onClick={() => setSearch('')} className="grid size-8 shrink-0 place-items-center rounded-full text-ink-3 hover:bg-surface-alt hover:text-ink">
+              <X className="size-4" />
+            </button>
+          )}
         </form>
+        <button
+          type="button"
+          title="فلترة"
+          aria-label="فلترة"
+          onClick={() => setFilterOpen(true)}
+          className="relative grid size-[52px] shrink-0 place-items-center rounded-full bg-brand text-white shadow-brand transition-colors hover:bg-brand-light active:scale-95"
+        >
+          <SlidersHorizontal className="size-6" />
+          {filtered && <span className="absolute top-0.5 end-0.5 size-2.5 rounded-full bg-accent ring-2 ring-bg" />}
+        </button>
       </div>
-    </div>
+
+      <FilterSheet open={filterOpen} onClose={() => setFilterOpen(false)} categories={categories} />
+    </section>
+  );
+}
+
+function FilterSheet({ open, onClose, categories }: { open: boolean; onClose: () => void; categories: StoreCategory[] }) {
+  const { categoryId, openOnly, setCategoryId, setOpenOnly } = useBrowse();
+  return (
+    <Sheet open={open} onClose={onClose} title="فلترة">
+      <p className="mb-2 font-bold text-ink-2">القسم</p>
+      <div className="flex flex-wrap gap-2">
+        <Chip selected={categoryId === null} onClick={() => setCategoryId(null)}>
+          الكل
+        </Chip>
+        {categories.map((c) => {
+          const look = categoryLook(c.icon);
+          const on = categoryId === c.id;
+          return (
+            <Chip key={c.id} selected={on} onClick={() => setCategoryId(c.id)} icon={<look.Icon className="size-4" style={{ color: on ? '#fff' : look.color }} />}>
+              {c.name}
+            </Chip>
+          );
+        })}
+      </div>
+      <label className="mt-4 flex cursor-pointer items-center justify-between gap-3 py-2">
+        <span className="font-bold text-ink">المفتوح دلوقتي بس</span>
+        <Switch checked={openOnly} onChange={setOpenOnly} label="المفتوح دلوقتي بس" />
+      </label>
+      <Button block className="mt-3" onClick={onClose}>
+        تمام
+      </Button>
+    </Sheet>
+  );
+}
+
+/** Store categories on the arc: "الكل" then the admin's categories; the centered one filters the list. */
+export function CategoryArc({ categories }: { categories: StoreCategory[] }) {
+  const categoryId = useBrowse((s) => s.categoryId);
+  const setCategoryId = useBrowse((s) => s.setCategoryId);
+  const items: ArcPickerItem[] = [
+    { key: 'all', label: 'الكل', icon: UtensilsCrossed, color: 'var(--color-brand)' },
+    ...categories.map((c) => {
+      const look = categoryLook(c.icon);
+      return { key: `category-${c.id}`, label: c.name, icon: look.Icon, imageUrl: c.imageUrl, color: look.color };
+    }),
+  ];
+  const index = categoryId === null ? 0 : categories.findIndex((c) => c.id === categoryId) + 1;
+  return (
+    <section className="container-site mt-3">
+      {/* Rebuilt when the categories arrive so the loop has the right length. */}
+      <ArcPicker
+        key={items.length}
+        label="الأقسام"
+        items={items}
+        selectedIndex={Math.max(index, 0)}
+        onSelect={(i) => setCategoryId(i === 0 ? null : categories[i - 1].id)}
+      />
+    </section>
   );
 }
 
@@ -143,6 +240,7 @@ function useSlider(count: number) {
 export function OffersCarousel({ offers, categories }: { offers: HomeOffer[]; categories: StoreCategory[] }) {
   const slider = useSlider(offers.length);
   const setCategoryId = useBrowse((s) => s.setCategoryId);
+  const openCustomOrder = useOpenCustomOrder();
   // An offer points at a category by its icon; if that category is gone it shows everything.
   const categoryFor = (icon: string | null) => (icon === null ? null : (categories.find((c) => c.icon === icon)?.id ?? null));
   return (
@@ -154,9 +252,9 @@ export function OffersCarousel({ offers, categories }: { offers: HomeOffer[]; ca
             <button
               key={o.id}
               type="button"
-              onClick={() => setCategoryId(categoryFor(o.categoryIcon))}
+              onClick={() => (o.kind === 'custom-order' ? openCustomOrder() : setCategoryId(categoryFor(o.categoryIcon)))}
               aria-label={o.title}
-              className="relative aspect-[2.25/1] flex-[0_0_82%] snap-start overflow-hidden rounded-[18px] border-[1.5px] border-brand/70 text-start shadow-[0_4px_12px_rgb(0_0_0/0.15)] md:flex-[0_0_calc(50%-0.375rem)]"
+              className="relative aspect-[1.9/1] flex-[0_0_82%] snap-start overflow-hidden rounded-[18px] border-[1.5px] border-brand/70 text-start shadow-[0_4px_12px_rgb(0_0_0/0.15)] md:aspect-[2.25/1] md:flex-[0_0_calc(50%-0.375rem)]"
               style={{ background: o.gradient }}
             >
               {o.image ? (
@@ -164,13 +262,28 @@ export function OffersCarousel({ offers, categories }: { offers: HomeOffer[]; ca
               ) : (
                 <>
                   <span className="absolute -end-10 -bottom-12 size-48 rounded-full bg-white/10" />
-                  <span className="absolute end-4 bottom-2 text-[76px] leading-none drop-shadow-lg md:text-[110px]" aria-hidden="true">
+                  <span
+                    className={clsx('absolute end-3 bottom-2 text-[68px] leading-none drop-shadow-lg md:text-[110px]', o.kind === 'custom-order' && '-rotate-12')}
+                    aria-hidden="true"
+                  >
                     {o.emoji}
                   </span>
-                  <span className="absolute inset-0 flex flex-col justify-center gap-1 p-4 pe-28 text-white md:p-6 md:pe-40">
+                  <span className="absolute inset-0 flex flex-col justify-center gap-1 p-4 pe-24 text-white md:p-6 md:pe-40">
                     <span className="self-start rounded-md bg-white/20 px-2 py-0.5 text-[11px] font-bold">{o.subtitle}</span>
-                    <span className="text-[20px] font-black leading-tight md:text-[28px]">{o.title}</span>
-                    {o.highlight && <span className="text-[17px] font-extrabold text-highlight md:text-[24px]">{o.highlight}</span>}
+                    <span className="text-[17px] font-black leading-tight sm:text-[20px] md:text-[28px]">{o.title}</span>
+                    {o.line ? (
+                      <span className="text-[12px] font-semibold leading-snug sm:text-[13px] md:text-[16px]">
+                        {o.line}
+                        {o.highlight && <span className="text-[14px] font-black text-highlight sm:text-[15px] md:text-[20px]">{o.highlight}</span>}
+                      </span>
+                    ) : (
+                      o.highlight && <span className="text-[17px] font-extrabold text-highlight md:text-[24px]">{o.highlight}</span>
+                    )}
+                    {o.button && (
+                      <span className="mt-1 self-start rounded-full bg-white px-4 py-1 text-[12.5px] font-extrabold text-brand-dark shadow-sm md:text-sm">
+                        {o.button}
+                      </span>
+                    )}
                   </span>
                 </>
               )}
@@ -188,226 +301,31 @@ export function OffersCarousel({ offers, categories }: { offers: HomeOffer[]; ca
   );
 }
 
-// ---------- Service tiles (categories) ----------
+// ---------- Open now ----------
 
-interface ServiceTile {
-  key: string;
-  label: string;
-  Icon: LucideIcon;
-  color: string;
-  /** The admin's picture for the category; the icon shows while it loads or when there is none. */
-  imageUrl?: string | null;
-  badge?: string;
-  badgeColor?: string;
-  selected: boolean;
-  onClick: () => void;
-}
-
-export function ServiceGrid({ stores, categories }: { stores: NearbyStore[]; categories: StoreCategory[] }) {
-  const { categoryId: selected, openOnly, setCategoryId, setOpenOnly } = useBrowse();
-  const navigate = useNavigate();
-  const openCount = stores.filter((s) => s.isOpen).length;
-
-  const tiles: ServiceTile[] = [
-    {
-      key: 'all',
-      label: 'كل المحلات',
-      Icon: LayoutGrid,
-      color: 'var(--color-accent)',
-      badge: stores.length > 0 ? `${stores.length}` : undefined,
-      badgeColor: '#1E6FE0',
-      selected: selected === null && !openOnly,
-      onClick: () => {
-        setCategoryId(null);
-        setOpenOnly(false);
-      },
-    },
-    ...categories.map((c) => {
-      const count = stores.filter((s) => s.categoryId === c.id).length;
-      const look = categoryLook(c.icon);
-      return {
-        key: `category-${c.id}`,
-        label: c.name,
-        Icon: look.Icon,
-        color: look.color,
-        imageUrl: c.imageUrl,
-        badge: count > 0 ? `${count}` : undefined,
-        selected: selected === c.id,
-        onClick: () => setCategoryId(selected === c.id ? null : c.id),
-      };
-    }),
-    {
-      key: 'open',
-      label: 'مفتوح دلوقتي',
-      Icon: Clock,
-      color: 'var(--color-success)',
-      badge: openCount > 0 ? `${openCount} مفتوح` : 'مقفول',
-      badgeColor: openCount > 0 ? 'var(--color-success)' : 'var(--color-ink-3)',
-      selected: openOnly,
-      onClick: () => setOpenOnly(!openOnly),
-    },
-    {
-      key: 'custom-order',
-      label: 'طلب خاص',
-      Icon: Sparkles,
-      color: '#A855F7',
-      badge: 'جديد',
-      badgeColor: '#9333EA',
-      selected: false,
-      onClick: () => navigate('/custom-order'),
-    },
-  ];
-
-  return (
-    <section className="container-site mt-6">
-      <h2 className="sr-only">الأقسام</h2>
-      {/* Phones and tablets: one row, five across, sliding sideways when the admin adds more categories. */}
-      <div className="no-scrollbar -mx-3 grid snap-x auto-cols-[calc((100%-2rem-4*0.5rem)/5)] grid-flow-col gap-x-2 overflow-x-auto px-3 pb-1 pt-1 scroll-px-3 sm:auto-cols-[calc((100%-2rem-4*0.875rem)/5)] sm:gap-x-3.5 lg:mx-0 lg:grid-flow-row lg:grid-cols-[repeat(auto-fit,minmax(100px,1fr))] lg:gap-x-3 lg:gap-y-4 lg:overflow-visible lg:px-0">
-        {tiles.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={t.onClick}
-            aria-pressed={t.selected}
-            className="group flex snap-start flex-col items-center gap-1.5 text-center outline-none"
-          >
-            <span
-              className={clsx(
-                'relative grid aspect-[1/1.04] w-full place-items-center overflow-hidden rounded-[20px] shadow-[0_2px_8px_rgb(0_0_0/0.25)] transition-all group-hover:-translate-y-[3px] group-hover:shadow-[0_8px_18px_rgb(0_0_0/0.35)] group-active:scale-[0.97]',
-                t.selected && 'ring-[3px] ring-brand-light ring-offset-2 ring-offset-bg',
-              )}
-              style={{ background: `linear-gradient(160deg, color-mix(in srgb, ${t.color} 42%, transparent), var(--color-surface) 90%)` }}
-            >
-              <t.Icon className="size-8 sm:size-10 drop-shadow" style={{ color: t.selected ? '#fff' : t.color }} strokeWidth={2.2} />
-              {t.imageUrl && <AppImage url={t.imageUrl} alt={t.label} fallback={null} className="absolute inset-0" />}
-              {t.imageUrl && t.selected && <span className="absolute inset-0 bg-brand/25" />}
-              {t.badge && (
-                <span
-                  className="absolute top-0 end-0 z-[1] max-w-[90%] truncate rounded-es-xl px-1.5 py-px text-[0.62rem] font-extrabold text-white sm:px-2 sm:text-[0.72rem]"
-                  style={{ background: t.badgeColor ?? t.color }}
-                >
-                  {t.badge}
-                </span>
-              )}
-            </span>
-            <span className={clsx('text-[0.8rem] font-extrabold leading-tight sm:text-[0.95rem]', t.selected ? 'text-brand-ink' : 'text-ink/85 group-hover:text-brand-ink')}>
-              {t.label}
-            </span>
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-// ---------- Custom order banner ----------
-
-export function CustomOrderBanner() {
-  return (
-    <section className="container-site mt-6">
-      <Link
-        to="/custom-order"
-        className="group relative block overflow-hidden rounded-[24px] p-5 sm:p-6 text-white shadow-[0_4px_18px_rgb(0_0_0/0.18)] transition-all hover:scale-[1.01] hover:shadow-[0_8px_26px_rgb(0_0_0/0.25)]"
-        style={{
-          background: 'linear-gradient(135deg, #7C3AED 0%, #B91C1C 60%, #E11D48 100%)',
-        }}
-      >
-        <span className="pointer-events-none absolute -top-14 -end-14 size-44 rounded-full bg-white/15 blur-2xl transition-transform group-hover:scale-125" />
-        <span className="pointer-events-none absolute -bottom-8 start-1/4 size-32 rounded-full bg-black/15 blur-xl" />
-
-        <div className="relative z-[1] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3.5">
-            <span className="grid size-12 sm:size-14 shrink-0 place-items-center rounded-2xl bg-white/20 backdrop-blur-md shadow-inner text-highlight">
-              <Sparkles className="size-6 sm:size-7" />
-            </span>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-highlight px-2.5 py-0.5 text-[11px] font-black text-[#3a2600]">
-                  خدمة MARID Egypt الخاصة
-                </span>
-                <span className="text-xs font-bold text-white/80">اطلب أي حاجة</span>
-              </div>
-              <h3 className="mt-1 text-lg sm:text-xl font-black text-white leading-tight">
-                محتاج طلب من مكان مش في القايمة؟
-              </h3>
-              <p className="mt-1 text-[13px] text-white/90 line-clamp-2 max-w-xl">
-                صيدلية، سوبرماركت، مخبز، أو أي مكان تاني... اكتبلنا طلبك وهنبعتلك مندوب يشتريلك حاجتك ويوصلهالك لحد عندك.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-            <span className="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2.5 text-sm font-extrabold text-[#7C3AED] shadow-sm transition-transform group-hover:-translate-x-1">
-              <span>اطلب دلوقتي</span>
-              <ArrowLeft className="size-4 rtl:-scale-x-100" />
-            </span>
-          </div>
-        </div>
-      </Link>
-    </section>
-  );
-}
-
-// ---------- Featured slider (open stores) ----------
-
-export function FeaturedSlider({ stores }: { stores: NearbyStore[] }) {
-  const slider = useSlider(stores.length);
-  if (stores.length === 0) return null;
+/** "مفتوح دلوقتي": open stores first, then the closed ones marked closed instead of disappearing. */
+export function OpenNowCarousel({ stores, onAll }: { stores: NearbyStore[]; onAll: () => void }) {
+  const open = stores.filter((s) => s.isOpen);
+  const list = [...open, ...stores.filter((s) => !s.isOpen)];
+  if (list.length === 0) return null;
   return (
     <section className="container-site mt-8">
-      <div className="group relative">
-        <div ref={slider.ref} className="slider-track rounded-[20px] bg-surface shadow-card">
-          {stores.map((s) => {
-            const meta = categoryOf(s);
-            return (
-              <Link
-                key={s.id}
-                to={`/store/${s.id}`}
-                aria-label={s.name}
-                className="relative aspect-[2/1] flex-[0_0_100%] snap-center overflow-hidden lg:aspect-auto lg:h-[min(320px,42vh)] lg:min-h-[240px]"
-              >
-                {/* Blurred copy of the cover as the backdrop. */}
-                <div className="absolute inset-0 scale-[1.2] blur-[28px] saturate-[1.2] opacity-90">
-                  <Cover category={s} logoUrl={s.coverUrl ?? s.logoUrl} iconSize={0} />
-                </div>
-                <div className="absolute inset-0 bg-black/25" />
-                <div className="absolute inset-y-4 inset-x-[18%] overflow-hidden rounded-2xl sm:inset-y-5 sm:inset-x-[28%]">
-                  <Cover category={s} logoUrl={s.coverUrl ?? s.logoUrl} iconSize={96} />
-                </div>
-                <div className="absolute inset-x-0 bottom-0 flex items-end gap-2 bg-gradient-to-t from-black/80 to-transparent p-4 pt-10 text-white">
-                  <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-lg font-black drop-shadow md:text-2xl">{localized(s.name, s.nameEn, s.nameRu)}</h3>
-                    <p className="flex items-center gap-1.5 text-xs font-semibold text-white/85 md:text-sm">
-                      <meta.Icon className="size-3.5" style={{ color: meta.color }} />
-                      {meta.label}
-                      {s.distanceKm !== null && (
-                        <>
-                          <span className="opacity-60">•</span>
-                          <Navigation className="size-3.5 text-accent" />
-                          {s.distanceKm.toFixed(1)} كم
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <span className="rounded-[5px] bg-success px-2 py-0.5 text-[0.8rem] font-extrabold text-white">مفتوح</span>
-                </div>
-              </Link>
-            );
-          })}
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <SectionTitle icon={Clock} className="min-w-0">
+            مفتوح دلوقتي
+          </SectionTitle>
+          <CountPill>{open.length} محل</CountPill>
         </div>
-        {stores.length > 1 && (
-          <>
-            <SliderArrows onPrev={slider.prev} onNext={slider.next} />
-            <div className="pointer-events-none absolute bottom-3 end-3 z-[2] flex items-center gap-2 rounded-full bg-black/45 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-sm">
-              <span className="flex h-1 w-14 justify-end overflow-hidden rounded-full bg-white/35">
-                <span className="h-full rounded-full bg-white transition-[width] duration-300" style={{ width: `${((slider.index + 1) / stores.length) * 100}%` }} />
-              </span>
-              <span dir="ltr">
-                {slider.index + 1} / {stores.length}
-              </span>
-            </div>
-          </>
-        )}
+        <button type="button" onClick={onAll} className="section-link">
+          شوف الكل
+          <ArrowLeft className="size-3.5 rtl:-scale-x-100" />
+        </button>
+      </div>
+      <div className="no-scrollbar -mx-3 flex snap-x gap-3 overflow-x-auto px-3 pb-1 scroll-px-3 sm:mx-0 sm:px-0">
+        {list.map((s) => (
+          <OpenStoreCard key={s.id} store={s} />
+        ))}
       </div>
     </section>
   );
@@ -438,9 +356,7 @@ export function PlaceTile({ store }: { store: NearbyStore }) {
           ? store.minOrderAmount > 0
             ? `أقل طلب ${formatPrice(store.minOrderAmount)}`
             : 'مفتوح'
-          : store.allowsScheduledOrders
-            ? 'مقفول • اطلب لبعدين'
-            : 'مقفول دلوقتي'}
+          : storeStatusLabel(store)}
       </span>
       <span className="absolute inset-x-3 bottom-2 z-[1] truncate text-[1.1rem] font-black [text-shadow:0_1px_4px_rgb(0_0_0/0.5)]">{localized(store.name, store.nameEn, store.nameRu)}</span>
     </Link>
@@ -453,7 +369,7 @@ export function NearestPanel({ stores, onAll }: { stores: NearbyStore[]; onAll: 
     <section className="container-site mt-8">
       <div className="rounded-[24px] bg-gradient-to-b from-[#6A3FB5] to-[#5B34A3] p-[0.9rem] pb-4 text-white shadow-[0_3px_12px_rgb(0_0_0/0.25)]">
         <div className="mb-3 flex items-center gap-2">
-          <BookmarkCheck className="size-6 shrink-0 text-accent" />
+          <BookmarkCheck className="size-6 shrink-0 text-highlight" />
           <h2 className="min-w-0 flex-1 text-[1.25rem] font-black">الأقرب ليك</h2>
           <button
             type="button"

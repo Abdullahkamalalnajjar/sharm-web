@@ -68,6 +68,8 @@ export function notificationTarget(
       return `/orders/${orderId}`;
     case 'storeOwner':
       return `/owner/orders/${orderId}`;
+    case 'cashier':
+      return `/cashier/orders/${orderId}`;
     default:
       return null;
   }
@@ -88,3 +90,77 @@ export function timeAgo(date: Date): string {
   if (days < 7) return `من ${days} أيام`;
   return date.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' });
 }
+
+// ---------- Alert sound ----------
+
+/**
+ * The app's alert (public/sounds/sharm_alert.wav), looped while a live banner is up.
+ * Browsers block audio until the visitor has interacted with the page, so `start` swallows
+ * the play() rejection, and `unlock` (call it from the first click/key press) primes the
+ * element and starts ringing if a banner is already waiting.
+ */
+export const alertSound = (() => {
+  let audio: HTMLAudioElement | null = null;
+  let ringing = false;
+  let unlocked = false;
+
+  const element = () => {
+    if (!audio) {
+      audio = new Audio(`${import.meta.env.BASE_URL}sounds/sharm_alert.wav`);
+      audio.loop = true;
+      audio.preload = 'auto';
+    }
+    return audio;
+  };
+
+  const play = (a: HTMLAudioElement) =>
+    a.play().then(
+      () => {
+        unlocked = true;
+      },
+      () => {
+        // Autoplay blocked: `unlock` retries on the next interaction.
+      },
+    );
+
+  return {
+    start() {
+      ringing = true;
+      const a = element();
+      a.muted = false;
+      if (a.paused) {
+        a.currentTime = 0;
+        void play(a);
+      }
+    },
+    stop() {
+      ringing = false;
+      if (!audio) return;
+      audio.pause();
+      audio.currentTime = 0;
+    },
+    get unlocked() {
+      return unlocked;
+    },
+    /** Call from a user gesture. */
+    unlock() {
+      const a = element();
+      if (ringing) {
+        a.muted = false;
+        if (a.paused) void play(a);
+        return;
+      }
+      if (unlocked) return;
+      a.muted = true;
+      void play(a).then(() => {
+        if (ringing) {
+          a.muted = false;
+          return;
+        }
+        a.pause();
+        a.currentTime = 0;
+        a.muted = false;
+      });
+    },
+  };
+})();
