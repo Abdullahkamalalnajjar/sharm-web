@@ -137,7 +137,7 @@ export function OfferFormSheet({
   const isNew = offer === null;
   const isPlatform = storeId === null;
   const [title, setTitle] = useState(offer?.title ?? '');
-  const [translations, setTranslations] = useState(() => translationValues({ nameEn: offer?.titleEn, nameRu: offer?.titleRu }));
+  const [translations, setTranslations] = useState(() => translationValues({ nameEn: offer?.titleEn, nameRu: offer?.titleRu, nameTr: offer?.titleTr, nameIt: offer?.titleIt }));
   const [endsAt, setEndsAt] = useState(toLocalInput(offer?.endsAtUtc ?? null));
   const [isActive, setIsActive] = useState(offer?.isActive ?? true);
   const [displayOrder, setDisplayOrder] = useState(String(offer?.displayOrder ?? defaultDisplayOrder));
@@ -173,6 +173,8 @@ export function OfferFormSheet({
       // "" clears a translation.
       titleEn: translations.nameEn.trim(),
       titleRu: translations.nameRu.trim(),
+      titleTr: translations.nameTr.trim(),
+      titleIt: translations.nameIt.trim(),
       endsAtUtc: endsAt ? new Date(endsAt).toISOString() : null,
       isActive,
       displayOrder: asAdmin ? order : existing?.displayOrder,
@@ -241,7 +243,7 @@ export function OfferFormSheet({
         </div>
 
         <TextField name="title" label={t('عنوان العرض (عربي)')} placeholder={t('مثلاً: خصم 20% على البيتزا')} maxLength={100} value={title} onChange={(e) => setTitle(e.target.value)} />
-        <TranslationFields value={translations} onChange={setTranslations} withDescription={false} nameLabels={['Title (English)', 'Заголовок (Русский)']} nameMaxLength={100} />
+        <TranslationFields value={translations} onChange={setTranslations} withDescription={false} nameLabels={['Title (English)', 'Заголовок (Русский)', 'Başlık (Türkçe)', 'Titolo (Italiano)']} nameMaxLength={100} />
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">

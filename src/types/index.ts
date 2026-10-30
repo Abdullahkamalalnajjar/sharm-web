@@ -51,6 +51,10 @@ export interface Store {
   nameRu: string | null;
   descriptionEn: string | null;
   descriptionRu: string | null;
+  nameTr?: string | null;
+  nameIt?: string | null;
+  descriptionTr?: string | null;
+  descriptionIt?: string | null;
   /** The wide header image of the store page. */
   coverUrl: string | null;
   /** Customers can order for later today or tomorrow (admin setting). */
@@ -110,6 +114,10 @@ export interface StoreInput {
   nameRu?: string | null;
   descriptionEn?: string | null;
   descriptionRu?: string | null;
+  nameTr?: string | null;
+  nameIt?: string | null;
+  descriptionTr?: string | null;
+  descriptionIt?: string | null;
 }
 
 /** Admin settings of a store; they affect new orders only. */
@@ -154,6 +162,10 @@ export interface Product {
   nameRu: string | null;
   descriptionEn: string | null;
   descriptionRu: string | null;
+  nameTr?: string | null;
+  nameIt?: string | null;
+  descriptionTr?: string | null;
+  descriptionIt?: string | null;
   /** % off the whole unit price (base and extras); 0 when not discounted. `price` is before it. */
   discountPercent: number;
   /** The base price after the discount. */
@@ -202,6 +214,10 @@ export interface ProductInput {
   nameRu?: string | null;
   descriptionEn?: string | null;
   descriptionRu?: string | null;
+  nameTr?: string | null;
+  nameIt?: string | null;
+  descriptionTr?: string | null;
+  descriptionIt?: string | null;
   /** 0 removes the discount; omitted keeps the current one. */
   discountPercent?: number | null;
 }

@@ -170,7 +170,7 @@ export const en: Record<string, string> = {
   'مش نشط (مش هيظهر للزبون)': 'Inactive (customers won\'t see it)',
   'المحلات بتظهر في صفحة العرض، والزبون يدخل عليها.': 'The stores appear on the offer page, and customers can open them.',
   'الترجمة للسياح': 'Translations for tourists',
-  'English • Русский — اختياري، لو فاضي هيظهر العربي': 'English • Русский — optional; if empty, the Arabic is shown',
+  'English • Русский • Türkçe • Italiano — اختياري، لو فاضي هيظهر العربي': 'English • Русский • Türkçe • Italiano — optional; if empty, the Arabic is shown',
   'owner|فاضي': 'Empty',
   'owner|إخفاء': 'Hide',
 };
@@ -345,7 +345,7 @@ export const ru: Record<string, string> = {
   'مش نشط (مش هيظهر للزبون)': 'Неактивен (покупатели его не увидят)',
   'المحلات بتظهر في صفحة العرض، والزبون يدخل عليها.': 'Магазины показываются на странице предложения, покупатели могут их открыть.',
   'الترجمة للسياح': 'Переводы для туристов',
-  'English • Русский — اختياري، لو فاضي هيظهر العربي': 'English • Русский — необязательно; если пусто, показывается арабский',
+  'English • Русский • Türkçe • Italiano — اختياري، لو فاضي هيظهر العربي': 'English • Русский • Türkçe • Italiano — необязательно; если пусто, показывается арабский',
   'owner|فاضي': 'Пусто',
   'owner|إخفاء': 'Скрыть',
 };
