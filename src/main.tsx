@@ -8,11 +8,11 @@ import { useLanguage } from './lib/i18n';
 import { useAuth } from './store/auth';
 import './index.css';
 
-// Only customer pages are translated: staff (admin, store, driver, cashier) always see Arabic.
+// Only customer and admin pages are translated: the other staff (store, driver, cashier) always see Arabic.
 // Set before the first render and kept in sync with sign-in and sign-out.
 const syncArabicOnly = () => {
   const role = useAuth.getState().session?.role;
-  useLanguage.getState().setArabicOnly(role !== undefined && role !== 'customer');
+  useLanguage.getState().setArabicOnly(role !== undefined && role !== 'customer' && role !== 'admin');
 };
 syncArabicOnly();
 useAuth.subscribe(syncArabicOnly);

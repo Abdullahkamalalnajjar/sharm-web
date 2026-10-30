@@ -23,6 +23,7 @@ import {
   TextField,
 } from "@/components/ui";
 import { formatPrice } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { PAYOUT_METHODS } from "@/lib/meta";
 import { runAction } from "@/lib/run-action";
 import type { PayoutMethod } from "@/types";
@@ -55,13 +56,13 @@ export function StoreWalletPage({ isAdmin = false }: { isAdmin?: boolean }) {
   return (
     <div className="mx-auto max-w-2xl pb-8">
       <PageHeader
-        title={name ? `محفظة ${name}` : "المحفظة"}
+        title={name ? t("محفظة {name}", { name }) : t("المحفظة")}
         actions={
           isAdmin ? (
             <RoundIconButton
               icon={SlidersHorizontal}
               size={40}
-              title="تسوية"
+              title={t("تسوية")}
               onClick={() => setAdjustOpen(true)}
             />
           ) : undefined
@@ -72,19 +73,21 @@ export function StoreWalletPage({ isAdmin = false }: { isAdmin?: boolean }) {
           <Loading />
         ) : wallet.isError || !w ? (
           <ErrorView
-            message={(wallet.error as Error)?.message ?? "حصل خطأ"}
+            message={(wallet.error as Error)?.message ?? t("حصل خطأ")}
             onRetry={() => wallet.refetch()}
           />
         ) : (
           <>
             <div className="rounded-card bg-gradient-to-br from-brand-light to-brand p-5 text-white">
               <p className="text-white/75">
-                {isAdmin ? "رصيده عند التطبيق" : "رصيدك عند التطبيق"}
+                {isAdmin ? t("رصيده عند التطبيق") : t("رصيدك عند التطبيق")}
               </p>
               <p className="text-3xl font-black">{formatPrice(w.balance)}</p>
               {w.pendingWithdrawals > 0 && (
                 <p className="text-xs text-white/75">
-                  منهم {formatPrice(w.pendingWithdrawals)} في طلبات سحب مستنية
+                  {t("منهم {amount} في طلبات سحب مستنية", {
+                    amount: formatPrice(w.pendingWithdrawals),
+                  })}
                 </p>
               )}
               {!isAdmin && (
@@ -96,30 +99,31 @@ export function StoreWalletPage({ isAdmin = false }: { isAdmin?: boolean }) {
                   onClick={() => setWithdrawOpen(true)}
                 >
                   {w.available > 0
-                    ? `اسحب (متاح ${formatPrice(w.available)})`
-                    : "مفيش رصيد متاح للسحب"}
+                    ? t("اسحب (متاح {amount})", { amount: formatPrice(w.available) })
+                    : t("مفيش رصيد متاح للسحب")}
                 </Button>
               )}
             </div>
 
             <div className="flex gap-2.5">
               <MoneyTile
-                label="إجمالي الأرباح"
+                label={t("إجمالي الأرباح")}
                 value={w.totalEarned}
-                hint={`${w.deliveredOrders} أوردر اتوصّل`}
+                hint={t("{n} أوردر اتوصّل", { n: w.deliveredOrders })}
               />
-              <MoneyTile label="اتسحب" value={w.totalPaidOut} />
+              <MoneyTile label={t("اتسحب")} value={w.totalPaidOut} />
             </div>
             <p className="-mt-1 text-[11px] text-ink-3">
-              الأرباح = سعر المنتجات ناقص عمولة التطبيق، بتتحسب لما الأوردر
-              يتوصّل.
+              {t(
+                "الأرباح = سعر المنتجات ناقص عمولة التطبيق، بتتحسب لما الأوردر يتوصّل.",
+              )}
             </p>
 
-            <SectionHeader title="طلبات السحب" />
+            <SectionHeader title={t("طلبات السحب")} />
             {withdrawals.isLoading ? (
               <Loading className="py-6" />
             ) : (withdrawals.data ?? []).length === 0 ? (
-              <p className="text-ink-3">لسه مفيش طلبات سحب</p>
+              <p className="text-ink-3">{t("لسه مفيش طلبات سحب")}</p>
             ) : (
               (withdrawals.data ?? []).slice(0, 10).map((item) => (
                 <WithdrawalCard
@@ -137,13 +141,13 @@ export function StoreWalletPage({ isAdmin = false }: { isAdmin?: boolean }) {
                               await runAction(
                                 () =>
                                   walletsApi.cancelWithdrawal(storeId, item.id),
-                                "الطلب اتلغى",
+                                t("الطلب اتلغى"),
                               )
                             )
                               refresh();
                           }}
                         >
-                          إلغاء الطلب
+                          {t("إلغاء الطلب")}
                         </Button>
                       </div>
                     ) : undefined
@@ -153,8 +157,8 @@ export function StoreWalletPage({ isAdmin = false }: { isAdmin?: boolean }) {
             )}
 
             <SectionHeader
-              title="آخر الحركات"
-              action={showAll ? undefined : "الكل"}
+              title={t("آخر الحركات")}
+              action={showAll ? undefined : t("الكل")}
               onAction={() => setShowAll(true)}
             />
             {showAll ? (
@@ -163,7 +167,7 @@ export function StoreWalletPage({ isAdmin = false }: { isAdmin?: boolean }) {
               />
             ) : w.recent.length === 0 ? (
               <p className="text-ink-3">
-                لسه مفيش حركات. أول ما أوردر يتوصّل أرباحه هتظهر هنا.
+                {t("لسه مفيش حركات. أول ما أوردر يتوصّل أرباحه هتظهر هنا.")}
               </p>
             ) : (
               <SoftCard className="overflow-hidden">
@@ -179,7 +183,7 @@ export function StoreWalletPage({ isAdmin = false }: { isAdmin?: boolean }) {
       <Sheet
         open={withdrawOpen}
         onClose={() => setWithdrawOpen(false)}
-        title="طلب سحب"
+        title={t("طلب سحب")}
       >
         {withdrawOpen && w && (
           <WithdrawalForm
@@ -195,16 +199,16 @@ export function StoreWalletPage({ isAdmin = false }: { isAdmin?: boolean }) {
 
       <AmountDialog
         open={adjustOpen}
-        title={`تسوية رصيد ${name}`}
-        message="بالموجب بيزوّد اللي ليه، وبالسالب بيخصم."
-        noteLabel="السبب"
+        title={t("تسوية رصيد {name}", { name })}
+        message={t("بالموجب بيزوّد اللي ليه، وبالسالب بيخصم.")}
+        noteLabel={t("السبب")}
         noteRequired
         allowNegative
         onClose={() => setAdjustOpen(false)}
         onSubmit={async (amount, note) => {
           const ok = await runAction(
             () => walletsApi.adjust("Store", storeId, amount, note),
-            "اتسجلت",
+            t("اتسجلت"),
           );
           if (ok) refresh();
           return ok;
@@ -234,9 +238,9 @@ function WithdrawalForm({
   async function submit(e: FormEvent) {
     e.preventDefault();
     const value = Number(amount);
-    if (!value || value <= 0) return setError("اكتب مبلغ");
-    if (value > available) return setError("أكتر من المتاح");
-    if (method !== "Cash" && !details.trim()) return setError(`${hint} مطلوب`);
+    if (!value || value <= 0) return setError(t("اكتب مبلغ"));
+    if (value > available) return setError(t("أكتر من المتاح"));
+    if (method !== "Cash" && !details.trim()) return setError(t("{field} مطلوب", { field: hint }));
     setBusy(true);
     const ok = await runAction(
       () =>
@@ -246,7 +250,7 @@ function WithdrawalForm({
           method,
           details.trim() || null,
         ),
-      "الطلب اتبعت للإدارة",
+      t("الطلب اتبعت للإدارة"),
     );
     setBusy(false);
     if (ok) onDone();
@@ -254,17 +258,19 @@ function WithdrawalForm({
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
-      <p className="text-ink-2">متاح {formatPrice(available)}</p>
+      <p className="text-ink-2">
+        {t("متاح {amount}", { amount: formatPrice(available) })}
+      </p>
       <TextField
         name="amount"
         type="number"
         inputMode="decimal"
         step="any"
         ltr
-        label="المبلغ (ج.م)"
+        label={t("المبلغ (ج.م)")}
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        end={<span className="text-sm">ج.م</span>}
+        end={<span className="text-sm">{t("ج.م")}</span>}
       />
       <div className="flex flex-wrap gap-2">
         {PAYOUT_METHODS.map((m) => (
@@ -286,7 +292,7 @@ function WithdrawalForm({
       />
       {error && <InlineError message={error} />}
       <Button type="submit" block loading={busy}>
-        ابعت الطلب
+        {t("ابعت الطلب")}
       </Button>
     </form>
   );

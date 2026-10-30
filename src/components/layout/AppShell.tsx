@@ -174,7 +174,7 @@ export function AppShell() {
               </NavLink>
             )}
             <ThemeButton />
-            {isCustomer && <LanguageButton />}
+            {(isCustomer || role === 'admin') && <LanguageButton />}
             {session ? (
               <>
                 <NotificationBell />

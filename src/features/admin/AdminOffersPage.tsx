@@ -6,6 +6,7 @@ import { useAdminOffers, useRefreshOffers } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, EmptyView, ErrorView, Loading, Segmented } from '@/components/ui';
 import { OfferFormSheet, OfferRow, deleteOffer } from '@/features/owner/OfferEditor';
+import { t } from '@/lib/i18n';
 import { runAction } from '@/lib/run-action';
 import type { OfferAdmin } from '@/types';
 
@@ -25,7 +26,7 @@ export function AdminOffersPage() {
 
   async function toggle(o: OfferAdmin, active: boolean) {
     setBusyId(o.id);
-    if (await runAction(() => offersApi.setActive(o.id, active), active ? 'العرض ظاهر' : 'العرض اتخفى')) refresh();
+    if (await runAction(() => offersApi.setActive(o.id, active), active ? t('العرض ظاهر') : t('العرض اتخفى'))) refresh();
     setBusyId(null);
   }
 
@@ -38,11 +39,11 @@ export function AdminOffersPage() {
   return (
     <div className="mx-auto max-w-3xl pb-28">
       <PageHeader
-        title="العروض"
-        subtitle="العروض اليومية في رئيسية الزبون"
+        title={t('العروض')}
+        subtitle={t('العروض اليومية في رئيسية الزبون')}
         actions={
           <Button size="sm" className="hidden md:inline-flex" icon={<Plus className="size-4" />} onClick={() => setEditing(null)}>
-            عرض عام جديد
+            {t('عرض عام جديد')}
           </Button>
         }
       />
@@ -52,9 +53,9 @@ export function AdminOffersPage() {
             value={filter}
             onChange={setFilter}
             options={[
-              { value: 'all', label: `الكل (${all.length})` },
-              { value: 'platform', label: 'عروض عامة' },
-              { value: 'stores', label: 'عروض المحلات' },
+              { value: 'all', label: t('الكل ({n})', { n: all.length }) },
+              { value: 'platform', label: t('عروض عامة') },
+              { value: 'stores', label: t('عروض المحلات') },
             ]}
           />
         </div>
@@ -63,18 +64,18 @@ export function AdminOffersPage() {
         ) : offers.isError ? (
           <ErrorView message={(offers.error as Error).message} onRetry={() => offers.refetch()} />
         ) : list.length === 0 ? (
-          <EmptyView icon={Gift} message={filter === 'stores' ? 'مفيش محل عامل عروض لسه' : 'مفيش عروض لسه.\nضيف عرض عام من أي محلات ومنتجات.'} />
+          <EmptyView icon={Gift} message={filter === 'stores' ? t('مفيش محل عامل عروض لسه') : t('مفيش عروض لسه.\nضيف عرض عام من أي محلات ومنتجات.')} />
         ) : (
           <>
             <p className="mb-3 text-sm leading-relaxed text-ink-2">
-              عروض المحلات بتظهر على طول من غير موافقة؛ تقدر تخفي أي عرض بالزرار. الترتيب: الأصغر الأول، وبعدين الأحدث.
+              {t('عروض المحلات بتظهر على طول من غير موافقة؛ تقدر تخفي أي عرض بالزرار. الترتيب: الأصغر الأول، وبعدين الأحدث.')}
             </p>
             <div className="flex flex-col gap-2.5">
               {list.map((o) => (
                 <OfferRow
                   key={o.id}
                   offer={o}
-                  storeLabel={o.storeId === null ? 'عرض عام' : (o.storeName ?? `محل #${o.storeId}`)}
+                  storeLabel={o.storeId === null ? t('عرض عام') : (o.storeName ?? t('محل #{n}', { n: o.storeId }))}
                   busy={busyId === o.id}
                   onEdit={() => setEditing(o)}
                   onToggle={(v) => toggle(o, v)}
@@ -89,7 +90,7 @@ export function AdminOffersPage() {
       <div className="fixed inset-x-0 bottom-24 z-30 px-4 md:hidden pointer-events-none">
         <div className="mx-auto max-w-3xl flex justify-end">
           <Button className="pointer-events-auto" icon={<Plus className="size-5" />} onClick={() => setEditing(null)}>
-            عرض عام جديد
+            {t('عرض عام جديد')}
           </Button>
         </div>
       </div>

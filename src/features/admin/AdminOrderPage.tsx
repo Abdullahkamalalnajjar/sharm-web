@@ -21,6 +21,7 @@ import {
   canAssignDriver,
 } from '@/features/orders/OrderWidgets';
 import { formatOrderDate } from '@/lib/format';
+import { t } from '@/lib/i18n';
 import { isAwaitingPickup, orderStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
@@ -55,13 +56,13 @@ export function AdminOrderPage() {
   }
 
   async function removeItem(o: Order, item: OrderItem) {
-    if (!(await confirm(`تشيل "${item.productName}" من الأوردر؟`, 'شيل'))) return;
-    await run(() => ordersApi.removeItem(o.id, item.id), 'المنتج اتشال');
+    if (!(await confirm(t('تشيل "{name}" من الأوردر؟', { name: item.productName }), t('شيل')))) return;
+    await run(() => ordersApi.removeItem(o.id, item.id), t('المنتج اتشال'));
   }
 
   async function removeDriver(o: Order) {
-    if (!(await confirm(`تشيل ${o.driver!.fullName} من الأوردر؟`, 'شيل'))) return;
-    await run(() => ordersApi.assignDriver(o.id, null), 'المندوب اتشال');
+    if (!(await confirm(t('تشيل {name} من الأوردر؟', { name: o.driver!.fullName }), t('شيل')))) return;
+    await run(() => ordersApi.assignDriver(o.id, null), t('المندوب اتشال'));
   }
 
   const o = order.data;
@@ -72,10 +73,10 @@ export function AdminOrderPage() {
   return (
     <div className="mx-auto max-w-3xl pb-28">
       <PageHeader
-        title={o ? `أوردر #${o.number}` : 'الأوردر'}
+        title={o ? t('أوردر #{n}', { n: o.number }) : t('الأوردر')}
         actions={
           o && active ? (
-            <button type="button" title="إلغاء الأوردر" disabled={busy} onClick={() => setReasonOpen(true)} className="grid size-10 place-items-center rounded-full text-danger hover:bg-danger/10 disabled:opacity-50">
+            <button type="button" title={t('إلغاء الأوردر')} disabled={busy} onClick={() => setReasonOpen(true)} className="grid size-10 place-items-center rounded-full text-danger hover:bg-danger/10 disabled:opacity-50">
               <XCircle className="size-5" />
             </button>
           ) : null
@@ -85,12 +86,12 @@ export function AdminOrderPage() {
         {order.isLoading ? (
           <Loading />
         ) : order.isError || !o ? (
-          <ErrorView message={(order.error as Error)?.message ?? 'حصل خطأ'} onRetry={() => order.refetch()} />
+          <ErrorView message={(order.error as Error)?.message ?? t('حصل خطأ')} onRetry={() => order.refetch()} />
         ) : (
           <>
             <div className="flex items-center gap-2 pb-3 flex-wrap">
               <span className="flex-1 text-ink-2">{formatOrderDate(o.createdUtc)}</span>
-              {o.isCustomOrder && <StatusChip label="طلب خاص" color="var(--color-custom)" />}
+              {o.isCustomOrder && <StatusChip label={t('طلب خاص')} color="var(--color-custom)" />}
               <OrderStatusBadge status={o.status} />
             </div>
             <div className="grid gap-3 md:grid-cols-2 md:items-start">
@@ -100,7 +101,7 @@ export function AdminOrderPage() {
                     order={o}
                     onAcceptForStore={
                       o.status === 'Pending' && o.storeDecision === 'Pending' && !busy
-                        ? () => run(() => ordersApi.acceptForStore(o.id), 'وافقت بدل المحل')
+                        ? () => run(() => ordersApi.acceptForStore(o.id), t('وافقت بدل المحل'))
                         : undefined
                     }
                   />
@@ -121,8 +122,8 @@ export function AdminOrderPage() {
                     <SoftCard as="button" onClick={() => !busy && setPickerOpen(true)} className="flex items-center gap-3 p-4 bg-warning/10">
                       <IconWell icon={UserRoundSearch} size={44} color="var(--color-warning)" />
                       <span className="min-w-0 flex-1">
-                        <span className="block font-extrabold text-ink">لسه مفيش مندوب</span>
-                        <span className="block text-xs text-ink-2">معروض على المناديب المتاحين، أو اختار واحد بنفسك</span>
+                        <span className="block font-extrabold text-ink">{t('لسه مفيش مندوب')}</span>
+                        <span className="block text-xs text-ink-2">{t('معروض على المناديب المتاحين، أو اختار واحد بنفسك')}</span>
                       </span>
                       <ChevronLeft className="size-5 text-warning" />
                     </SoftCard>
@@ -137,7 +138,7 @@ export function AdminOrderPage() {
                   order={o}
                   onRemoveItem={canEditItems && !busy ? (item) => removeItem(o, item) : undefined}
                   onQuantityChange={
-                    canEditItems && !busy ? (item, q) => run(() => ordersApi.setItemQuantity(o.id, item.id, q), 'الكمية اتعدّلت') : undefined
+                    canEditItems && !busy ? (item, q) => run(() => ordersApi.setItemQuantity(o.id, item.id, q), t('الكمية اتعدّلت')) : undefined
                   }
                   onAddItem={canEditItems && !busy && o.stores.length > 0 ? () => setItemPickerOpen(true) : undefined}
                 />
@@ -148,7 +149,7 @@ export function AdminOrderPage() {
                     onClose={() => setItemPickerOpen(false)}
                     onPick={(item) => {
                       setItemPickerOpen(false);
-                      run(() => ordersApi.addItem(o.id, item.productId, item.optionIds, item.quantity, item.note), 'المنتج اتضاف للأوردر');
+                      run(() => ordersApi.addItem(o.id, item.productId, item.optionIds, item.quantity, item.note), t('المنتج اتضاف للأوردر'));
                     }}
                   />
                 )}
@@ -163,12 +164,12 @@ export function AdminOrderPage() {
                       disabled={busy}
                       onClick={() => setSubtotalOpen(true)}
                     >
-                      تعديل سعر المنتجات
+                      {t('تعديل سعر المنتجات')}
                     </Button>
                   )}
                   {awaitingPickup && (
                     <Button variant="ghost" size="sm" icon={<Pencil className="size-4" />} disabled={busy} onClick={() => setFeeDialog('edit')}>
-                      تعديل سعر التوصيل
+                      {t('تعديل سعر التوصيل')}
                     </Button>
                   )}
                 </div>
@@ -184,19 +185,19 @@ export function AdminOrderPage() {
             {/* The store's acceptance confirms the order; the admin can confirm for a store that does not answer. */}
             {o.status === 'Pending' ? (
               <Button block loading={busy} icon={<Check className="size-5" />} onClick={() => setFeeDialog('confirm')}>
-                {o.storeDecision === 'Pending' ? 'أكّد بدل المحل' : 'تأكيد الأوردر'}
+                {o.storeDecision === 'Pending' ? t('أكّد بدل المحل') : t('تأكيد الأوردر')}
               </Button>
             ) : awaitingPickup && !o.driver ? (
               <Button block loading={busy} icon={<UserRoundPlus className="size-5" />} onClick={() => setPickerOpen(true)}>
-                اختار مندوب
+                {t('اختار مندوب')}
               </Button>
             ) : awaitingPickup ? (
-              <Button block loading={busy} icon={<Bike className="size-5" />} onClick={() => run(() => ordersApi.startDelivery(o.id), 'الأوردر خرج للتوصيل')}>
-                المندوب استلم الأوردر
+              <Button block loading={busy} icon={<Bike className="size-5" />} onClick={() => run(() => ordersApi.startDelivery(o.id), t('الأوردر خرج للتوصيل'))}>
+                {t('المندوب استلم الأوردر')}
               </Button>
             ) : (
-              <Button block variant="success" loading={busy} icon={<CheckCheck className="size-5" />} onClick={() => run(() => ordersApi.markDelivered(o.id), 'الأوردر اتوصّل')}>
-                اتوصّل للزبون
+              <Button block variant="success" loading={busy} icon={<CheckCheck className="size-5" />} onClick={() => run(() => ordersApi.markDelivered(o.id), t('الأوردر اتوصّل'))}>
+                {t('اتوصّل للزبون')}
               </Button>
             )}
           </div>
@@ -205,29 +206,29 @@ export function AdminOrderPage() {
 
       <ChargesDialog
         open={feeDialog !== null}
-        title={feeDialog === 'edit' ? 'تعديل سعر التوصيل والضريبة' : `سعر التوصيل للأوردر #${o?.number ?? ''}`}
+        title={feeDialog === 'edit' ? t('تعديل سعر التوصيل والضريبة') : t('سعر التوصيل للأوردر #{n}', { n: o?.number ?? '' })}
         order={o}
         onClose={() => setFeeDialog(null)}
         onSubmit={({ deliveryFee, taxPercent }) =>
           feeDialog === 'edit'
-            ? run(() => ordersApi.setDeliveryFee(id, deliveryFee, taxPercent), 'سعر التوصيل اتعدّل')
-            : run(() => ordersApi.confirm(id, deliveryFee, taxPercent), 'الأوردر اتأكد')
+            ? run(() => ordersApi.setDeliveryFee(id, deliveryFee, taxPercent), t('سعر التوصيل اتعدّل'))
+            : run(() => ordersApi.confirm(id, deliveryFee, taxPercent), t('الأوردر اتأكد'))
         }
       />
       <NumberDialog
         open={subtotalOpen}
-        title={`سعر منتجات الطلب الخاص #${o?.number ?? ''}`}
-        label="سعر المنتجات (ج.م)"
+        title={t('سعر منتجات الطلب الخاص #{n}', { n: o?.number ?? '' })}
+        label={t('سعر المنتجات (ج.م)')}
         initial={o?.subtotal}
         onClose={() => setSubtotalOpen(false)}
-        onSubmit={(subtotal) => run(() => ordersApi.setCustomSubtotal(id, subtotal), 'سعر المنتجات اتعدّل')}
+        onSubmit={(subtotal) => run(() => ordersApi.setCustomSubtotal(id, subtotal), t('سعر المنتجات اتعدّل'))}
       />
-      <ReasonDialog open={reasonOpen} onClose={() => setReasonOpen(false)} onSubmit={(reason) => run(() => ordersApi.cancel(id, reason || null), 'الأوردر اتلغى')} />
+      <ReasonDialog open={reasonOpen} onClose={() => setReasonOpen(false)} onSubmit={(reason) => run(() => ordersApi.cancel(id, reason || null), t('الأوردر اتلغى'))} />
       <DriverPicker
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         currentDriverId={o?.driver?.id}
-        onPick={(d) => run(() => ordersApi.assignDriver(id, d.id), `الأوردر اتسلّم لـ ${d.fullName}`)}
+        onPick={(d) => run(() => ordersApi.assignDriver(id, d.id), t('الأوردر اتسلّم لـ {name}', { name: d.fullName }))}
       />
     </div>
   );
@@ -237,16 +238,16 @@ export function AdminOrderPage() {
 function StoreDecisionCard({ order, onAcceptForStore }: { order: Order; onAcceptForStore?: () => void }) {
   const [text, color] =
     order.storeDecision === 'Pending'
-      ? ['مستني موافقة المحل', 'var(--color-warning)']
+      ? [t('مستني موافقة المحل'), 'var(--color-warning)']
       : order.storeDecision === 'Rejected'
-        ? ['المحل رفض الأوردر', 'var(--color-danger)']
+        ? [t('المحل رفض الأوردر'), 'var(--color-danger)']
         : order.readyUtc
-          ? ['المحل جهّز الأوردر 📦', 'var(--color-success)']
+          ? [t('المحل جهّز الأوردر 📦'), 'var(--color-success)']
           : order.status === 'Processing'
-            ? ['المحل بيجهّز الأوردر', 'var(--color-success)']
+            ? [t('المحل بيجهّز الأوردر'), 'var(--color-success)']
             : order.status === 'Confirmed'
-              ? ['المحل وافق، لسه مبدأش يجهّز', 'var(--color-success)']
-              : ['المحل وافق', 'var(--color-success)'];
+              ? [t('المحل وافق، لسه مبدأش يجهّز'), 'var(--color-success)']
+              : [t('المحل وافق'), 'var(--color-success)'];
 
   return (
     <div className="card flex items-center gap-2.5 p-4" style={{ background: `color-mix(in srgb, ${color} 10%, var(--color-surface))` }}>
@@ -254,7 +255,7 @@ function StoreDecisionCard({ order, onAcceptForStore }: { order: Order; onAccept
       <span className="flex-1 font-extrabold text-ink">{text}</span>
       {onAcceptForStore && (
         <Button variant="ghost" size="sm" onClick={onAcceptForStore}>
-          وافق بداله
+          {t('وافق بداله')}
         </Button>
       )}
     </div>

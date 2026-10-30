@@ -66,7 +66,7 @@ interface LanguageState {
   language: Language;
   /** The visitor's saved choice. */
   chosen: Language;
-  /** Only customer pages are translated: staff roles (admin, store, driver, cashier) always see Arabic. */
+  /** Only customer and admin pages are translated: the other staff (store, driver, cashier) always see Arabic. */
   arabicOnly: boolean;
   setLanguage: (language: Language) => void;
   setArabicOnly: (arabicOnly: boolean) => void;

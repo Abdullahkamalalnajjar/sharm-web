@@ -7,6 +7,7 @@ import { storeEmployeesApi } from '@/api';
 import { useStore } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, EmptyView, ErrorView, IconWell, InlineError, Loading, Sheet, SoftCard, TextField } from '@/components/ui';
+import { t, tIn } from '@/lib/i18n';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
 import type { StoreEmployee } from '@/types';
@@ -25,30 +26,30 @@ export function StoreEmployeesPage() {
   const reload = () => qc.invalidateQueries({ queryKey: employeesKey(storeId) });
 
   async function remove(e: StoreEmployee) {
-    if (!(await confirm(`تشيل ${e.fullName}؟ حسابه هيتقفل ومش هيقدر يدخل تاني.`, 'شيل'))) return;
-    if (await runAction(() => storeEmployeesApi.remove(storeId, e.id), 'الحساب اتشال')) reload();
+    if (!(await confirm(t('تشيل {name}؟ حسابه هيتقفل ومش هيقدر يدخل تاني.', { name: e.fullName }), t('شيل')))) return;
+    if (await runAction(() => storeEmployeesApi.remove(storeId, e.id), t('الحساب اتشال'))) reload();
   }
 
   return (
     <div className="mx-auto max-w-2xl pb-28">
       <PageHeader
-        title={store.data ? `كاشير ${store.data.name}` : 'حسابات الكاشير'}
+        title={store.data ? t('كاشير {name}', { name: store.data.name }) : t('حسابات الكاشير')}
         actions={
           <Button size="sm" className="hidden md:inline-flex" icon={<UserPlus className="size-4" />} onClick={() => setForm({ employee: null })}>
-            حساب كاشير
+            {t('حساب كاشير')}
           </Button>
         }
       />
       <div className="flex flex-col gap-2.5 px-4">
         <SoftCard className="bg-surface-alt p-3.5 text-[13px] text-ink-2">
-          الكاشير بيدخل بالإيميل والباسورد دول، ويشوف أوردرات المحل ويقبلها ويجهّزها. ما بيشوفش صافي المحل ولا المحفظة، ومش بيقدر يطلب سحب.
+          {t('الكاشير بيدخل بالإيميل والباسورد دول، ويشوف أوردرات المحل ويقبلها ويجهّزها. ما بيشوفش صافي المحل ولا المحفظة، ومش بيقدر يطلب سحب.')}
         </SoftCard>
         {employees.isLoading ? (
           <Loading />
         ) : employees.isError ? (
           <ErrorView message={(employees.error as Error).message} onRetry={() => employees.refetch()} />
         ) : employees.data!.length === 0 ? (
-          <EmptyView icon={IdCard} message="لسه مفيش حسابات كاشير للمحل ده" />
+          <EmptyView icon={IdCard} message={t('لسه مفيش حسابات كاشير للمحل ده')} />
         ) : (
           employees.data!.map((e) => (
             <SoftCard key={e.id} className="flex items-center gap-3 py-2.5 ps-3 pe-1.5">
@@ -66,10 +67,10 @@ export function StoreEmployeesPage() {
                   </span>
                 )}
               </span>
-              <button type="button" title="تعديل" onClick={() => setForm({ employee: e })} className="grid size-10 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
+              <button type="button" title={t('تعديل')} onClick={() => setForm({ employee: e })} className="grid size-10 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
                 <Pencil className="size-[18px]" />
               </button>
-              <button type="button" title="شيل" onClick={() => remove(e)} className="grid size-10 place-items-center rounded-full text-danger hover:bg-danger/10">
+              <button type="button" title={t('شيل')} onClick={() => remove(e)} className="grid size-10 place-items-center rounded-full text-danger hover:bg-danger/10">
                 <Trash2 className="size-[18px]" />
               </button>
             </SoftCard>
@@ -80,12 +81,12 @@ export function StoreEmployeesPage() {
       <div className="pointer-events-none fixed inset-x-0 bottom-24 z-30 px-4 md:hidden">
         <div className="mx-auto flex max-w-2xl justify-end">
           <Button className="pointer-events-auto" icon={<UserPlus className="size-5" />} onClick={() => setForm({ employee: null })}>
-            حساب كاشير
+            {t('حساب كاشير')}
           </Button>
         </div>
       </div>
 
-      <Sheet open={form !== null} onClose={() => setForm(null)} title={form?.employee ? `تعديل ${form.employee.fullName}` : 'حساب كاشير جديد'}>
+      <Sheet open={form !== null} onClose={() => setForm(null)} title={form?.employee ? t('تعديل {name}', { name: form.employee.fullName }) : t('حساب كاشير جديد')}>
         {form && (
           <EmployeeForm
             key={form.employee?.id ?? 'new'}
@@ -114,16 +115,16 @@ function EmployeeForm({ storeId, employee, onDone }: { storeId: number; employee
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return setError('الاسم مطلوب');
-    if (isNew && !email.includes('@')) return setError('اكتب إيميل صحيح');
+    if (!name.trim()) return setError(t('الاسم مطلوب'));
+    if (isNew && !email.includes('@')) return setError(t('اكتب إيميل صحيح'));
     // Editing: an empty password keeps the current one.
-    if ((isNew || password) && password.length < 6) return setError('الباسورد ٦ حروف على الأقل');
+    if ((isNew || password) && password.length < 6) return setError(t('الباسورد ٦ حروف على الأقل'));
     setError(null);
     setBusy(true);
     const input = { fullName: name.trim(), phoneNumber: phone.trim() || null, password, email: email.trim() };
     const ok = await runAction(
       () => (isNew ? storeEmployeesApi.create(storeId, input) : storeEmployeesApi.update(storeId, employee.id, input)),
-      isNew ? 'حساب الكاشير اتعمل' : 'البيانات اتحفظت',
+      isNew ? t('حساب الكاشير اتعمل') : t('البيانات اتحفظت'),
     );
     setBusy(false);
     if (ok) onDone();
@@ -131,20 +132,20 @@ function EmployeeForm({ storeId, employee, onDone }: { storeId: number; employee
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
-      <TextField name="fullName" label="الاسم" maxLength={100} start={<UserRound className="size-4" />} value={name} onChange={(e) => setName(e.target.value)} />
-      <TextField name="phone" type="tel" ltr maxLength={20} label="رقم الموبايل (اختياري)" start={<Phone className="size-4" />} value={phone} onChange={(e) => setPhone(e.target.value)} />
+      <TextField name="fullName" label={t('الاسم')} maxLength={100} start={<UserRound className="size-4" />} value={name} onChange={(e) => setName(e.target.value)} />
+      <TextField name="phone" type="tel" ltr maxLength={20} label={t('رقم الموبايل (اختياري)')} start={<Phone className="size-4" />} value={phone} onChange={(e) => setPhone(e.target.value)} />
       {isNew && (
-        <TextField name="email" type="email" ltr autoComplete="off" label="الإيميل (للدخول)" start={<Mail className="size-4" />} value={email} onChange={(e) => setEmail(e.target.value)} />
+        <TextField name="email" type="email" ltr autoComplete="off" label={t('الإيميل (للدخول)')} start={<Mail className="size-4" />} value={email} onChange={(e) => setEmail(e.target.value)} />
       )}
       <TextField
         name="password"
         type={showPassword ? 'text' : 'password'}
         ltr
         autoComplete="new-password"
-        label={isNew ? 'الباسورد' : 'باسورد جديد (سيبه فاضي لو مش هتغيّره)'}
+        label={isNew ? t('الباسورد') : t('باسورد جديد (سيبه فاضي لو مش هتغيّره)')}
         start={<Lock className="size-4" />}
         end={
-          <button type="button" aria-label={showPassword ? 'إخفاء' : 'إظهار'} onClick={() => setShowPassword(!showPassword)} className="text-ink-3 hover:text-ink">
+          <button type="button" aria-label={showPassword ? tIn('admin', 'إخفاء') : t('إظهار')} onClick={() => setShowPassword(!showPassword)} className="text-ink-3 hover:text-ink">
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         }
@@ -153,7 +154,7 @@ function EmployeeForm({ storeId, employee, onDone }: { storeId: number; employee
       />
       {error && <InlineError message={error} />}
       <Button type="submit" block size="md" loading={busy} className="mt-1">
-        {isNew ? 'اعمل الحساب' : 'حفظ'}
+        {isNew ? t('اعمل الحساب') : t('حفظ')}
       </Button>
     </form>
   );

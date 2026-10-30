@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { AppImage, Sheet } from '@/components/ui';
 import { MenuItem } from '@/features/addresses/AddressesPage';
+import { t } from '@/lib/i18n';
 
 /** What the user did with the image in a form; applied after the form is saved. */
 export type ImageEdit = { kind: 'none' } | { kind: 'picked'; file: File } | { kind: 'removed' };
@@ -11,7 +12,7 @@ export const noImageEdit: ImageEdit = { kind: 'none' };
 
 /** Image preview with change / remove actions. Shows the picked file, else the current image, else a placeholder. */
 export function ImagePickerField({
-  label = 'الصورة',
+  label = t('الصورة'),
   currentUrl,
   edit,
   onChange,
@@ -59,14 +60,14 @@ export function ImagePickerField({
         ) : (
           <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-ink-2">
             <Placeholder className="size-9 text-ink-3" />
-            <span className="font-semibold">دوس عشان تضيف صورة</span>
-            <span className="text-[11px] text-ink-3">JPG أو PNG • لحد 5 ميجا</span>
+            <span className="font-semibold">{t('دوس عشان تضيف صورة')}</span>
+            <span className="text-[11px] text-ink-3">{t('JPG أو PNG • لحد 5 ميجا')}</span>
           </span>
         )}
         {hasImage && (
           <span className="absolute bottom-2.5 end-2.5 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-sm font-bold text-white">
             <Pencil className="size-3.5" />
-            تغيير
+            {t('تغيير')}
           </span>
         )}
       </button>
@@ -91,7 +92,7 @@ export function ImagePickerField({
           >
             <span className="inline-flex items-center gap-2">
               <ImagePlus className="size-5 text-ink-2" />
-              اختار صورة
+              {t('اختار صورة')}
             </span>
           </MenuItem>
           <MenuItem
@@ -103,7 +104,7 @@ export function ImagePickerField({
           >
             <span className="inline-flex items-center gap-2">
               <Trash2 className="size-5" />
-              شيل الصورة
+              {t('شيل الصورة')}
             </span>
           </MenuItem>
         </div>

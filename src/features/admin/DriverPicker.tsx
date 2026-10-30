@@ -3,6 +3,7 @@ import { Bike } from 'lucide-react';
 
 import { useAdminDrivers } from '@/api/queries';
 import { EmptyView, ErrorView, IconWell, Loading, Sheet, StatusChip } from '@/components/ui';
+import { t } from '@/lib/i18n';
 import type { Driver } from '@/types';
 
 /** Sheet listing the active drivers, least busy first. */
@@ -21,14 +22,14 @@ export function DriverPicker({
   const active = (drivers.data ?? []).filter((d) => d.isActive).sort((a, b) => a.activeOrders - b.activeOrders);
 
   return (
-    <Sheet open={open} onClose={onClose} title="اختار المندوب">
-      <p className="-mt-2 mb-3 text-[13px] text-ink-3">الأقل شغل الأول</p>
+    <Sheet open={open} onClose={onClose} title={t('اختار المندوب')}>
+      <p className="-mt-2 mb-3 text-[13px] text-ink-3">{t('الأقل شغل الأول')}</p>
       {drivers.isLoading ? (
         <Loading className="py-8" />
       ) : drivers.isError ? (
         <ErrorView message={(drivers.error as Error).message} onRetry={() => drivers.refetch()} />
       ) : active.length === 0 ? (
-        <EmptyView icon={Bike} message={'مفيش مندوبين مفعّلين.\nضيف مندوب من صفحة "المندوبين".'} />
+        <EmptyView icon={Bike} message={t('مفيش مندوبين مفعّلين.\nضيف مندوب من صفحة "المندوبين".')} />
       ) : (
         <div className="flex flex-col gap-2.5 pb-2">
           {active.map((d) => {
@@ -53,11 +54,11 @@ export function DriverPicker({
                   </span>
                 </span>
                 {current ? (
-                  <StatusChip label="الحالي" color="var(--color-brand)" />
+                  <StatusChip label={t('الحالي')} color="var(--color-brand)" />
                 ) : free ? (
-                  <StatusChip label="فاضي" color="var(--color-success)" />
+                  <StatusChip label={t('فاضي')} color="var(--color-success)" />
                 ) : (
-                  <StatusChip label={`معاه ${d.activeOrders}`} color="var(--color-series-1)" />
+                  <StatusChip label={t('معاه {n}', { n: d.activeOrders })} color="var(--color-series-1)" />
                 )}
               </button>
             );

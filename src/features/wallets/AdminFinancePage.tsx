@@ -20,6 +20,7 @@ import {
   Segmented,
   SoftCard,
 } from "@/components/ui";
+import { t } from "@/lib/i18n";
 import { runAction } from "@/lib/run-action";
 import type { PartyBalance, Withdrawal, WithdrawalStatus } from "@/types";
 
@@ -44,18 +45,18 @@ export function AdminFinancePage() {
 
   return (
     <div className="mx-auto max-w-3xl pb-8">
-      <PageHeader title="المالية" />
+      <PageHeader title={t("المالية")} />
       <div className="flex flex-col gap-3 px-4">
         {o && (
           <div className="flex gap-2">
-            <MoneyTile label="للمحلات" value={o.owedToStores} />
+            <MoneyTile label={t("للمحلات")} value={o.owedToStores} />
             <MoneyTile
-              label="كاش مع المناديب"
+              label={t("كاش مع المناديب")}
               value={o.cashWithDrivers}
               color="var(--color-accent)"
             />
             <MoneyTile
-              label="العمولة"
+              label={t("العمولة")}
               value={o.commissionEarned}
               color="var(--color-success)"
             />
@@ -67,11 +68,11 @@ export function AdminFinancePage() {
           options={[
             {
               value: "withdrawals",
-              label: pending > 0 ? `السحب (${pending})` : "طلبات السحب",
+              label: pending > 0 ? t("السحب ({n})", { n: pending }) : t("طلبات السحب"),
             },
-            { value: "stores", label: "المحلات" },
-            { value: "drivers", label: "المناديب" },
-            { value: "entries", label: "الحركات" },
+            { value: "stores", label: t("المحلات") },
+            { value: "drivers", label: t("المناديب") },
+            { value: "entries", label: t("الحركات") },
           ]}
         />
         {tab === "withdrawals" && <WithdrawalsTab />}
@@ -80,17 +81,17 @@ export function AdminFinancePage() {
             <Loading />
           ) : overview.isError || !o ? (
             <ErrorView
-              message={(overview.error as Error)?.message ?? "حصل خطأ"}
+              message={(overview.error as Error)?.message ?? t("حصل خطأ")}
               onRetry={() => overview.refetch()}
             />
           ) : (
             <BalancesList
               rows={o.stores}
-              empty="مفيش أرصدة للمحلات لسه"
+              empty={t("مفيش أرصدة للمحلات لسه")}
               subtitle={(b) =>
                 b.pendingWithdrawals > 0
-                  ? `طلب سحب ${b.pendingWithdrawals.toFixed(0)} ج.م`
-                  : "ليه عند التطبيق"
+                  ? t("طلب سحب {amount} ج.م", { amount: b.pendingWithdrawals.toFixed(0) })
+                  : t("ليه عند التطبيق")
               }
               to={(b) => `/admin/stores/${b.id}/wallet`}
             />
@@ -100,15 +101,15 @@ export function AdminFinancePage() {
             <Loading />
           ) : overview.isError || !o ? (
             <ErrorView
-              message={(overview.error as Error)?.message ?? "حصل خطأ"}
+              message={(overview.error as Error)?.message ?? t("حصل خطأ")}
               onRetry={() => overview.refetch()}
             />
           ) : (
             <BalancesList
               rows={o.drivers}
-              empty="مفيش كاش مع المناديب"
+              empty={t("مفيش كاش مع المناديب")}
               subtitle={(b) =>
-                b.balance >= 0 ? "المطلوب يسلّمه" : "ليه عند الإدارة"
+                b.balance >= 0 ? t("المطلوب يسلّمه") : t("ليه عند الإدارة")
               }
               to={(b) => `/admin/drivers/${b.id}/wallet`}
             />
@@ -147,7 +148,7 @@ function WithdrawalsTab() {
             selected={status === f.value}
             onClick={() => setStatus(f.value)}
           >
-            {f.label}
+            {t(f.label)}
           </Chip>
         ))}
       </div>
@@ -155,11 +156,11 @@ function WithdrawalsTab() {
         <Loading />
       ) : list.isError ? (
         <ErrorView
-          message={(list.error as Error)?.message ?? "حصل خطأ"}
+          message={(list.error as Error)?.message ?? t("حصل خطأ")}
           onRetry={() => list.refetch()}
         />
       ) : (list.data ?? []).length === 0 ? (
-        <EmptyView icon={Inbox} message="مفيش طلبات هنا" />
+        <EmptyView icon={Inbox} message={t("مفيش طلبات هنا")} />
       ) : (
         (list.data ?? []).map((w) => (
           <WithdrawalCard
@@ -175,7 +176,7 @@ function WithdrawalsTab() {
                     className="!text-danger"
                     onClick={() => setRejecting(w)}
                   >
-                    رفض
+                    {t("رفض")}
                   </Button>
                   <Button
                     size="md"
@@ -183,7 +184,7 @@ function WithdrawalsTab() {
                     icon={<Check className="size-5" />}
                     onClick={() => setPaying(w)}
                   >
-                    دفعت
+                    {t("دفعت")}
                   </Button>
                 </div>
               ) : undefined
@@ -194,15 +195,20 @@ function WithdrawalsTab() {
       <NoteDialog
         open={paying !== null}
         title={
-          paying ? `دفعت ${paying.amount} ج.م لـ ${paying.storeName}؟` : ""
+          paying
+            ? t("دفعت {amount} ج.م لـ {store}؟", {
+                amount: paying.amount,
+                store: paying.storeName,
+              })
+            : ""
         }
-        label="رقم العملية / المرجع (اختياري)"
-        confirmLabel="دفعت"
+        label={t("رقم العملية / المرجع (اختياري)")}
+        confirmLabel={t("دفعت")}
         onClose={() => setPaying(null)}
         onSubmit={async (note) => {
           const ok = await runAction(
             () => walletsApi.pay(paying!.id, note || null),
-            "اتسجل إنه اتدفع",
+            t("اتسجل إنه اتدفع"),
           );
           if (ok) refresh();
           return ok;
@@ -210,15 +216,15 @@ function WithdrawalsTab() {
       />
       <NoteDialog
         open={rejecting !== null}
-        title={rejecting ? `ترفض طلب ${rejecting.storeName}؟` : ""}
-        label="السبب (هيظهر للمحل)"
-        confirmLabel="رفض"
+        title={rejecting ? t("ترفض طلب {store}؟", { store: rejecting.storeName }) : ""}
+        label={t("السبب (هيظهر للمحل)")}
+        confirmLabel={t("رفض")}
         danger
         onClose={() => setRejecting(null)}
         onSubmit={async (note) => {
           const ok = await runAction(
             () => walletsApi.reject(rejecting!.id, note || null),
-            "الطلب اترفض",
+            t("الطلب اترفض"),
           );
           if (ok) refresh();
           return ok;

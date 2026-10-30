@@ -11,6 +11,7 @@ import { Button, InlineError, Loading, SectionHeader, Sheet, SoftCard, Switch, T
 import { MenuItem } from '@/features/addresses/AddressesPage';
 import { groupRule } from '@/features/customer/ProductSheet';
 import { applyDiscount, formatPrice } from '@/lib/format';
+import { t } from '@/lib/i18n';
 import { runAction } from '@/lib/run-action';
 import { confirm, showMessage } from '@/store/ui';
 import type { MenuCategory, Product, ProductInput, ProductOption, ProductOptionGroup } from '@/types';
@@ -58,12 +59,12 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
   async function save(e: FormEvent) {
     e.preventDefault();
     const priceValue = Number(price);
-    if (!name.trim()) return setError('اسم المنتج مطلوب');
-    if (Number.isNaN(priceValue) || priceValue <= 0) return setError('السعر لازم يكون أكبر من صفر');
+    if (!name.trim()) return setError(t('اسم المنتج مطلوب'));
+    if (Number.isNaN(priceValue) || priceValue <= 0) return setError(t('السعر لازم يكون أكبر من صفر'));
     // Empty = no discount.
     const discountValue = discount.trim() === '' ? 0 : Number(discount);
-    if (Number.isNaN(discountValue) || discountValue < 0 || discountValue > 99) return setError('الخصم من 0 لـ 99%');
-    if (!Number.isInteger(Number(order))) return setError('الترتيب لازم يكون رقم');
+    if (Number.isNaN(discountValue) || discountValue < 0 || discountValue > 99) return setError(t('الخصم من 0 لـ 99%'));
+    if (!Number.isInteger(Number(order))) return setError(t('الترتيب لازم يكون رقم'));
     const input: ProductInput = {
       categoryId,
       name: name.trim(),
@@ -82,7 +83,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
       setImage(noImageEdit);
       setProduct(saved);
       invalidate();
-      showMessage(product ? 'اتحفظ' : 'المنتج اتضاف. تقدر تضيف له أحجام وإضافات تحت.');
+      showMessage(product ? t('اتحفظ') : t('المنتج اتضاف. تقدر تضيف له أحجام وإضافات تحت.'));
       if (!product) navigate(`${basePath}/stores/${storeId}/products/${saved.id}`, { replace: true });
     } catch (err) {
       setError(errorMessage(err));
@@ -103,8 +104,8 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
 
   async function remove() {
     if (!product) return;
-    if (!(await confirm(`تمسح "${product.name}"؟`, 'مسح'))) return;
-    if (await runAction(() => catalogApi.deleteProduct(storeId, product.id), 'المنتج اتمسح')) {
+    if (!(await confirm(t('تمسح "{name}"؟', { name: product.name }), t('مسح')))) return;
+    if (await runAction(() => catalogApi.deleteProduct(storeId, product.id), t('المنتج اتمسح'))) {
       invalidate();
       navigate(-1);
     }
@@ -132,10 +133,10 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
   return (
     <div className="mx-auto max-w-2xl pb-10">
       <PageHeader
-        title={product ? product.name : 'منتج جديد'}
+        title={product ? product.name : t('منتج جديد')}
         actions={
           product && (
-            <button type="button" title="مسح" onClick={remove} className="grid size-10 place-items-center rounded-full text-danger hover:bg-danger/10">
+            <button type="button" title={t('مسح')} onClick={remove} className="grid size-10 place-items-center rounded-full text-danger hover:bg-danger/10">
               <Trash2 className="size-5" />
             </button>
           )
@@ -143,9 +144,9 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
       />
       <div className="px-4">
         <form onSubmit={save} className="flex flex-col gap-3">
-          <ImagePickerField label="صورة المنتج" currentUrl={product?.imageUrl} edit={image} onChange={setImage} placeholderIcon={Sandwich} />
+          <ImagePickerField label={t('صورة المنتج')} currentUrl={product?.imageUrl} edit={image} onChange={setImage} placeholderIcon={Sandwich} />
           <label className="block">
-            <span className="mb-1.5 block text-[13px] font-bold text-ink-2">القسم</span>
+            <span className="mb-1.5 block text-[13px] font-bold text-ink-2">{t('القسم')}</span>
             <select value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))} className="field appearance-none">
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -154,11 +155,11 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
               ))}
             </select>
           </label>
-          <TextField name="name" label="اسم المنتج" value={name} onChange={(e) => setName(e.target.value)} />
-          <TextArea name="description" label="وصف (اختياري)" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
+          <TextField name="name" label={t('اسم المنتج')} value={name} onChange={(e) => setName(e.target.value)} />
+          <TextArea name="description" label={t('وصف (اختياري)')} rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
           <TranslationFields value={translations} onChange={setTranslations} />
           <div className="grid grid-cols-[1fr_1fr_90px] gap-3">
-            <TextField name="price" type="number" inputMode="decimal" ltr label="السعر (ج.م)" value={price} onChange={(e) => setPrice(e.target.value)} />
+            <TextField name="price" type="number" inputMode="decimal" ltr label={t('السعر (ج.م)')} value={price} onChange={(e) => setPrice(e.target.value)} />
             <TextField
               name="discount"
               type="number"
@@ -166,30 +167,30 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
               min={0}
               max={99}
               ltr
-              label="الخصم %"
+              label={t('الخصم %')}
               placeholder="0"
               value={discount}
               onChange={(e) => setDiscount(e.target.value)}
             />
-            <TextField name="order" type="number" ltr label="الترتيب" value={order} onChange={(e) => setOrder(e.target.value)} />
+            <TextField name="order" type="number" ltr label={t('الترتيب')} value={order} onChange={(e) => setOrder(e.target.value)} />
           </div>
           {Number(discount) > 0 && Number(discount) <= 99 && Number(price) > 0 && (
             // The discount covers the whole unit price, extras included.
             <p className="-mt-1 text-xs text-ink-2">
-              بعد الخصم {formatPrice(applyDiscount(Number(price), Number(discount)))} • الخصم بيتطبّق على الإضافات كمان
+              {t('بعد الخصم {price} • الخصم بيتطبّق على الإضافات كمان', { price: formatPrice(applyDiscount(Number(price), Number(discount))) })}
             </p>
           )}
           {error && <InlineError message={error} />}
           <Button type="submit" block loading={saving} className="mt-1">
-            {product ? 'حفظ التعديلات' : 'إضافة المنتج'}
+            {product ? t('حفظ التعديلات') : t('إضافة المنتج')}
           </Button>
         </form>
 
         {product && (
           <>
-            <SectionHeader title="الأحجام والإضافات" action="+ مجموعة" onAction={() => setGroupDialog({ group: null })} className="mt-4" />
+            <SectionHeader title={t('الأحجام والإضافات')} action={t('+ مجموعة')} onAction={() => setGroupDialog({ group: null })} className="mt-4" />
             {product.optionGroups.length === 0 && (
-              <p className="py-3 text-ink-2">مفيش اختيارات. ضيف مجموعة زي "الحجم" أو "الإضافات" لو المنتج ليه اختيارات.</p>
+              <p className="py-3 text-ink-2">{t('مفيش اختيارات. ضيف مجموعة زي "الحجم" أو "الإضافات" لو المنتج ليه اختيارات.')}</p>
             )}
             <div className="flex flex-col gap-2.5">
               {product.optionGroups.map((g) => (
@@ -198,10 +199,10 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
                     <div className="min-w-0 flex-1">
                       <p className="font-bold text-ink">{g.name}</p>
                       <p className="text-xs text-ink-2">
-                        {g.isRequired ? 'مطلوب' : 'اختياري'} • {groupRule(g)}
+                        {g.isRequired ? t('مطلوب') : t('اختياري')} • {groupRule(g)}
                       </p>
                     </div>
-                    <button type="button" aria-label="خيارات" onClick={() => setGroupMenu(g)} className="grid size-10 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
+                    <button type="button" aria-label={t('خيارات')} onClick={() => setGroupMenu(g)} className="grid size-10 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
                       <MoreVertical className="size-5" />
                     </button>
                   </div>
@@ -209,10 +210,10 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
                     <div key={o.id} className="flex items-center gap-2 border-t border-line px-4 py-2.5">
                       <button type="button" onClick={() => setOptionDialog({ group: g, option: o })} className="min-w-0 flex-1 text-start">
                         <p className="text-ink">{o.name}</p>
-                        <p className="text-xs text-ink-2">{o.extraPrice > 0 ? `+ ${formatPrice(o.extraPrice)}` : 'من غير زيادة'}</p>
+                        <p className="text-xs text-ink-2">{o.extraPrice > 0 ? `+ ${formatPrice(o.extraPrice)}` : t('من غير زيادة')}</p>
                       </button>
-                      <Switch checked={o.isAvailable} label="متاح" onChange={(v) => mutate((id) => catalogApi.setOptionAvailability(storeId, id, g.id, o.id, v))} />
-                      <button type="button" aria-label="مسح" onClick={() => mutate((id) => catalogApi.removeOption(storeId, id, g.id, o.id))} className="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
+                      <Switch checked={o.isAvailable} label={t('متاح')} onChange={(v) => mutate((id) => catalogApi.setOptionAvailability(storeId, id, g.id, o.id, v))} />
+                      <button type="button" aria-label={t('مسح')} onClick={() => mutate((id) => catalogApi.removeOption(storeId, id, g.id, o.id))} className="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
                         <X className="size-4" />
                       </button>
                     </div>
@@ -223,7 +224,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
                     className="flex w-full items-center justify-center gap-1.5 border-t border-line py-3 text-sm font-bold text-brand-ink hover:bg-surface-alt"
                   >
                     <Plus className="size-4" />
-                    إضافة اختيار
+                    {t('إضافة اختيار')}
                   </button>
                 </SoftCard>
               ))}
@@ -241,18 +242,18 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
                 setGroupMenu(null);
               }}
             >
-              تعديل
+              {t('تعديل')}
             </MenuItem>
             <MenuItem
               danger
               onClick={async () => {
                 const g = groupMenu;
                 setGroupMenu(null);
-                if (!(await confirm(`تمسح مجموعة "${g.name}" وكل اختياراتها؟`, 'مسح'))) return;
+                if (!(await confirm(t('تمسح مجموعة "{name}" وكل اختياراتها؟', { name: g.name }), t('مسح')))) return;
                 await mutate((id) => catalogApi.removeOptionGroup(storeId, id, g.id));
               }}
             >
-              مسح
+              {t('مسح')}
             </MenuItem>
           </div>
         )}

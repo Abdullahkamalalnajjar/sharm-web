@@ -26,6 +26,7 @@ import {
 } from "@/components/ui";
 import { errorMessage } from "@/api/client";
 import { formatOrderDate, formatPrice } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { WALLET_ENTRY_LABEL, WITHDRAWAL_STATUS, payoutLabel } from "@/lib/meta";
 import type { WalletEntry, WalletEntryKind, Withdrawal } from "@/types";
 
@@ -83,7 +84,7 @@ export function WalletEntryRow({
     showParty && entry.partyName
       ? `${entry.party === "Store" ? "🏪" : "🛵"} ${entry.partyName}`
       : null,
-    entry.orderNumber ? `أوردر #${entry.orderNumber}` : null,
+    entry.orderNumber ? t("أوردر #{n}", { n: entry.orderNumber }) : null,
     entry.note,
     formatOrderDate(entry.createdUtc),
   ]
@@ -124,7 +125,7 @@ export function WithdrawalCard({
         />
         <div className="min-w-0 flex-1">
           <p className="font-extrabold text-ink">
-            {showStore ? w.storeName : "طلب سحب"}
+            {showStore ? w.storeName : t("طلب سحب")}
           </p>
           <p className="text-xs text-ink-2">
             {payoutLabel(w.method)}
@@ -141,7 +142,7 @@ export function WithdrawalCard({
       </div>
       {w.adminNote && (
         <p className="mt-2 text-xs text-ink-2">
-          {w.status === "Rejected" ? "السبب: " : "المرجع: "}
+          {w.status === "Rejected" ? t("السبب:") : t("المرجع:")}{" "}
           {w.adminNote}
         </p>
       )}
@@ -159,7 +160,7 @@ export function AmountDialog({
   title,
   message,
   initial,
-  noteLabel = "ملاحظة (اختياري)",
+  noteLabel = t("ملاحظة (اختياري)"),
   noteRequired,
   allowNegative,
   onClose,
@@ -220,9 +221,9 @@ function AmountForm({
     e.preventDefault();
     const value = Number(amount);
     if (amount.trim() === "" || Number.isNaN(value) || value === 0)
-      return setError("اكتب مبلغ");
-    if (!allowNegative && value < 0) return setError("لازم أكبر من صفر");
-    if (noteRequired && !note.trim()) return setError(`${noteLabel} مطلوب`);
+      return setError(t("اكتب مبلغ"));
+    if (!allowNegative && value < 0) return setError(t("لازم أكبر من صفر"));
+    if (noteRequired && !note.trim()) return setError(t("{field} مطلوب", { field: noteLabel }));
     setBusy(true);
     const ok = await onSubmit(value, note.trim());
     setBusy(false);
@@ -239,11 +240,11 @@ function AmountForm({
         step="any"
         ltr
         autoFocus
-        label="المبلغ (ج.م)"
-        hint={allowNegative ? "بالسالب عشان تخصم، مثلاً -50" : undefined}
+        label={t("المبلغ (ج.م)")}
+        hint={allowNegative ? t("بالسالب عشان تخصم، مثلاً -50") : undefined}
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        end={<span className="text-sm">ج.م</span>}
+        end={<span className="text-sm">{t("ج.م")}</span>}
       />
       <TextField
         name="note"
@@ -255,10 +256,10 @@ function AmountForm({
       {error && <InlineError message={error} />}
       <div className="mt-2 flex justify-end gap-2">
         <Button type="button" variant="ghost" size="md" onClick={onClose}>
-          إلغاء
+          {t("إلغاء")}
         </Button>
         <Button type="submit" size="md" loading={busy}>
-          تمام
+          {t("تمام")}
         </Button>
       </div>
     </form>
@@ -270,7 +271,7 @@ export function NoteDialog({
   open,
   title,
   label,
-  confirmLabel = "تأكيد",
+  confirmLabel = t("تأكيد"),
   danger,
   onClose,
   onSubmit,
@@ -310,7 +311,7 @@ export function NoteDialog({
         />
         <div className="mt-2 flex justify-end gap-2">
           <Button type="button" variant="ghost" size="md" onClick={onClose}>
-            إلغاء
+            {t("إلغاء")}
           </Button>
           <Button
             type="submit"
@@ -332,7 +333,7 @@ const PAGE_SIZE = 30;
 export function EntriesList({
   load,
   showParty,
-  emptyMessage = "لسه مفيش حركات",
+  emptyMessage = t("لسه مفيش حركات"),
 }: {
   load: (beforeId?: number) => Promise<WalletEntry[]>;
   showParty?: boolean;
@@ -392,7 +393,7 @@ export function EntriesList({
             className="self-center"
             onClick={more}
           >
-            عرض الأقدم
+            {t("عرض الأقدم")}
           </Button>
         )
       )}

@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { storesApi } from '@/api';
 import { Button, Sheet } from '@/components/ui';
 import { formatStoreHours } from '@/lib/format';
+import { t } from '@/lib/i18n';
 import { runAction } from '@/lib/run-action';
 import type { Store } from '@/types';
 
@@ -14,7 +15,7 @@ import type { Store } from '@/types';
  */
 export function StoreHoursDialog({ store, open, onClose }: { store: Store; open: boolean; onClose: () => void }) {
   return (
-    <Sheet open={open} onClose={onClose} title={`مواعيد ${store.name}`}>
+    <Sheet open={open} onClose={onClose} title={t('مواعيد {name}', { name: store.name })}>
       {open && <HoursForm key={store.id} store={store} onClose={onClose} />}
     </Sheet>
   );
@@ -41,7 +42,7 @@ function HoursForm({ store, onClose }: { store: Store; onClose: () => void }) {
     setBusy(true);
     const ok = await runAction(
       () => storesApi.setHours(store.id, clear ? null : opensAt, clear ? null : closesAt),
-      clear ? 'المواعيد اتشالت' : 'المواعيد اتحفظت',
+      clear ? t('المواعيد اتشالت') : t('المواعيد اتحفظت'),
     );
     setBusy(false);
     if (ok) {
@@ -54,26 +55,26 @@ function HoursForm({ store, onClose }: { store: Store; onClose: () => void }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="-mt-2 text-xs text-ink-3">برا المواعيد دي المحل بيتقفل لوحده، حتى لو زرار الفتح شغال</p>
+      <p className="-mt-2 text-xs text-ink-3">{t('برا المواعيد دي المحل بيتقفل لوحده، حتى لو زرار الفتح شغال')}</p>
       <div className="grid grid-cols-2 gap-3">
-        <TimeBox label="بيفتح" value={opensAt} onChange={setOpensAt} />
-        <TimeBox label="بيقفل" value={closesAt} onChange={setClosesAt} />
+        <TimeBox label={t('بيفتح')} value={opensAt} onChange={setOpensAt} />
+        <TimeBox label={t('بيقفل')} value={closesAt} onChange={setClosesAt} />
       </div>
       {!missing && (
         <p className={`text-xs ${sameTime ? 'text-danger' : 'text-ink-2'}`}>
           {sameTime
-            ? 'ميعاد الفتح والقفل مينفعش يبقوا واحد'
+            ? t('ميعاد الفتح والقفل مينفعش يبقوا واحد')
             : overnight
-              ? 'بيقفل بعد نص الليل'
-              : `كل يوم ${formatStoreHours(opensAt, closesAt)}`}
+              ? t('بيقفل بعد نص الليل')
+              : t('كل يوم {hours}', { hours: formatStoreHours(opensAt, closesAt) ?? '' })}
         </p>
       )}
       <Button block size="md" className="mt-1" loading={busy} disabled={missing || sameTime} onClick={() => save()}>
-        حفظ
+        {t('حفظ')}
       </Button>
       {store.opensAt && (
         <button type="button" disabled={busy} onClick={() => save(true)} className="py-2 text-sm font-bold text-danger hover:underline disabled:opacity-50">
-          شيل المواعيد (الزرار بس اللي يتحكم)
+          {t('شيل المواعيد (الزرار بس اللي يتحكم)')}
         </button>
       )}
     </div>

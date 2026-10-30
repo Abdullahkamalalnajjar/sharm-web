@@ -8,6 +8,7 @@ import { errorMessage } from '@/api/client';
 import { useStore, useStoreCategories } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, Chip, InlineError, Loading, TextArea, TextField } from '@/components/ui';
+import { t } from '@/lib/i18n';
 import { SHARM_AREAS, categoryLook } from '@/lib/meta';
 import { showMessage } from '@/store/ui';
 import type { Store as StoreModel, StoreInput } from '@/types';
@@ -56,17 +57,17 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
     const minOrderValue = Number(minOrder);
     const latValue = Number(lat);
     const lngValue = Number(lng);
-    if (categoryId === null) return setError('اختار القسم');
-    if (!name.trim()) return setError('اسم المحل مطلوب');
-    if (!phone.trim()) return setError('رقم التليفون مطلوب');
-    if (!address.trim()) return setError('العنوان مطلوب');
-    if (Number.isNaN(minOrderValue) || minOrderValue < 0) return setError('أقل قيمة للطلب لازم تكون 0 أو أكتر');
-    if (Number.isNaN(latValue) || latValue < -90 || latValue > 90) return setError('Latitude غير صحيح');
-    if (Number.isNaN(lngValue) || lngValue < -180 || lngValue > 180) return setError('Longitude غير صحيح');
-    if (isAdmin && !isEdit && ownerEmail.trim() && !ownerEmail.includes('@')) return setError('إيميل صاحب المحل غير صحيح');
+    if (categoryId === null) return setError(t('اختار القسم'));
+    if (!name.trim()) return setError(t('اسم المحل مطلوب'));
+    if (!phone.trim()) return setError(t('رقم التليفون مطلوب'));
+    if (!address.trim()) return setError(t('العنوان مطلوب'));
+    if (Number.isNaN(minOrderValue) || minOrderValue < 0) return setError(t('أقل قيمة للطلب لازم تكون 0 أو أكتر'));
+    if (Number.isNaN(latValue) || latValue < -90 || latValue > 90) return setError(t('Latitude غير صحيح'));
+    if (Number.isNaN(lngValue) || lngValue < -180 || lngValue > 180) return setError(t('Longitude غير صحيح'));
+    if (isAdmin && !isEdit && ownerEmail.trim() && !ownerEmail.includes('@')) return setError(t('إيميل صاحب المحل غير صحيح'));
     const commissionValue = Number(commission);
     if (isAdmin && !isEdit && (commission.trim() === '' || Number.isNaN(commissionValue) || commissionValue < 0 || commissionValue > 100))
-      return setError('العمولة لازم تكون من 0 لـ 100');
+      return setError(t('العمولة لازم تكون من 0 لـ 100'));
 
     const input: StoreInput = {
       name: name.trim(),
@@ -91,7 +92,7 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
       else if (cover.kind === 'removed' && store?.coverUrl) await storesApi.removeCover(saved.id);
       qc.invalidateQueries({ queryKey: ['stores'] });
       qc.invalidateQueries({ queryKey: ['admin'] });
-      showMessage(isEdit ? 'اتحفظت التعديلات' : 'المحل اتسجل واتفعّل');
+      showMessage(isEdit ? t('اتحفظت التعديلات') : t('المحل اتسجل واتفعّل'));
       navigate(-1);
     } catch (err) {
       setError(errorMessage(err));
@@ -101,11 +102,11 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
 
   return (
     <div className="mx-auto max-w-2xl pb-10">
-      <PageHeader title={isEdit ? 'تعديل المحل' : 'محل جديد'} />
+      <PageHeader title={isEdit ? t('تعديل المحل') : t('محل جديد')} />
       <form onSubmit={submit} className="px-4 flex flex-col gap-3">
-        <ImagePickerField label="لوجو المحل" currentUrl={store?.logoUrl} edit={logo} onChange={setLogo} placeholderIcon={Store} aspect="aspect-[2.2]" />
+        <ImagePickerField label={t('لوجو المحل')} currentUrl={store?.logoUrl} edit={logo} onChange={setLogo} placeholderIcon={Store} aspect="aspect-[2.2]" />
         <ImagePickerField
-          label="صورة الغلاف (بتظهر فوق في صفحة المحل)"
+          label={t('صورة الغلاف (بتظهر فوق في صفحة المحل)')}
           currentUrl={store?.coverUrl}
           edit={cover}
           onChange={setCover}
@@ -113,12 +114,12 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
           aspect="aspect-[2.4]"
         />
 
-        <p className="mt-1 text-sm font-extrabold text-ink">القسم</p>
+        <p className="mt-1 text-sm font-extrabold text-ink">{t('القسم')}</p>
         {categories.isLoading ? (
           <Loading className="py-2" />
         ) : categories.isError ? (
           <Button variant="outline" size="md" onClick={() => categories.refetch()}>
-            مقدرناش نجيب الأقسام، حاول تاني
+            {t('مقدرناش نجيب الأقسام، حاول تاني')}
           </Button>
         ) : (
           <div className="flex flex-wrap gap-2">
@@ -149,8 +150,8 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
             name="ownerEmail"
             type="email"
             ltr
-            label="إيميل صاحب المحل (اختياري)"
-            hint="لو سيبته فاضي المحل هيبقى باسمك. المحلات اللي بتضيفها بتتفعّل على طول."
+            label={t('إيميل صاحب المحل (اختياري)')}
+            hint={t('لو سيبته فاضي المحل هيبقى باسمك. المحلات اللي بتضيفها بتتفعّل على طول.')}
             value={ownerEmail}
             onChange={(e) => setOwnerEmail(e.target.value)}
           />
@@ -163,22 +164,22 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
             min={0}
             max={100}
             ltr
-            label="العمولة %"
-            hint="نسبة التطبيق من سعر المنتجات، بتتخصم من حساب المحل. تقدر تغيّرها بعدين من إعدادات المحل."
+            label={t('العمولة %')}
+            hint={t('نسبة التطبيق من سعر المنتجات، بتتخصم من حساب المحل. تقدر تغيّرها بعدين من إعدادات المحل.')}
             start={<Percent className="size-4" />}
             value={commission}
             onChange={(e) => setCommission(e.target.value)}
           />
         )}
 
-        <TextField name="name" label="اسم المحل" value={name} onChange={(e) => setName(e.target.value)} />
-        <TextArea name="description" label="وصف (اختياري)" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
+        <TextField name="name" label={t('اسم المحل')} value={name} onChange={(e) => setName(e.target.value)} />
+        <TextArea name="description" label={t('وصف (اختياري)')} rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
         <TranslationFields value={translations} onChange={setTranslations} />
-        <TextField name="phone" type="tel" ltr label="رقم التليفون" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        <TextField name="address" label="العنوان" value={address} onChange={(e) => setAddress(e.target.value)} />
-        <TextField name="minOrder" type="number" inputMode="decimal" min={0} label="أقل قيمة للطلب (ج.م)" value={minOrder} onChange={(e) => setMinOrder(e.target.value)} />
+        <TextField name="phone" type="tel" ltr label={t('رقم التليفون')} value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <TextField name="address" label={t('العنوان')} value={address} onChange={(e) => setAddress(e.target.value)} />
+        <TextField name="minOrder" type="number" inputMode="decimal" min={0} label={t('أقل قيمة للطلب (ج.م)')} value={minOrder} onChange={(e) => setMinOrder(e.target.value)} />
 
-        <p className="mt-2 text-sm font-extrabold text-ink">موقع المحل</p>
+        <p className="mt-2 text-sm font-extrabold text-ink">{t('موقع المحل')}</p>
         <div className="flex flex-wrap gap-2">
           {SHARM_AREAS.map((a) => (
             <Chip
@@ -189,11 +190,11 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
                 setLng(String(a.longitude));
               }}
             >
-              {a.name}
+              {t(a.name)}
             </Chip>
           ))}
         </div>
-        <p className="text-xs text-ink-3">دوس على الخريطة أو اسحب الدبوس عشان تحدد موقع المحل بالظبط</p>
+        <p className="text-xs text-ink-3">{t('دوس على الخريطة أو اسحب الدبوس عشان تحدد موقع المحل بالظبط')}</p>
         <MapPicker
           lat={Number(lat) || SHARM_AREAS[0].latitude}
           lng={Number(lng) || SHARM_AREAS[0].longitude}
@@ -209,7 +210,7 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
 
         {error && <InlineError message={error} />}
         <Button type="submit" block loading={saving} className="mt-3">
-          {isEdit ? 'حفظ' : 'تسجيل المحل'}
+          {isEdit ? t('حفظ') : t('تسجيل المحل')}
         </Button>
       </form>
     </div>

@@ -10,6 +10,7 @@ import { useAdminDrivers } from '@/api/queries';
 import { TabHeader } from '@/components/layout/AppShell';
 import { Button, Chip, EmptyView, ErrorView, IconWell, InlineError, Loading, Sheet, SoftCard, Spinner, StatusChip, Switch, TextField } from '@/components/ui';
 import { telHref } from '@/features/orders/OrderWidgets';
+import { t, tIn } from '@/lib/i18n';
 import { VEHICLE_TYPES, vehicleLabel } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { confirm, showMessage } from '@/store/ui';
@@ -29,14 +30,14 @@ export function AdminDriversPage() {
       d.isActive &&
       !(await confirm(
         d.activeOrders > 0
-          ? `توقف ${d.fullName}؟ معاه ${d.activeOrders} أوردر لسه، هيفضلوا معاه لحد ما تغيّر المندوب.`
-          : `توقف ${d.fullName}؟ مش هتقدر تديله أوردرات جديدة.`,
-        'إيقاف',
+          ? t('توقف {name}؟ معاه {n} أوردر لسه، هيفضلوا معاه لحد ما تغيّر المندوب.', { name: d.fullName, n: d.activeOrders })
+          : t('توقف {name}؟ مش هتقدر تديله أوردرات جديدة.', { name: d.fullName }),
+        t('إيقاف'),
       ))
     ) {
       return;
     }
-    const success = d.isActive ? 'المندوب اتوقف' : d.isApproved ? 'المندوب اتفعّل' : 'المندوب اتقبل واتفعّل';
+    const success = d.isActive ? t('المندوب اتوقف') : d.isApproved ? t('المندوب اتفعّل') : t('المندوب اتقبل واتفعّل');
     if (await runAction(() => driversApi.setActive(d.id, !d.isActive), success)) refresh();
   }
 
@@ -49,10 +50,10 @@ export function AdminDriversPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 pb-28">
       <TabHeader
-        title="المندوبين"
+        title={t('المندوبين')}
         actions={
           <Button size="sm" className="hidden md:inline-flex" icon={<UserRoundPlus className="size-4" />} onClick={() => setEditing(null)}>
-            مندوب جديد
+            {t('مندوب جديد')}
           </Button>
         }
       />
@@ -61,12 +62,12 @@ export function AdminDriversPage() {
       ) : drivers.isError ? (
         <ErrorView message={(drivers.error as Error).message} onRetry={() => drivers.refetch()} />
       ) : all.length === 0 ? (
-        <EmptyView icon={Bike} message={'لسه مفيش مندوبين.\nضيف أول مندوب عشان توزّع عليه الأوردرات.'} />
+        <EmptyView icon={Bike} message={t('لسه مفيش مندوبين.\nضيف أول مندوب عشان توزّع عليه الأوردرات.')} />
       ) : (
         <>
           {waiting.length > 0 && (
             <>
-              <p className="mb-2 px-1 font-extrabold text-ink-2">مستنيين المراجعة ({waiting.length})</p>
+              <p className="mb-2 px-1 font-extrabold text-ink-2">{t('مستنيين المراجعة ({n})', { n: waiting.length })}</p>
               <div className="mb-5 grid gap-3 md:grid-cols-2">
                 {waiting.map((d) => (
                   <WaitingDriverCard key={d.id} driver={d} onViewId={() => setIdOf(d)} onApprove={() => toggle(d)} />
@@ -75,9 +76,9 @@ export function AdminDriversPage() {
             </>
           )}
           <div className="grid grid-cols-3 gap-2.5">
-            <Stat label="مفعّلين" value={active} color="var(--color-success)" />
-            <Stat label="معاهم أوردرات" value={busy} color="var(--color-series-1)" />
-            <Stat label="فاضيين" value={active - busy} color="var(--color-series-3)" />
+            <Stat label={t('مفعّلين')} value={active} color="var(--color-success)" />
+            <Stat label={t('معاهم أوردرات')} value={busy} color="var(--color-series-1)" />
+            <Stat label={t('فاضيين')} value={active - busy} color="var(--color-series-3)" />
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {list.map((d) => (
@@ -90,7 +91,7 @@ export function AdminDriversPage() {
       <div className="fixed inset-x-0 bottom-24 z-30 px-4 md:hidden pointer-events-none">
         <div className="mx-auto max-w-3xl flex justify-end">
           <Button className="pointer-events-auto" icon={<UserRoundPlus className="size-5" />} onClick={() => setEditing(null)}>
-            مندوب جديد
+            {t('مندوب جديد')}
           </Button>
         </div>
       </div>
@@ -127,16 +128,16 @@ function WaitingDriverCard({ driver: d, onViewId, onApprove }: { driver: Driver;
           </span>
           {vehicle && <span className="block text-xs text-ink-3">{vehicle}</span>}
         </span>
-        <StatusChip label="جديد" color="var(--color-warning)" />
+        <StatusChip label={t('جديد')} color="var(--color-warning)" />
       </div>
       <div className="mt-3 flex gap-2.5">
         {d.hasNationalIdImage && (
           <Button variant="outline" className="flex-1" icon={<IdCard className="size-4" />} onClick={onViewId}>
-            شوف البطاقة
+            {t('شوف البطاقة')}
           </Button>
         )}
         <Button className="flex-1" icon={<BadgeCheck className="size-4" />} onClick={onApprove}>
-          اقبل وفعّل
+          {t('اقبل وفعّل')}
         </Button>
       </div>
     </SoftCard>
@@ -169,9 +170,9 @@ function NationalIdSheet({ driver, onClose }: { driver: Driver | null; onClose: 
   }, [driver]);
 
   return (
-    <Sheet open={driver !== null} onClose={onClose} title={driver ? `بطاقة ${driver.fullName}` : undefined}>
+    <Sheet open={driver !== null} onClose={onClose} title={driver ? t('بطاقة {name}', { name: driver.fullName }) : undefined}>
       {error ? (
-        <InlineError message="مقدرناش نحمّل صورة البطاقة" />
+        <InlineError message={t('مقدرناش نحمّل صورة البطاقة')} />
       ) : url ? (
         <img src={url} alt="" className="w-full rounded-card" />
       ) : (
@@ -187,12 +188,12 @@ function DriverCard({ driver: d, onEdit, onToggle }: { driver: Driver; onEdit: (
   const navigate = useNavigate();
   const free = d.activeOrders === 0;
   const [label, color] = !d.isActive
-    ? ['متوقف', 'var(--color-ink-3)']
+    ? [t('متوقف'), 'var(--color-ink-3)']
     : !free
-      ? [`معاه ${d.activeOrders} أوردر`, 'var(--color-series-1)']
+      ? [t('معاه {n} أوردر', { n: d.activeOrders }), 'var(--color-series-1)']
       : d.isAvailable
-        ? ['فاضي', 'var(--color-success)']
-        : ['مش متاح', 'var(--color-warning)'];
+        ? [t('فاضي'), 'var(--color-success)']
+        : [t('مش متاح'), 'var(--color-warning)'];
   const vehicle = vehicleLabel(d.vehicleType);
 
   return (
@@ -216,15 +217,15 @@ function DriverCard({ driver: d, onEdit, onToggle }: { driver: Driver; onEdit: (
       <div className="my-3 border-t border-line" />
       <div className="flex items-center gap-2">
         <CheckCheck className="size-4 text-ink-3" />
-        <span className="text-ink-2">{d.deliveredOrders} أوردر اتوصّل</span>
+        <span className="text-ink-2">{t('{n} أوردر اتوصّل', { n: d.deliveredOrders })}</span>
         <span className="flex-1" />
-        <button type="button" title="الحساب" onClick={() => navigate(`/admin/drivers/${d.id}/wallet`)} className="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
+        <button type="button" title={tIn('admin', 'الحساب')} onClick={() => navigate(`/admin/drivers/${d.id}/wallet`)} className="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
           <Wallet className="size-[18px]" />
         </button>
-        <a href={telHref(d.phoneNumber)} title="اتصل" className="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
+        <a href={telHref(d.phoneNumber)} title={t('اتصل')} className="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
           <Phone className="size-[18px]" />
         </a>
-        <Switch checked={d.isActive} onChange={onToggle} label="مفعّل" />
+        <Switch checked={d.isActive} onChange={onToggle} label={t('مفعّل')} />
       </div>
     </SoftCard>
   );
@@ -233,7 +234,7 @@ function DriverCard({ driver: d, onEdit, onToggle }: { driver: Driver; onEdit: (
 /** Create a driver (with their login) or edit an existing one's name, phone and vehicle. */
 function DriverFormSheet({ open, driver, onClose, onSaved }: { open: boolean; driver: Driver | null; onClose: () => void; onSaved: () => void }) {
   return (
-    <Sheet open={open} onClose={onClose} title={driver ? 'تعديل المندوب' : 'مندوب جديد'}>
+    <Sheet open={open} onClose={onClose} title={driver ? t('تعديل المندوب') : t('مندوب جديد')}>
       {open && <DriverForm key={driver?.id ?? 'new'} driver={driver} onClose={onClose} onSaved={onSaved} />}
     </Sheet>
   );
@@ -252,16 +253,16 @@ function DriverForm({ driver, onClose, onSaved }: { driver: Driver | null; onClo
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return setError('الاسم مطلوب');
-    if (!phone.trim()) return setError('رقم الموبايل مطلوب');
-    if (isNew && !email.includes('@')) return setError('اكتب إيميل صحيح');
-    if (isNew && password.length < 6) return setError('الباسورد ٦ حروف على الأقل');
+    if (!name.trim()) return setError(t('الاسم مطلوب'));
+    if (!phone.trim()) return setError(t('رقم الموبايل مطلوب'));
+    if (isNew && !email.includes('@')) return setError(t('اكتب إيميل صحيح'));
+    if (isNew && password.length < 6) return setError(t('الباسورد ٦ حروف على الأقل'));
     setError(null);
     setBusy(true);
     try {
       if (isNew) await driversApi.create({ fullName: name.trim(), phoneNumber: phone.trim(), email: email.trim(), password, vehicleType: vehicle });
       else await driversApi.update(driver.id, { fullName: name.trim(), phoneNumber: phone.trim(), vehicleType: vehicle });
-      showMessage(isNew ? 'المندوب اتضاف' : 'البيانات اتحفظت');
+      showMessage(isNew ? t('المندوب اتضاف') : t('البيانات اتحفظت'));
       onSaved();
       onClose();
     } catch (err) {
@@ -272,8 +273,8 @@ function DriverForm({ driver, onClose, onSaved }: { driver: Driver | null; onClo
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
-      <TextField name="name" label="الاسم" maxLength={100} start={<UserRound className="size-5" />} value={name} onChange={(e) => setName(e.target.value)} />
-      <TextField name="phone" type="tel" ltr label="رقم الموبايل" maxLength={20} start={<Phone className="size-5" />} value={phone} onChange={(e) => setPhone(e.target.value)} />
+      <TextField name="name" label={t('الاسم')} maxLength={100} start={<UserRound className="size-5" />} value={name} onChange={(e) => setName(e.target.value)} />
+      <TextField name="phone" type="tel" ltr label={t('رقم الموبايل')} maxLength={20} start={<Phone className="size-5" />} value={phone} onChange={(e) => setPhone(e.target.value)} />
       <div className="flex flex-wrap gap-2">
         {VEHICLE_TYPES.map((v) => (
           <Chip key={v.value} selected={vehicle === v.value} onClick={() => setVehicle(vehicle === v.value ? null : v.value)} icon={<v.Icon className="size-4" />}>
@@ -283,17 +284,17 @@ function DriverForm({ driver, onClose, onSaved }: { driver: Driver | null; onClo
       </div>
       {isNew && (
         <>
-          <p className="mt-1 text-[13px] font-bold text-ink-2">بيانات الدخول لتطبيق المندوب</p>
-          <TextField name="email" type="email" ltr label="الإيميل" autoComplete="off" start={<Mail className="size-5" />} value={email} onChange={(e) => setEmail(e.target.value)} />
+          <p className="mt-1 text-[13px] font-bold text-ink-2">{t('بيانات الدخول لتطبيق المندوب')}</p>
+          <TextField name="email" type="email" ltr label={t('الإيميل')} autoComplete="off" start={<Mail className="size-5" />} value={email} onChange={(e) => setEmail(e.target.value)} />
           <TextField
             name="password"
             type={show ? 'text' : 'password'}
             ltr
-            label="الباسورد"
+            label={t('الباسورد')}
             autoComplete="new-password"
             start={<Lock className="size-5" />}
             end={
-              <button type="button" onClick={() => setShow((v) => !v)} aria-label="إظهار الباسورد" className="hover:text-ink">
+              <button type="button" onClick={() => setShow((v) => !v)} aria-label={t('إظهار الباسورد')} className="hover:text-ink">
                 {show ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
               </button>
             }
@@ -304,7 +305,7 @@ function DriverForm({ driver, onClose, onSaved }: { driver: Driver | null; onClo
       )}
       {error && <InlineError message={error} />}
       <Button type="submit" block loading={busy} className="mt-2">
-        {isNew ? 'إضافة المندوب' : 'حفظ'}
+        {isNew ? t('إضافة المندوب') : t('حفظ')}
       </Button>
     </form>
   );

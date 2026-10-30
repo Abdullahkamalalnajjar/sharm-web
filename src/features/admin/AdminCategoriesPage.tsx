@@ -9,6 +9,7 @@ import { keys, useAdminStoreCategories } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { AppImage, Button, EmptyView, ErrorView, InlineError, Loading, Sheet, SoftCard, StatusChip, Switch, TextField } from '@/components/ui';
 import { ImagePickerField, noImageEdit, type ImageEdit } from '@/features/owner/ImagePicker';
+import { t, tIn } from '@/lib/i18n';
 import { STORE_CATEGORY_ICONS, categoryLook } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { confirm, showMessage } from '@/store/ui';
@@ -46,7 +47,7 @@ export function AdminCategoriesPage() {
   async function toggle(c: StoreCategory) {
     const ok = await runAction(
       () => storeCategoriesApi.setVisible(c.id, !c.isVisible),
-      c.isVisible ? `${c.name} اتخفى من الرئيسية` : `${c.name} ظاهر في الرئيسية`,
+      c.isVisible ? t('{name} اتخفى من الرئيسية', { name: c.name }) : t('{name} ظاهر في الرئيسية', { name: c.name }),
     );
     if (ok) refresh();
   }
@@ -54,10 +55,10 @@ export function AdminCategoriesPage() {
   return (
     <div className="mx-auto max-w-3xl pb-28">
       <PageHeader
-        title="الأقسام"
+        title={t('الأقسام')}
         actions={
           <Button size="sm" className="hidden md:inline-flex" icon={<Plus className="size-4" />} onClick={() => setEditing(null)}>
-            قسم جديد
+            {t('قسم جديد')}
           </Button>
         }
       />
@@ -67,11 +68,11 @@ export function AdminCategoriesPage() {
         ) : categories.isError ? (
           <ErrorView message={(categories.error as Error).message} onRetry={() => categories.refetch()} />
         ) : list.length === 0 ? (
-          <EmptyView icon={LayoutGrid} message={'مفيش أقسام لسه.\nضيف أول قسم.'} />
+          <EmptyView icon={LayoutGrid} message={t('مفيش أقسام لسه.\nضيف أول قسم.')} />
         ) : (
           <>
             <p className="mb-3 text-sm leading-relaxed text-ink-2">
-              رتّب الأقسام بالأسهم زي ما تظهر للزبون. القسم المخفي محلاته بتفضل ظاهرة تحت "كل المحلات".
+              {t('رتّب الأقسام بالأسهم زي ما تظهر للزبون. القسم المخفي محلاته بتفضل ظاهرة تحت "كل المحلات".')}
             </p>
             <div className="flex flex-col gap-2.5">
               {list.map((c, i) => (
@@ -95,7 +96,7 @@ export function AdminCategoriesPage() {
       <div className="fixed inset-x-0 bottom-24 z-30 px-4 md:hidden pointer-events-none">
         <div className="mx-auto max-w-3xl flex justify-end">
           <Button className="pointer-events-auto" icon={<Plus className="size-5" />} onClick={() => setEditing(null)}>
-            قسم جديد
+            {t('قسم جديد')}
           </Button>
         </div>
       </div>
@@ -148,10 +149,10 @@ function CategoryRow({
   return (
     <SoftCard className={clsx('flex items-center gap-3 p-2.5', !c.isVisible && 'opacity-60')}>
       <div className="flex flex-col">
-        <button type="button" aria-label="لفوق" disabled={first || busy} onClick={onUp} className={arrow}>
+        <button type="button" aria-label={t('لفوق')} disabled={first || busy} onClick={onUp} className={arrow}>
           <ArrowUp className="size-4" />
         </button>
-        <button type="button" aria-label="لتحت" disabled={last || busy} onClick={onDown} className={arrow}>
+        <button type="button" aria-label={t('لتحت')} disabled={last || busy} onClick={onDown} className={arrow}>
           <ArrowDown className="size-4" />
         </button>
       </div>
@@ -160,12 +161,12 @@ function CategoryRow({
         <span className="min-w-0 flex-1">
           <span className="block truncate font-extrabold text-ink">{c.name}</span>
           <span className="text-xs text-ink-3">
-            {c.storesCount} محل{c.imageUrl ? '' : ' • من غير صورة'}
+            {c.imageUrl ? t('{n} محل', { n: c.storesCount }) : t('{n} محل • من غير صورة', { n: c.storesCount })}
           </span>
         </span>
       </button>
-      {!c.isVisible && <StatusChip label="مخفي" color="var(--color-ink-3)" />}
-      <Switch checked={c.isVisible} onChange={onToggle} label={c.isVisible ? 'إخفاء' : 'إظهار'} />
+      {!c.isVisible && <StatusChip label={t('مخفي')} color="var(--color-ink-3)" />}
+      <Switch checked={c.isVisible} onChange={onToggle} label={c.isVisible ? tIn('admin', 'إخفاء') : t('إظهار')} />
     </SoftCard>
   );
 }
@@ -191,7 +192,7 @@ function CategoryFormSheet({
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return setError('اكتب اسم القسم');
+    if (!name.trim()) return setError(t('اكتب اسم القسم'));
     setBusy(true);
     setError(null);
     try {
@@ -201,7 +202,7 @@ function CategoryFormSheet({
       // Saved first, so a failed upload never loses the name and icon.
       if (image.kind === 'picked') await storeCategoriesApi.uploadImage(saved.id, image.file);
       else if (image.kind === 'removed' && category?.imageUrl) await storeCategoriesApi.removeImage(saved.id);
-      showMessage(isNew ? 'القسم اتضاف' : 'القسم اتحفظ');
+      showMessage(isNew ? t('القسم اتضاف') : t('القسم اتحفظ'));
       onSaved();
       onClose();
     } catch (err) {
@@ -212,9 +213,9 @@ function CategoryFormSheet({
   }
 
   async function remove() {
-    if (!category || !(await confirm(`تمسح قسم "${category.name}"؟`, 'امسح'))) return;
+    if (!category || !(await confirm(t('تمسح قسم "{name}"؟', { name: category.name }), t('امسح')))) return;
     setBusy(true);
-    if (await runAction(() => storeCategoriesApi.delete(category.id), 'القسم اتمسح')) {
+    if (await runAction(() => storeCategoriesApi.delete(category.id), t('القسم اتمسح'))) {
       onSaved();
       onClose();
     }
@@ -224,11 +225,11 @@ function CategoryFormSheet({
   const look = categoryLook(icon);
 
   return (
-    <Sheet open={open} onClose={onClose} title={isNew ? 'قسم جديد' : 'تعديل القسم'} wide>
+    <Sheet open={open} onClose={onClose} title={isNew ? t('قسم جديد') : t('تعديل القسم')} wide>
       <form onSubmit={submit} className="flex flex-col gap-3">
-        <TextField name="name" label="اسم القسم" placeholder="مثلاً: مخبوزات" maxLength={50} value={name} onChange={(e) => setName(e.target.value)} />
+        <TextField name="name" label={t('اسم القسم')} placeholder={t('مثلاً: مخبوزات')} maxLength={50} value={name} onChange={(e) => setName(e.target.value)} />
 
-        <p className="text-sm font-bold text-ink-2">الأيقونة (بتظهر لو مفيش صورة)</p>
+        <p className="text-sm font-bold text-ink-2">{t('الأيقونة (بتظهر لو مفيش صورة)')}</p>
         <div className="flex flex-wrap gap-2">
           {Object.entries(STORE_CATEGORY_ICONS).map(([key, l]) => (
             <button
@@ -247,7 +248,7 @@ function CategoryFormSheet({
         </div>
 
         <ImagePickerField
-          label="صورة القسم (اختياري)"
+          label={t('صورة القسم (اختياري)')}
           currentUrl={category?.imageUrl}
           edit={image}
           onChange={setImage}
@@ -258,16 +259,16 @@ function CategoryFormSheet({
         {error && <InlineError message={error} />}
 
         <Button type="submit" loading={busy} block className="mt-1">
-          {isNew ? 'إضافة القسم' : 'حفظ'}
+          {isNew ? t('إضافة القسم') : t('حفظ')}
         </Button>
 
         {!isNew && (
           <>
             <Button type="button" variant="ghost" disabled={busy} icon={<Trash2 className="size-4" />} className="text-danger" onClick={remove}>
-              امسح القسم
+              {t('امسح القسم')}
             </Button>
             <p className="text-center text-xs text-ink-3">
-              المسح بس للقسم اللي مفيهوش محلات. لو فيه، انقل المحلات لقسم تاني أو خبّي القسم.
+              {t('المسح بس للقسم اللي مفيهوش محلات. لو فيه، انقل المحلات لقسم تاني أو خبّي القسم.')}
             </p>
           </>
         )}

@@ -18,6 +18,7 @@ import {
   SoftCard,
 } from "@/components/ui";
 import { formatPrice } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { runAction } from "@/lib/run-action";
 import type { DriverWallet } from "@/types";
 
@@ -46,11 +47,11 @@ function MyDriverWallet() {
   const wallet = useMyDriverWallet();
   return (
     <WalletView
-      title="حسابي"
+      title={t("حسابي")}
       wallet={wallet.data}
       isLoading={wallet.isLoading}
       error={
-        wallet.isError ? ((wallet.error as Error)?.message ?? "حصل خطأ") : null
+        wallet.isError ? ((wallet.error as Error)?.message ?? t("حصل خطأ")) : null
       }
       onRetry={() => wallet.refetch()}
       loadEntries={(beforeId) => walletsApi.myEntries(beforeId)}
@@ -69,12 +70,12 @@ function AdminDriverWallet({ driverId }: { driverId: number }) {
     <>
       <WalletView
         isAdmin
-        title={w ? `حساب ${w.driverName}` : "حساب المندوب"}
+        title={w ? t("حساب {name}", { name: w.driverName }) : t("حساب المندوب")}
         wallet={w}
         isLoading={wallet.isLoading}
         error={
           wallet.isError
-            ? ((wallet.error as Error)?.message ?? "حصل خطأ")
+            ? ((wallet.error as Error)?.message ?? t("حصل خطأ"))
             : null
         }
         onRetry={() => wallet.refetch()}
@@ -86,21 +87,25 @@ function AdminDriverWallet({ driverId }: { driverId: number }) {
           <RoundIconButton
             icon={SlidersHorizontal}
             size={40}
-            title="تسوية"
+            title={t("تسوية")}
             onClick={() => setAdjustOpen(true)}
           />
         }
       />
       <AmountDialog
         open={handInOpen}
-        title={`استلام كاش من ${w?.driverName ?? ""}`}
-        message={w ? `المطلوب منه ${formatPrice(w.amountToHandIn)}` : undefined}
+        title={t("استلام كاش من {name}", { name: w?.driverName ?? "" })}
+        message={
+          w
+            ? t("المطلوب منه {amount}", { amount: formatPrice(w.amountToHandIn) })
+            : undefined
+        }
         initial={w?.amountToHandIn}
         onClose={() => setHandInOpen(false)}
         onSubmit={async (amount, note) => {
           const ok = await runAction(
             () => walletsApi.recordCashHandIn(driverId, amount, note || null),
-            "اتسجل",
+            t("اتسجل"),
           );
           if (ok) refresh();
           return ok;
@@ -108,16 +113,16 @@ function AdminDriverWallet({ driverId }: { driverId: number }) {
       />
       <AmountDialog
         open={adjustOpen}
-        title={`تسوية حساب ${w?.driverName ?? ""}`}
-        message="بالموجب بيزوّد المطلوب منه، وبالسالب بيقلله (مكافأة مثلاً)."
-        noteLabel="السبب"
+        title={t("تسوية حساب {name}", { name: w?.driverName ?? "" })}
+        message={t("بالموجب بيزوّد المطلوب منه، وبالسالب بيقلله (مكافأة مثلاً).")}
+        noteLabel={t("السبب")}
         noteRequired
         allowNegative
         onClose={() => setAdjustOpen(false)}
         onSubmit={async (amount, note) => {
           const ok = await runAction(
             () => walletsApi.adjust("Driver", driverId, amount, note),
-            "اتسجلت",
+            t("اتسجلت"),
           );
           if (ok) refresh();
           return ok;
@@ -157,7 +162,7 @@ function WalletView({
         {isLoading ? (
           <Loading />
         ) : error || !w ? (
-          <ErrorView message={error ?? "حصل خطأ"} onRetry={onRetry} />
+          <ErrorView message={error ?? t("حصل خطأ")} onRetry={onRetry} />
         ) : (
           <>
             {/* Owing cash reads as a warning; nothing owed (or the app owes them) reads as fine. */}
@@ -173,17 +178,17 @@ function WalletView({
               <p className="text-ink-2">
                 {w.amountToHandIn >= 0
                   ? isAdmin
-                    ? "المطلوب منه يسلّمه"
-                    : "المطلوب تسلّمه للإدارة"
+                    ? t("المطلوب منه يسلّمه")
+                    : t("المطلوب تسلّمه للإدارة")
                   : isAdmin
-                    ? "ليه عند الإدارة"
-                    : "ليك عند الإدارة"}
+                    ? t("ليه عند الإدارة")
+                    : t("ليك عند الإدارة")}
               </p>
               <p className="text-3xl font-black text-ink">
                 {formatPrice(Math.abs(w.amountToHandIn))}
               </p>
               <p className="text-[11px] text-ink-3">
-                الكاش اللي حصّله ناقص أجرة التوصيل واللي اتسلّم.
+                {t("الكاش اللي حصّله ناقص أجرة التوصيل واللي اتسلّم.")}
               </p>
               {isAdmin && onHandIn && (
                 <Button
@@ -192,48 +197,48 @@ function WalletView({
                   icon={<Handshake className="size-5" />}
                   onClick={onHandIn}
                 >
-                  استلمت منه كاش
+                  {t("استلمت منه كاش")}
                 </Button>
               )}
             </div>
 
             <div className="flex gap-2.5">
               <MoneyTile
-                label={isAdmin ? "الكاش اللي معاه" : "الكاش اللي معاك"}
+                label={isAdmin ? t("الكاش اللي معاه") : t("الكاش اللي معاك")}
                 value={w.cashInHand}
                 color="var(--color-accent)"
               />
               <MoneyTile
-                label="أرباح النهارده"
+                label={t("أرباح النهارده")}
                 value={w.todayEarnings}
                 color="var(--color-success)"
-                hint={`${w.todayDeliveredOrders} أوردر`}
+                hint={t("{n} أوردر", { n: w.todayDeliveredOrders })}
               />
             </div>
             <div className="flex gap-2.5">
               <MoneyTile
-                label="إجمالي الأرباح"
+                label={t("إجمالي الأرباح")}
                 value={w.totalEarnings}
-                hint={`${w.deliveredOrders} أوردر اتوصّل`}
+                hint={t("{n} أوردر اتوصّل", { n: w.deliveredOrders })}
               />
               <MoneyTile
-                label="بقشيش الزباين"
+                label={t("بقشيش الزباين")}
                 value={w.totalTips ?? 0}
                 color="var(--color-success)"
-                hint={`النهارده ${formatPrice(w.todayTips ?? 0)}`}
+                hint={t("النهارده {amount}", { amount: formatPrice(w.todayTips ?? 0) })}
               />
             </div>
 
             <SectionHeader
-              title="آخر الحركات"
-              action={showAll ? undefined : "الكل"}
+              title={t("آخر الحركات")}
+              action={showAll ? undefined : t("الكل")}
               onAction={() => setShowAll(true)}
             />
             {showAll ? (
               <EntriesList load={loadEntries} />
             ) : w.recent.length === 0 ? (
               <p className="text-ink-3">
-                لسه مفيش حركات. أول ما يتوصّل أوردر هيظهر هنا.
+                {t("لسه مفيش حركات. أول ما يتوصّل أوردر هيظهر هنا.")}
               </p>
             ) : (
               <SoftCard className="overflow-hidden">

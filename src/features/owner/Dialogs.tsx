@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 
 import { Button, InlineError, Sheet, TextField } from '@/components/ui';
+import { t } from '@/lib/i18n';
 
 /** Small form dialogs used by the menu management screens. */
 
@@ -31,7 +32,7 @@ export function CategoryDialog({
   mainCategories?: { id: number; name: string }[];
 }) {
   return (
-    <Sheet open={open} onClose={onClose} title={initial?.name ? 'تعديل القسم' : 'قسم جديد'}>
+    <Sheet open={open} onClose={onClose} title={initial?.name ? t('تعديل القسم') : t('قسم جديد')}>
       {open && (
         <CategoryForm key={JSON.stringify(initial)} initial={initial} mainCategories={mainCategories} onSubmit={onSubmit} onClose={onClose} />
       )}
@@ -60,8 +61,8 @@ function CategoryForm({
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return setError('اسم القسم مطلوب');
-    if (!Number.isInteger(Number(order))) return setError('الترتيب لازم يكون رقم');
+    if (!name.trim()) return setError(t('اسم القسم مطلوب'));
+    if (!Number.isInteger(Number(order))) return setError(t('الترتيب لازم يكون رقم'));
     setBusy(true);
     await onSubmit({ name: name.trim(), displayOrder: Number(order), nameEn: nameEn.trim(), nameRu: nameRu.trim(), parentId });
     setBusy(false);
@@ -70,34 +71,34 @@ function CategoryForm({
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
-      <TextField name="name" label="اسم القسم (عربي)" autoFocus value={name} onChange={(e) => setName(e.target.value)} />
-      <TextField name="nameEn" ltr label="Name (English) — اختياري" value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
-      <TextField name="nameRu" ltr label="Название (Русский) — اختياري" value={nameRu} onChange={(e) => setNameRu(e.target.value)} />
+      <TextField name="name" label={t('اسم القسم (عربي)')} autoFocus value={name} onChange={(e) => setName(e.target.value)} />
+      <TextField name="nameEn" ltr label={t('Name (English) — اختياري')} value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
+      <TextField name="nameRu" ltr label={t('Название (Русский) — اختياري')} value={nameRu} onChange={(e) => setNameRu(e.target.value)} />
       {mainCategories.length > 0 && (
         <label className="block">
-          <span className="block text-[13px] font-bold text-ink-2 mb-1.5">جوه قسم</span>
+          <span className="block text-[13px] font-bold text-ink-2 mb-1.5">{t('جوه قسم')}</span>
           <select
             className="field"
             value={parentId ?? ''}
             onChange={(e) => setParentId(e.target.value === '' ? null : Number(e.target.value))}
           >
-            <option value="">قسم رئيسي</option>
+            <option value="">{t('قسم رئيسي')}</option>
             {mainCategories.map((c) => (
               <option key={c.id} value={c.id}>
-                فرعي من: {c.name}
+                {t('فرعي من: {name}', { name: c.name })}
               </option>
             ))}
           </select>
         </label>
       )}
-      <TextField name="order" type="number" ltr label="الترتيب" value={order} onChange={(e) => setOrder(e.target.value)} />
+      <TextField name="order" type="number" ltr label={t('الترتيب')} value={order} onChange={(e) => setOrder(e.target.value)} />
       {error && <InlineError message={error} />}
       <div className="mt-2 flex justify-end gap-2">
         <Button type="button" variant="ghost" size="md" onClick={onClose}>
-          إلغاء
+          {t('إلغاء')}
         </Button>
         <Button type="submit" size="md" loading={busy}>
-          حفظ
+          {t('حفظ')}
         </Button>
       </div>
     </form>
@@ -122,7 +123,7 @@ export function OptionGroupDialog({
   initial?: Partial<OptionGroupValues>;
 }) {
   return (
-    <Sheet open={open} onClose={onClose} title={initial?.name ? 'تعديل المجموعة' : 'مجموعة اختيارات جديدة'}>
+    <Sheet open={open} onClose={onClose} title={initial?.name ? t('تعديل المجموعة') : t('مجموعة اختيارات جديدة')}>
       {open && <OptionGroupForm key={JSON.stringify(initial)} initial={initial} onSubmit={onSubmit} onClose={onClose} />}
     </Sheet>
   );
@@ -139,10 +140,10 @@ function OptionGroupForm({ initial, onSubmit, onClose }: { initial?: Partial<Opt
     e.preventDefault();
     const minV = Number(min);
     const maxV = Number(max);
-    if (!name.trim()) return setError('الاسم مطلوب');
-    if (!Number.isInteger(minV) || minV < 0) return setError('أقل اختيار: 0 أو أكتر');
-    if (!Number.isInteger(maxV) || maxV < 1) return setError('أقصى اختيار: 1 أو أكتر');
-    if (maxV < minV) return setError('أقصى اختيار أقل من الأدنى');
+    if (!name.trim()) return setError(t('الاسم مطلوب'));
+    if (!Number.isInteger(minV) || minV < 0) return setError(t('أقل اختيار: 0 أو أكتر'));
+    if (!Number.isInteger(maxV) || maxV < 1) return setError(t('أقصى اختيار: 1 أو أكتر'));
+    if (maxV < minV) return setError(t('أقصى اختيار أقل من الأدنى'));
     setBusy(true);
     await onSubmit({ name: name.trim(), min: minV, max: maxV });
     setBusy(false);
@@ -151,19 +152,19 @@ function OptionGroupForm({ initial, onSubmit, onClose }: { initial?: Partial<Opt
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
-      <TextField name="name" label="الاسم (مثلاً: الحجم، الإضافات)" autoFocus value={name} onChange={(e) => setName(e.target.value)} />
+      <TextField name="name" label={t('الاسم (مثلاً: الحجم، الإضافات)')} autoFocus value={name} onChange={(e) => setName(e.target.value)} />
       <div className="grid grid-cols-2 gap-3">
-        <TextField name="min" type="number" ltr label="أقل اختيار" value={min} onChange={(e) => setMin(e.target.value)} />
-        <TextField name="max" type="number" ltr label="أقصى اختيار" value={max} onChange={(e) => setMax(e.target.value)} />
+        <TextField name="min" type="number" ltr label={t('أقل اختيار')} value={min} onChange={(e) => setMin(e.target.value)} />
+        <TextField name="max" type="number" ltr label={t('أقصى اختيار')} value={max} onChange={(e) => setMax(e.target.value)} />
       </div>
-      <p className="text-xs text-ink-3">الحجم: أقل 1 وأقصى 1 • الإضافات: أقل 0 وأقصى 3</p>
+      <p className="text-xs text-ink-3">{t('الحجم: أقل 1 وأقصى 1 • الإضافات: أقل 0 وأقصى 3')}</p>
       {error && <InlineError message={error} />}
       <div className="mt-2 flex justify-end gap-2">
         <Button type="button" variant="ghost" size="md" onClick={onClose}>
-          إلغاء
+          {t('إلغاء')}
         </Button>
         <Button type="submit" size="md" loading={busy}>
-          حفظ
+          {t('حفظ')}
         </Button>
       </div>
     </form>
@@ -187,7 +188,7 @@ export function OptionDialog({
   initial?: Partial<OptionValues>;
 }) {
   return (
-    <Sheet open={open} onClose={onClose} title={initial?.name ? 'تعديل الاختيار' : 'اختيار جديد'}>
+    <Sheet open={open} onClose={onClose} title={initial?.name ? t('تعديل الاختيار') : t('اختيار جديد')}>
       {open && <OptionForm key={JSON.stringify(initial)} initial={initial} onSubmit={onSubmit} onClose={onClose} />}
     </Sheet>
   );
@@ -202,8 +203,8 @@ function OptionForm({ initial, onSubmit, onClose }: { initial?: Partial<OptionVa
   async function submit(e: FormEvent) {
     e.preventDefault();
     const p = Number(price);
-    if (!name.trim()) return setError('الاسم مطلوب');
-    if (Number.isNaN(p) || p < 0) return setError('السعر الزيادة: 0 أو أكتر');
+    if (!name.trim()) return setError(t('الاسم مطلوب'));
+    if (Number.isNaN(p) || p < 0) return setError(t('السعر الزيادة: 0 أو أكتر'));
     setBusy(true);
     await onSubmit({ name: name.trim(), extraPrice: p });
     setBusy(false);
@@ -212,15 +213,15 @@ function OptionForm({ initial, onSubmit, onClose }: { initial?: Partial<OptionVa
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
-      <TextField name="name" label="الاسم (مثلاً: كبير، جبنة زيادة)" autoFocus value={name} onChange={(e) => setName(e.target.value)} />
-      <TextField name="price" type="number" inputMode="decimal" ltr label="السعر الزيادة (ج.م)" value={price} onChange={(e) => setPrice(e.target.value)} />
+      <TextField name="name" label={t('الاسم (مثلاً: كبير، جبنة زيادة)')} autoFocus value={name} onChange={(e) => setName(e.target.value)} />
+      <TextField name="price" type="number" inputMode="decimal" ltr label={t('السعر الزيادة (ج.م)')} value={price} onChange={(e) => setPrice(e.target.value)} />
       {error && <InlineError message={error} />}
       <div className="mt-2 flex justify-end gap-2">
         <Button type="button" variant="ghost" size="md" onClick={onClose}>
-          إلغاء
+          {t('إلغاء')}
         </Button>
         <Button type="submit" size="md" loading={busy}>
-          حفظ
+          {t('حفظ')}
         </Button>
       </div>
     </form>
@@ -258,7 +259,7 @@ function NumberForm({ label, initial, onClose, onSubmit }: { label: string; init
   async function submit(e: FormEvent) {
     e.preventDefault();
     const n = Number(value);
-    if (value.trim() === '' || Number.isNaN(n) || n < 0) return setError('اكتب رقم صحيح');
+    if (value.trim() === '' || Number.isNaN(n) || n < 0) return setError(t('اكتب رقم صحيح'));
     setBusy(true);
     await onSubmit(n);
     setBusy(false);
@@ -267,14 +268,14 @@ function NumberForm({ label, initial, onClose, onSubmit }: { label: string; init
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
-      <TextField name="value" type="number" inputMode="decimal" ltr autoFocus label={label} value={value} onChange={(e) => setValue(e.target.value)} end={<span className="text-sm">ج.م</span>} />
+      <TextField name="value" type="number" inputMode="decimal" ltr autoFocus label={label} value={value} onChange={(e) => setValue(e.target.value)} end={<span className="text-sm">{t('ج.م')}</span>} />
       {error && <InlineError message={error} />}
       <div className="mt-2 flex justify-end gap-2">
         <Button type="button" variant="ghost" size="md" onClick={onClose}>
-          إلغاء
+          {t('إلغاء')}
         </Button>
         <Button type="submit" size="md" loading={busy}>
-          حفظ
+          {t('حفظ')}
         </Button>
       </div>
     </form>
@@ -286,8 +287,8 @@ export function ReasonDialog({
   open,
   onClose,
   onSubmit,
-  title = 'إلغاء الأوردر',
-  placeholder = 'مثلاً: المحل مقفول',
+  title = t('إلغاء الأوردر'),
+  placeholder = t('مثلاً: المحل مقفول'),
 }: {
   open: boolean;
   onClose: () => void;
@@ -311,10 +312,10 @@ export function ReasonDialog({
         }}
         className="flex flex-col gap-3"
       >
-        <TextField name="reason" label="السبب (اختياري)" placeholder={placeholder} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} />
+        <TextField name="reason" label={t('السبب (اختياري)')} placeholder={placeholder} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} />
         <div className="mt-2 flex justify-end gap-2">
           <Button type="button" variant="ghost" size="md" onClick={onClose}>
-            رجوع
+            {t('رجوع')}
           </Button>
           <Button type="submit" variant="danger" size="md" loading={busy}>
             {title}

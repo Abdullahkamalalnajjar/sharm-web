@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useAdminStores } from '@/api/queries';
 import { TabHeader } from '@/components/layout/AppShell';
 import { Button, EmptyView, ErrorView, Loading, RoundIconButton } from '@/components/ui';
+import { t, tIn } from '@/lib/i18n';
 import { STORE_STATUSES, storeStatus } from '@/lib/meta';
 import type { Store, StoreStatus } from '@/types';
 
@@ -40,12 +41,12 @@ export function AdminStoresPage() {
   return (
     <div className="mx-auto max-w-3xl pb-8">
       <div className="flex items-center px-4 pt-[max(env(safe-area-inset-top),8px)] md:pt-4">
-        <RoundIconButton icon={Plus} filled size={40} title="محل جديد" onClick={() => navigate('/admin/stores/new')} />
+        <RoundIconButton icon={Plus} filled size={40} title={t('محل جديد')} onClick={() => navigate('/admin/stores/new')} />
         <div className="flex-1 text-center">
-          <h1 className="text-xl font-extrabold text-ink">المحلات</h1>
+          <h1 className="text-xl font-extrabold text-ink">{tIn('admin', 'المحلات')}</h1>
           {stores.data && (
             <p className="text-xs font-medium text-ink-3">
-              {all.length} محل • {openCount} مفتوح دلوقتي
+              {t('{n} محل • {open} مفتوح دلوقتي', { n: all.length, open: openCount })}
             </p>
           )}
         </div>
@@ -55,15 +56,15 @@ export function AdminStoresPage() {
       <div className="sticky top-0 md:top-16 z-20 bg-bg px-4 pt-2 pb-2.5">
         <label className="flex h-12 items-center gap-2 rounded-full border border-line bg-surface px-4 focus-within:border-brand">
           <Search className="size-5 text-ink-2" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="دور باسم المحل أو العنوان أو الرقم" className="flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-ink-3 placeholder:font-medium" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('دور باسم المحل أو العنوان أو الرقم')} className="flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-ink-3 placeholder:font-medium" />
           {query && (
-            <button type="button" aria-label="مسح" onClick={() => setQuery('')} className="text-ink-2 hover:text-ink">
+            <button type="button" aria-label={tIn('admin', 'مسح')} onClick={() => setQuery('')} className="text-ink-2 hover:text-ink">
               <X className="size-5" />
             </button>
           )}
         </label>
         <div className="mt-2.5 -mx-4 flex gap-2 overflow-x-auto px-4 no-scrollbar">
-          {([['الكل', null], ...STORE_STATUSES.map((s) => [s.label === 'مفعّل' ? 'مفعّلة' : s.label === 'موقوف' ? 'موقوفة' : 'مستنية موافقة', s.value] as const)] as [string, StoreStatus | null][]).map(([label, status]) => {
+          {([[t('الكل'), null], ...STORE_STATUSES.map((s) => [s.value === 'Active' ? t('مفعّلة') : s.value === 'Suspended' ? t('موقوفة') : t('مستنية موافقة'), s.value] as const)] as [string, StoreStatus | null][]).map(([label, status]) => {
             const selected = filter === status;
             const meta = status ? storeStatus(status) : null;
             return (
@@ -93,11 +94,11 @@ export function AdminStoresPage() {
         ) : list.length === 0 ? (
           <EmptyView
             icon={q ? SearchX : Inbox}
-            message={q ? `مفيش نتايج لـ "${query.trim()}"` : 'مفيش محلات هنا'}
+            message={q ? t('مفيش نتايج لـ "{q}"', { q: query.trim() }) : t('مفيش محلات هنا')}
             action={
               !q && filter === null ? (
                 <Button size="md" icon={<PlusSquare className="size-4" />} onClick={() => navigate('/admin/stores/new')}>
-                  أضف أول محل
+                  {t('أضف أول محل')}
                 </Button>
               ) : null
             }

@@ -5,14 +5,16 @@ import { useState } from 'react';
 import { isCurrentPeriod, shiftReportKey, useReport, type ReportKey, type ReportPeriod } from '@/api/queries';
 import { TabHeader } from '@/components/layout/AppShell';
 import { ErrorView, IconWell, Loading, Price, Segmented, SoftCard } from '@/components/ui';
-import { formatFullDate, formatPrice } from '@/lib/format';
+import { dateLocale, formatFullDate, formatPrice } from '@/lib/format';
+import { t, tIn } from '@/lib/i18n';
 import type { Report, ReportTotals } from '@/types';
 
-const monthYear = new Intl.DateTimeFormat('ar-EG', { month: 'long', year: 'numeric' });
-const mediumDate = new Intl.DateTimeFormat('ar-EG', { day: 'numeric', month: 'long' });
+// Made at render time in the current language (pages remount on a language change).
+const monthYear = () => new Intl.DateTimeFormat(dateLocale(), { month: 'long', year: 'numeric' });
+const mediumDate = () => new Intl.DateTimeFormat(dateLocale(), { day: 'numeric', month: 'long' });
 
 export function periodTitle(k: ReportKey): string {
-  return k.period === 'day' ? formatFullDate(k.date) : k.period === 'month' ? monthYear.format(k.date) : String(k.date.getFullYear());
+  return k.period === 'day' ? formatFullDate(k.date) : k.period === 'month' ? monthYear().format(k.date) : String(k.date.getFullYear());
 }
 
 /** Orders and money by day, month or year, with the period before for comparison. */
@@ -22,14 +24,14 @@ export function AdminReportsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-8">
-      <TabHeader title="الإحصائيات" />
+      <TabHeader title={t('الإحصائيات')} />
       <Segmented<ReportPeriod>
         value={key.period}
         onChange={(p) => setKey({ period: p, date: key.date })}
         options={[
-          { value: 'day', label: 'يوم' },
-          { value: 'month', label: 'شهر' },
-          { value: 'year', label: 'سنة' },
+          { value: 'day', label: t('يوم') },
+          { value: 'month', label: t('شهر') },
+          { value: 'year', label: t('سنة') },
         ]}
       />
       <PeriodBar reportKey={key} onChange={setKey} />
@@ -54,16 +56,16 @@ function PeriodBar({ reportKey, onChange }: { reportKey: ReportKey; onChange: (k
 
   return (
     <SoftCard className="mt-3 flex items-center p-1">
-      <button type="button" title="اللي قبله" onClick={() => onChange(shiftReportKey(reportKey, -1))} className="grid size-11 place-items-center rounded-full text-ink hover:bg-surface-alt">
+      <button type="button" title={t('اللي قبله')} onClick={() => onChange(shiftReportKey(reportKey, -1))} className="grid size-11 place-items-center rounded-full text-ink hover:bg-surface-alt">
         <ChevronRight className="size-6" />
       </button>
       <div className="relative flex-1 py-2 text-center">
         <p className="font-extrabold text-ink">{periodTitle(reportKey)}</p>
-        {current && <p className="text-xs text-brand-ink">{reportKey.period === 'day' ? 'النهارده' : reportKey.period === 'month' ? 'الشهر ده' : 'السنة دي'}</p>}
+        {current && <p className="text-xs text-brand-ink">{reportKey.period === 'day' ? t('النهارده') : reportKey.period === 'month' ? t('الشهر ده') : t('السنة دي')}</p>}
         {reportKey.period === 'day' && (
           <input
             type="date"
-            aria-label="اختار يوم"
+            aria-label={t('اختار يوم')}
             value={dateValue}
             max={maxValue}
             min="2025-01-01"
@@ -77,7 +79,7 @@ function PeriodBar({ reportKey, onChange }: { reportKey: ReportKey; onChange: (k
       </div>
       <button
         type="button"
-        title="اللي بعده"
+        title={t('اللي بعده')}
         disabled={current}
         onClick={() => onChange(shiftReportKey(reportKey, 1))}
         className="grid size-11 place-items-center rounded-full text-ink hover:bg-surface-alt disabled:opacity-30"
@@ -91,53 +93,53 @@ function PeriodBar({ reportKey, onChange }: { reportKey: ReportKey; onChange: (k
 /** Change against the previous period, e.g. "↑ 12%". */
 function delta(now: number, before: number): { text: string; up: boolean } | null {
   if (now === 0 && before === 0) return null;
-  if (before === 0) return { text: '↑ جديد', up: true };
+  if (before === 0) return { text: t('↑ جديد'), up: true };
   const change = Math.round(((now - before) / before) * 100);
-  if (change === 0) return { text: 'زي', up: true };
+  if (change === 0) return { text: t('زي'), up: true };
   return { text: `${change > 0 ? '↑' : '↓'} ${Math.abs(change)}%`, up: change > 0 };
 }
 
 function ReportBody({ report, reportKey }: { report: Report; reportKey: ReportKey }) {
-  const t = report.totals;
+  const tot = report.totals;
   const p = report.previous;
-  const previousName = reportKey.period === 'day' ? 'امبارح' : reportKey.period === 'month' ? 'الشهر اللي فات' : 'السنة اللي فاتت';
+  const previousName = reportKey.period === 'day' ? tIn('admin', 'امبارح') : reportKey.period === 'month' ? t('الشهر اللي فات') : t('السنة اللي فاتت');
 
   return (
     <div className="mt-4 flex flex-col gap-3">
-      <MoneyHero totals={t} previous={p} previousName={previousName} />
+      <MoneyHero totals={tot} previous={p} previousName={previousName} />
       <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
-        <MiniStat icon={ReceiptText} color="var(--color-series-3)" label="أوردرات اتعملت" value={String(t.ordersPlaced)} delta={delta(t.ordersPlaced, p.ordersPlaced)} />
-        <MiniStat icon={CheckCheck} color="var(--color-success)" label="اتوصّلت" value={String(t.delivered)} delta={delta(t.delivered, p.delivered)} />
-        <MiniStat icon={XCircle} color="var(--color-danger)" label="اتلغت" value={String(t.cancelled)} caption={t.ordersPlaced ? `${Math.round((t.cancelled * 100) / t.ordersPlaced)}% من الأوردرات` : undefined} />
-        <MiniStat icon={ShoppingBag} color="var(--color-accent)" label="متوسط الأوردر" value={formatPrice(t.averageOrder)} caption={t.inProgress > 0 ? `${t.inProgress} لسه شغالين` : undefined} />
+        <MiniStat icon={ReceiptText} color="var(--color-series-3)" label={t('أوردرات اتعملت')} value={String(tot.ordersPlaced)} delta={delta(tot.ordersPlaced, p.ordersPlaced)} />
+        <MiniStat icon={CheckCheck} color="var(--color-success)" label={t('اتوصّلت')} value={String(tot.delivered)} delta={delta(tot.delivered, p.delivered)} />
+        <MiniStat icon={XCircle} color="var(--color-danger)" label={t('اتلغت')} value={String(tot.cancelled)} caption={tot.ordersPlaced ? t('{p}% من الأوردرات', { p: Math.round((tot.cancelled * 100) / tot.ordersPlaced) }) : undefined} />
+        <MiniStat icon={ShoppingBag} color="var(--color-accent)" label={t('متوسط الأوردر')} value={formatPrice(tot.averageOrder)} caption={tot.inProgress > 0 ? t('{n} لسه شغالين', { n: tot.inProgress }) : undefined} />
       </div>
       <ChartCard report={report} reportKey={reportKey} />
       {report.best && (
         <SoftCard className="flex items-center gap-3 p-3.5">
           <IconWell icon={Trophy} size={42} color="var(--color-accent)" />
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-ink-3">{reportKey.period === 'year' ? 'أحسن شهر' : 'أحسن يوم'}</p>
-            <p className="font-extrabold text-ink">{reportKey.period === 'year' ? monthYear.format(new Date(report.best.start)) : mediumDate.format(new Date(report.best.start))}</p>
+            <p className="text-xs text-ink-3">{reportKey.period === 'year' ? t('أحسن شهر') : t('أحسن يوم')}</p>
+            <p className="font-extrabold text-ink">{reportKey.period === 'year' ? monthYear().format(new Date(report.best.start)) : mediumDate().format(new Date(report.best.start))}</p>
           </div>
           <div className="text-end">
             <Price value={report.best.sales} className="text-base block" />
-            <span className="text-xs text-ink-3">{report.best.delivered} أوردر</span>
+            <span className="text-xs text-ink-3">{t('{n} أوردر', { n: report.best.delivered })}</span>
           </div>
         </SoftCard>
       )}
       <div className="grid gap-3 md:grid-cols-2 md:items-start">
         <RankedList
-          title="أكتر المحلات بيعاً"
+          title={t('أكتر المحلات بيعاً')}
           icon={Store}
-          empty="مفيش مبيعات في الفترة دي"
-          rows={report.stores.map((s) => ({ name: s.storeName, sub: `${s.orders} أوردر • ${s.itemsSold} منتج`, value: s.sales }))}
+          empty={t('مفيش مبيعات في الفترة دي')}
+          rows={report.stores.map((s) => ({ name: s.storeName, sub: t('{o} أوردر • {i} منتج', { o: s.orders, i: s.itemsSold }), value: s.sales }))}
         />
         <RankedList
-          title="المندوبين"
+          title={t('المندوبين')}
           icon={Bike}
-          empty="مفيش توصيلات في الفترة دي"
-          valueCaption="توصيل"
-          rows={report.drivers.map((d) => ({ name: d.fullName, sub: `${d.delivered} توصيلة • حصّل ${formatPrice(d.collected)}`, value: d.deliveryFees }))}
+          empty={t('مفيش توصيلات في الفترة دي')}
+          valueCaption={t('توصيل')}
+          rows={report.drivers.map((d) => ({ name: d.fullName, sub: t('{n} توصيلة • حصّل {amount}', { n: d.delivered, amount: formatPrice(d.collected) }), value: d.deliveryFees }))}
         />
       </div>
     </div>
@@ -145,20 +147,20 @@ function ReportBody({ report, reportKey }: { report: Report; reportKey: ReportKe
 }
 
 /** The money of the period: total collected, split into the app's share and the stores'. */
-function MoneyHero({ totals: t, previous, previousName }: { totals: ReportTotals; previous: ReportTotals; previousName: string }) {
-  const d = delta(t.sales, previous.sales);
+function MoneyHero({ totals: tot, previous, previousName }: { totals: ReportTotals; previous: ReportTotals; previousName: string }) {
+  const d = delta(tot.sales, previous.sales);
   return (
     <div className="rounded-card bg-gradient-to-br from-brand-light via-brand to-brand-dark p-[18px]">
-      <p className="text-white/85">الفلوس اللي اتحصّلت</p>
-      <p className="text-[40px] font-extrabold leading-tight text-highlight">{formatPrice(t.sales)}</p>
+      <p className="text-white/85">{t('الفلوس اللي اتحصّلت')}</p>
+      <p className="text-[40px] font-extrabold leading-tight text-highlight">{formatPrice(tot.sales)}</p>
       {d && (
         <p className="text-[13px] font-semibold text-white">
-          {d.text} عن {previousName}
+          {t('{change} عن {prev}', { change: d.text, prev: previousName })}
         </p>
       )}
       <div className="mt-3.5 grid grid-cols-2 gap-2.5">
-        <Share icon={Bike} label="ليك (التوصيل)" value={t.deliveryFees} />
-        <Share icon={Store} label="للمحلات" value={t.storeSales} />
+        <Share icon={Bike} label={t('ليك (التوصيل)')} value={tot.deliveryFees} />
+        <Share icon={Store} label={t('للمحلات')} value={tot.storeSales} />
       </div>
     </div>
   );
@@ -189,7 +191,8 @@ function MiniStat({ icon: Icon, color, label, value, delta: d, caption }: { icon
   );
 }
 
-const hourLabel = (h: number) => (h === 0 ? '12ص' : h === 12 ? '12م' : h < 12 ? `${h}ص` : `${h - 12}م`);
+// {h24} is the 24-hour hour, for languages that don't use am/pm.
+const hourLabel = (h: number) => (h < 12 ? t('{h}ص', { h: h === 0 ? 12 : h, h24: h }) : t('{h}م', { h: h === 12 ? 12 : h - 12, h24: h }));
 
 /** Day: orders per hour. Month / year: money or orders per day / month. */
 function ChartCard({ report: r, reportKey: key }: { report: Report; reportKey: ReportKey }) {
@@ -204,20 +207,22 @@ function ChartCard({ report: r, reportKey: key }: { report: Report; reportKey: R
   let dimFrom: number | undefined;
 
   if (key.period === 'day') {
-    title = 'الأوردرات على مدار اليوم';
+    title = t('الأوردرات على مدار اليوم');
     values = r.hours;
     axis = (i) => (i % 3 === 0 ? hourLabel(i) : null);
-    tip = (i) => `${hourLabel(i)} — ${r.hours[i]} أوردر`;
+    tip = (i) => t('{hour} — {n} أوردر', { hour: hourLabel(i), n: r.hours[i] });
     if (current) dimFrom = now.getHours() + 1;
   } else {
     const byMonth = key.period === 'year';
-    title = byMonth ? 'على مدار السنة' : 'على مدار الشهر';
+    title = byMonth ? t('على مدار السنة') : t('على مدار الشهر');
     values = r.points.map((p) => (metric === 'money' ? p.sales : p.ordersPlaced));
     axis = byMonth ? (i) => String(i + 1) : (i) => (i === 0 || (i + 1) % 5 === 0 ? String(i + 1) : null);
     tip = (i) => {
       const p = r.points[i];
-      const when = byMonth ? monthYear.format(new Date(p.start)) : mediumDate.format(new Date(p.start));
-      return metric === 'money' ? `${when} — ${formatPrice(p.sales)} (توصيل ${formatPrice(p.deliveryFees)})` : `${when} — ${p.ordersPlaced} أوردر، اتوصّل ${p.delivered}`;
+      const when = byMonth ? monthYear().format(new Date(p.start)) : mediumDate().format(new Date(p.start));
+      return metric === 'money'
+        ? t('{when} — {amount} (توصيل {fee})', { when, amount: formatPrice(p.sales), fee: formatPrice(p.deliveryFees) })
+        : t('{when} — {n} أوردر، اتوصّل {d}', { when, n: p.ordersPlaced, d: p.delivered });
     };
     if (current) dimFrom = byMonth ? now.getMonth() + 1 : now.getDate();
   }
@@ -230,7 +235,7 @@ function ChartCard({ report: r, reportKey: key }: { report: Report; reportKey: R
           <div className="flex rounded-full border border-line bg-bg p-0.5 text-xs">
             {(['money', 'orders'] as const).map((m) => (
               <button key={m} type="button" onClick={() => setMetric(m)} className={clsx('rounded-full px-3 py-1 font-bold', metric === m ? 'bg-brand text-white' : 'text-ink-2')}>
-                {m === 'money' ? 'فلوس' : 'أوردرات'}
+                {m === 'money' ? t('فلوس') : t('أوردرات')}
               </button>
             ))}
           </div>
@@ -250,7 +255,7 @@ function BarChart({ values, axisLabel, tooltip, dimFrom, height = 170 }: { value
   return (
     <div className="mt-3">
       <p className={clsx('h-[22px] text-center text-[13px]', selected !== null ? 'font-extrabold text-ink' : 'font-medium text-ink-3')}>
-        {selected !== null ? tooltip(selected) : max === 0 ? 'مفيش بيانات في الفترة دي' : 'دوس على أي عمود عشان تشوف رقمه'}
+        {selected !== null ? tooltip(selected) : max === 0 ? t('مفيش بيانات في الفترة دي') : t('دوس على أي عمود عشان تشوف رقمه')}
       </p>
       <div className="mt-2 flex items-end" style={{ height }} onPointerLeave={() => undefined}>
         {values.map((v, i) => {

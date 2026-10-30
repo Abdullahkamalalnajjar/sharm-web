@@ -2,6 +2,7 @@ import { ChevronDown, Languages } from 'lucide-react';
 import { useState } from 'react';
 
 import { TextArea, TextField } from '@/components/ui';
+import { t } from '@/lib/i18n';
 
 /** English and Russian versions of a name (and optionally a description). Empty = falls back to Arabic. */
 export interface TranslationValues {
@@ -55,8 +56,8 @@ export function TranslationFields({
       <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 p-3 text-start">
         <Languages className="size-5 text-brand" />
         <span className="flex-1">
-          <span className="block text-sm font-extrabold text-ink">الترجمة للسياح</span>
-          <span className="block text-xs text-ink-3">English • Русский — اختياري، لو فاضي هيظهر العربي</span>
+          <span className="block text-sm font-extrabold text-ink">{t('الترجمة للسياح')}</span>
+          <span className="block text-xs text-ink-3">{t('English • Русский — اختياري، لو فاضي هيظهر العربي')}</span>
         </span>
         <ChevronDown className={`size-5 text-ink-3 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>

@@ -8,6 +8,7 @@ import { LoyaltySettingsCard } from '@/features/loyalty/LoyaltyAdmin';
 import { AppFeaturesCard } from './AppFeaturesCard';
 import { compactNumber, formatFullDate, formatPrice } from '@/lib/format';
 import { ORDER_STATUSES, categoryLook, storeStatus } from '@/lib/meta';
+import { t } from '@/lib/i18n';
 import { useAuth } from '@/store/auth';
 import type { AdminDashboard, OrderStatus, StoreStatus } from '@/types';
 
@@ -30,12 +31,12 @@ export function AdminDashboardPage() {
         <span className="absolute end-14 -bottom-12 size-32 rounded-full bg-black/10" />
         <div className="relative flex items-center gap-3">
           <div className="flex-1">
-            <h1 className="text-xl font-extrabold text-white">أهلاً يا أدمن 👋</h1>
+            <h1 className="text-xl font-extrabold text-white">{t('أهلاً يا أدمن 👋')}</h1>
             <p className="text-[13px] text-white/85">{formatFullDate(new Date())}</p>
           </div>
           <button
             type="button"
-            title="تسجيل الخروج"
+            title={t('تسجيل الخروج')}
             onClick={() => {
               logout();
               navigate('/');
@@ -45,12 +46,12 @@ export function AdminDashboardPage() {
             <LogOut className="size-5" />
           </button>
         </div>
-        <p className="relative mt-5 text-sm text-white/85">المحلات على المنصة</p>
+        <p className="relative mt-5 text-sm text-white/85">{t('المحلات على المنصة')}</p>
         <p className="relative text-[52px] font-extrabold leading-tight text-highlight">{d ? compactNumber(d.totalStores) : '—'}</p>
         {d && (
           <div className="relative mt-1 flex flex-wrap gap-2">
-            <HeaderPill icon={Store} text={`${d.openStores} مفتوح دلوقتي`} />
-            <HeaderPill icon={CheckCircle2} text={`${d.activeStores} مفعّل`} />
+            <HeaderPill icon={Store} text={t('{n} مفتوح دلوقتي', { n: d.openStores })} />
+            <HeaderPill icon={CheckCircle2} text={t('{n} مفعّل', { n: d.activeStores })} />
           </div>
         )}
       </div>
@@ -59,7 +60,7 @@ export function AdminDashboardPage() {
         {dashboard.isLoading ? (
           <Loading />
         ) : dashboard.isError || !d ? (
-          <ErrorView message={(dashboard.error as Error)?.message ?? 'حصل خطأ'} onRetry={() => dashboard.refetch()} />
+          <ErrorView message={(dashboard.error as Error)?.message ?? t('حصل خطأ')} onRetry={() => dashboard.refetch()} />
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="flex flex-col gap-4">
@@ -69,16 +70,16 @@ export function AdminDashboardPage() {
               {d.unassignedOrders > 0 && (
                 <AttentionBanner
                   icon={UserRoundSearch}
-                  title={d.unassignedOrders === 1 ? 'أوردر واحد محتاج مندوب' : `${d.unassignedOrders} أوردرات محتاجة مندوب`}
-                  subtitle="معروضة على المناديب ومحدش قبلها لسه، أو اختار مندوب"
+                  title={d.unassignedOrders === 1 ? t('أوردر واحد محتاج مندوب') : t('{n} أوردرات محتاجة مندوب', { n: d.unassignedOrders })}
+                  subtitle={t('معروضة على المناديب ومحدش قبلها لسه، أو اختار مندوب')}
                   onClick={() => openOrders('all')}
                 />
               )}
               {d.pendingStores > 0 && (
                 <AttentionBanner
                   icon={Hourglass}
-                  title={d.pendingStores === 1 ? 'محل واحد مستني موافقتك' : `${d.pendingStores} محلات مستنية موافقتك`}
-                  subtitle="راجع البيانات ووافق عشان يظهروا للزباين"
+                  title={d.pendingStores === 1 ? t('محل واحد مستني موافقتك') : t('{n} محلات مستنية موافقتك', { n: d.pendingStores })}
+                  subtitle={t('راجع البيانات ووافق عشان يظهروا للزباين')}
                   onClick={() => openStores('PendingApproval')}
                 />
               )}
@@ -86,29 +87,29 @@ export function AdminDashboardPage() {
 
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3">
-                <StatTile icon={Users} label="الزباين" value={d.customers} />
-                <StatTile icon={Store} label="أصحاب المحلات" value={d.storeOwners} onClick={() => openStores()} />
-                <StatTile icon={Package} label="المنتجات" value={d.totalProducts} caption={d.unavailableProducts > 0 ? `${d.unavailableProducts} خلصان` : 'كله متاح'} />
-                <StatTile icon={LayoutGrid} label="الأقسام" value={d.totalCategories} />
+                <StatTile icon={Users} label={t('الزباين')} value={d.customers} />
+                <StatTile icon={Store} label={t('أصحاب المحلات')} value={d.storeOwners} onClick={() => openStores()} />
+                <StatTile icon={Package} label={t('المنتجات')} value={d.totalProducts} caption={d.unavailableProducts > 0 ? t('{n} خلصان', { n: d.unavailableProducts }) : t('كله متاح')} />
+                <StatTile icon={LayoutGrid} label={t('الأقسام')} value={d.totalCategories} />
                 <StatTile
                   icon={Bike}
-                  label="المندوبين المفعّلين"
+                  label={t('المندوبين المفعّلين')}
                   value={d.activeDrivers}
-                  caption={d.unassignedOrders > 0 ? `${d.unassignedOrders} أوردر مستني مندوب` : undefined}
+                  caption={d.unassignedOrders > 0 ? t('{n} أوردر مستني مندوب', { n: d.unassignedOrders }) : undefined}
                   onClick={() => navigate('/admin/drivers')}
                   className="col-span-2"
                 />
               </div>
               <div className="flex gap-3">
                 <Button block icon={<PlusSquare className="size-5" />} onClick={() => navigate('/admin/stores/new')}>
-                  محل جديد
+                  {t('محل جديد')}
                 </Button>
                 <Button block variant="outline" icon={<Store className="size-5" />} onClick={() => openStores()}>
-                  كل المحلات
+                  {t('كل المحلات')}
                 </Button>
               </div>
               <Button block variant="outline" icon={<Gift className="size-5" />} onClick={() => navigate('/admin/offers')}>
-                العروض اليومية
+                {t('العروض اليومية')}
               </Button>
               <LoyaltySettingsCard />
               <AppFeaturesCard />
@@ -116,21 +117,21 @@ export function AdminDashboardPage() {
 
             <SoftCard className="p-4">
               <div className="flex items-center">
-                <h3 className="flex-1 font-extrabold text-ink">المحلات حسب القسم</h3>
+                <h3 className="flex-1 font-extrabold text-ink">{t('المحلات حسب القسم')}</h3>
                 <Button variant="ghost" size="sm" icon={<SlidersHorizontal className="size-4" />} onClick={() => navigate('/admin/categories')}>
-                  إدارة الأقسام
+                  {t('إدارة الأقسام')}
                 </Button>
               </div>
               <StoreCategoryBreakdown dashboard={d} />
             </SoftCard>
             <SoftCard className="p-4">
-              <h3 className="font-extrabold text-ink">حالة المحلات</h3>
+              <h3 className="font-extrabold text-ink">{t('حالة المحلات')}</h3>
               <StoreStatusMeters dashboard={d} onSelect={openStores} />
             </SoftCard>
 
             {d.pendingApprovals.length > 0 && (
               <div className="lg:col-span-2">
-                <SectionHeader title="مستنية موافقتك" action="عرض الكل" onAction={() => openStores('PendingApproval')} />
+                <SectionHeader title={t('مستنية موافقتك')} action={t('عرض الكل')} onAction={() => openStores('PendingApproval')} />
                 <div className="grid gap-3 md:grid-cols-2">
                   {d.pendingApprovals.map((s) => (
                     <AdminStoreCard key={s.id} store={s} />
@@ -167,15 +168,15 @@ function TodayCard({ onOpen }: { onOpen: () => void }) {
     <SoftCard as="button" onClick={onOpen} className="p-3.5">
       <div className="flex items-center gap-2">
         <TrendingUp className="size-5 text-accent" />
-        <span className="font-extrabold text-ink">النهارده</span>
+        <span className="font-extrabold text-ink">{t('النهارده')}</span>
         <span className="flex-1" />
-        <span className="text-[13px] font-bold text-brand-ink">كل الإحصائيات</span>
+        <span className="text-[13px] font-bold text-brand-ink">{t('كل الإحصائيات')}</span>
         <ChevronLeft className="size-5 text-brand-ink" />
       </div>
       <div className="mt-3 flex gap-3">
-        <Cell label="اتحصّل" value={today ? formatPrice(today.sales) : '—'} accent />
-        <Cell label="ليك (توصيل)" value={today ? formatPrice(today.deliveryFees) : '—'} />
-        <Cell label="أوردرات" value={today ? String(today.ordersPlaced) : '—'} />
+        <Cell label={t('اتحصّل')} value={today ? formatPrice(today.sales) : '—'} accent />
+        <Cell label={t('ليك (توصيل)')} value={today ? formatPrice(today.deliveryFees) : '—'} />
+        <Cell label={t('أوردرات')} value={today ? String(today.ordersPlaced) : '—'} />
       </div>
     </SoftCard>
   );
@@ -184,16 +185,16 @@ function TodayCard({ onOpen }: { onOpen: () => void }) {
 /** Order work at a glance: new (needs review), in progress, delivered. */
 function OrdersStrip({ dashboard: d, onOpen }: { dashboard: AdminDashboard; onOpen: (s: OrderStatus | 'all') => void }) {
   const cells: [OrderStatus, string, number][] = [
-    ['Pending', 'جديدة', d.pendingOrders],
-    ['Confirmed', 'شغالة', d.ordersInProgress],
-    ['Delivered', 'اتوصلت', d.deliveredOrders],
+    ['Pending', t('جديدة'), d.pendingOrders],
+    ['Confirmed', t('شغالة'), d.ordersInProgress],
+    ['Delivered', t('اتوصلت'), d.deliveredOrders],
   ];
   return (
     <SoftCard className="p-3.5">
       <div className="flex items-center">
-        <h3 className="flex-1 font-extrabold text-ink">الأوردرات</h3>
+        <h3 className="flex-1 font-extrabold text-ink">{t('الأوردرات')}</h3>
         <button type="button" onClick={() => onOpen('all')} className="text-[13px] font-bold text-brand-ink hover:underline">
-          كل الأوردرات
+          {t('كل الأوردرات')}
         </button>
       </div>
       <div className="mt-2 grid grid-cols-3 gap-2">
@@ -226,14 +227,14 @@ function FinanceCard({ onOpen }: { onOpen: () => void }) {
     <SoftCard as="button" onClick={onOpen} className="flex items-center gap-3 p-4 text-start">
       <IconWell icon={Landmark} size={44} color="var(--color-success)" />
       <span className="min-w-0 flex-1">
-        <span className="block font-extrabold text-ink">المالية</span>
+        <span className="block font-extrabold text-ink">{t('المالية')}</span>
         <span className="block text-xs text-ink-2">
           {o
-            ? `للمحلات ${formatPrice(o.owedToStores)} • كاش مع المناديب ${formatPrice(o.cashWithDrivers)}`
-            : 'المحافظ وطلبات السحب والحركات'}
+            ? t('للمحلات {stores} • كاش مع المناديب {cash}', { stores: formatPrice(o.owedToStores), cash: formatPrice(o.cashWithDrivers) })
+            : t('المحافظ وطلبات السحب والحركات')}
         </span>
       </span>
-      {pending > 0 && <StatusChip label={`${pending} طلب سحب`} color="var(--color-warning)" />}
+      {pending > 0 && <StatusChip label={t('{n} طلب سحب', { n: pending })} color="var(--color-warning)" />}
       <ChevronLeft className="size-5 text-ink-3" />
     </SoftCard>
   );
@@ -268,7 +269,7 @@ function StoreCategoryBreakdown({ dashboard }: { dashboard: AdminDashboard }) {
   const [focused, setFocused] = useState<number | null>(null);
   const rows = dashboard.storesByCategory.map((c) => ({ ...c, look: categoryLook(c.icon) }));
   const total = rows.reduce((n, c) => n + c.count, 0);
-  if (total === 0) return <p className="py-3 text-ink-3">لسه مفيش محلات</p>;
+  if (total === 0) return <p className="py-3 text-ink-3">{t('لسه مفيش محلات')}</p>;
   const opacity = (id: number) => (focused === null || focused === id ? 1 : 0.3);
   const toggle = (id: number) => setFocused((f) => (f === id ? null : id));
 

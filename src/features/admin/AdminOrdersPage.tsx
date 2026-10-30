@@ -6,6 +6,7 @@ import { useAdminOrders } from '@/api/queries';
 import { TabHeader } from '@/components/layout/AppShell';
 import { EmptyView, ErrorView, Loading } from '@/components/ui';
 import { OrderSummaryCard } from '@/features/orders/OrderWidgets';
+import { t } from '@/lib/i18n';
 import { orderStatus } from '@/lib/meta';
 import type { OrderStatus } from '@/types';
 
@@ -30,7 +31,7 @@ export function AdminOrdersPage() {
 
   return (
     <div className="mx-auto max-w-3xl pb-8">
-      <TabHeader title="الأوردرات" />
+      <TabHeader title={t('الأوردرات')} />
       <div className="sticky top-0 md:top-16 z-20 bg-bg -mx-0 px-4 pb-2.5">
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 no-scrollbar">
           {FILTERS.map(([label, value]) => {
@@ -50,7 +51,7 @@ export function AdminOrdersPage() {
                 )}
               >
                 {meta && <meta.Icon className="size-4" style={{ color: selected ? '#fff' : meta.color }} />}
-                {label}
+                {t(label)}
               </button>
             );
           })}
@@ -62,7 +63,7 @@ export function AdminOrdersPage() {
         ) : orders.isError ? (
           <ErrorView message={(orders.error as Error).message} onRetry={() => orders.refetch()} />
         ) : orders.data!.length === 0 ? (
-          <EmptyView icon={ReceiptText} message={filter === 'Pending' ? 'مفيش أوردرات جديدة دلوقتي 👌' : 'مفيش أوردرات هنا'} />
+          <EmptyView icon={ReceiptText} message={filter === 'Pending' ? t('مفيش أوردرات جديدة دلوقتي 👌') : t('مفيش أوردرات هنا')} />
         ) : (
           <div className="grid gap-2.5 md:grid-cols-2">
             {orders.data!.map((o) => (

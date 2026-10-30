@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/layout/AppShell';
 import { Button, EmptyView, ErrorView, Loading, Sheet, SoftCard, StatusChip, Switch } from '@/components/ui';
 import { MenuItem } from '@/features/addresses/AddressesPage';
 import { applyDiscount, formatPercent, formatPrice } from '@/lib/format';
+import { t } from '@/lib/i18n';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
 import type { MenuCategory, MenuImportResult } from '@/types';
@@ -89,21 +90,21 @@ export function ManageMenuPage() {
       if (await runAction(() => catalogApi.setCategoryActive(storeId, c.id, !c.isActive))) reload();
       return;
     }
-    if (!(await confirm(`تمسح قسم "${c.name}"؟`, 'مسح'))) return;
-    if (await runAction(() => catalogApi.deleteCategory(storeId, c.id), 'القسم اتمسح')) reload();
+    if (!(await confirm(t('تمسح قسم "{name}"؟', { name: c.name }), t('مسح')))) return;
+    if (await runAction(() => catalogApi.deleteCategory(storeId, c.id), t('القسم اتمسح'))) reload();
   }
 
   return (
     <div className="mx-auto max-w-3xl pb-28">
       <PageHeader
-        title={store.data ? `منيو ${store.data.name}` : 'المنيو'}
+        title={store.data ? t('منيو {name}', { name: store.data.name }) : t('المنيو')}
         actions={
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" icon={<FileSpreadsheet className="size-4" />} loading={excelBusy} onClick={() => setExcelMenu(true)}>
               Excel
             </Button>
             <Button size="sm" className="hidden md:inline-flex" icon={<FolderPlus className="size-4" />} onClick={() => setCategoryDialog({ category: null })}>
-              قسم جديد
+              {t('قسم جديد')}
             </Button>
           </div>
         }
@@ -125,7 +126,7 @@ export function ManageMenuPage() {
         ) : menu.isError ? (
           <ErrorView message={(menu.error as Error).message} onRetry={reload} />
         ) : categories.length === 0 ? (
-          <EmptyView icon={BookOpen} message='ابدأ بإضافة قسم، زي "مشويات" أو "ألبان"' />
+          <EmptyView icon={BookOpen} message={t('ابدأ بإضافة قسم، زي "مشويات" أو "ألبان"')} />
         ) : (
           <div className="flex flex-col gap-3">
             {categories.map((c) => (
@@ -135,12 +136,12 @@ export function ManageMenuPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="truncate font-extrabold text-ink">{c.name}</span>
-                      {c.parentId !== null && <StatusChip label="فرعي" color="var(--color-series-3)" />}
-                      {!c.isActive && <StatusChip label="مخفي" color="var(--color-ink-3)" />}
+                      {c.parentId !== null && <StatusChip label={t('فرعي')} color="var(--color-series-3)" />}
+                      {!c.isActive && <StatusChip label={t('مخفي')} color="var(--color-ink-3)" />}
                     </div>
-                    <span className="text-sm text-ink-2">{c.products.length} منتج</span>
+                    <span className="text-sm text-ink-2">{t('{n} منتج', { n: c.products.length })}</span>
                   </div>
-                  <button type="button" aria-label="خيارات" onClick={() => setMenuFor(c)} className="grid size-10 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
+                  <button type="button" aria-label={t('خيارات')} onClick={() => setMenuFor(c)} className="grid size-10 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
                     <MoreVertical className="size-5" />
                   </button>
                 </div>
@@ -151,8 +152,9 @@ export function ManageMenuPage() {
                       <p className="text-xs text-ink-2">
                         {[
                           formatPrice(p.price),
-                          p.discountPercent > 0 && `خصم ${formatPercent(p.discountPercent)} ← ${formatPrice(p.finalPrice ?? applyDiscount(p.price, p.discountPercent))}`,
-                          p.optionGroups.length > 0 && `${p.optionGroups.length} مجموعة اختيارات`,
+                          p.discountPercent > 0 &&
+                            t('خصم {percent} ← {price}', { percent: formatPercent(p.discountPercent), price: formatPrice(p.finalPrice ?? applyDiscount(p.price, p.discountPercent)) }),
+                          p.optionGroups.length > 0 && t('{n} مجموعة اختيارات', { n: p.optionGroups.length }),
                         ]
                           .filter(Boolean)
                           .join(' • ')}
@@ -160,7 +162,7 @@ export function ManageMenuPage() {
                     </button>
                     <Switch
                       checked={p.isAvailable}
-                      label="متاح"
+                      label={t('متاح')}
                       onChange={async (v) => {
                         if (await runAction(() => catalogApi.setProductAvailability(storeId, p.id, v))) reload();
                       }}
@@ -174,7 +176,7 @@ export function ManageMenuPage() {
                     className="flex w-full items-center justify-center gap-1.5 py-3 text-sm font-bold text-brand-ink hover:bg-surface-alt"
                   >
                     <Plus className="size-4" />
-                    إضافة منتج
+                    {t('إضافة منتج')}
                   </button>
                 </div>
               </SoftCard>
@@ -186,19 +188,19 @@ export function ManageMenuPage() {
       <div className="fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(env(safe-area-inset-bottom),12px)] md:hidden pointer-events-none">
         <div className="mx-auto max-w-3xl flex justify-end">
           <Button className="pointer-events-auto" icon={<FolderPlus className="size-5" />} onClick={() => setCategoryDialog({ category: null })}>
-            قسم جديد
+            {t('قسم جديد')}
           </Button>
         </div>
       </div>
 
-      <Sheet open={excelMenu} onClose={() => setExcelMenu(false)} title="المنيو Excel">
+      <Sheet open={excelMenu} onClose={() => setExcelMenu(false)} title={t('المنيو Excel')}>
         <div className="flex flex-col">
-          <ExcelAction icon={FileDown} title="نزّل المنيو Excel" subtitle="عدّل فيه أو املاه وارفعه" onClick={() => download(() => catalogApi.exportMenu(storeId), `menu-${storeId}.xlsx`)} />
-          <ExcelAction icon={FileText} title="نزّل ملف مثال" subtitle="منيو كامل بكل الأعمدة وشرحها" onClick={() => download(() => catalogApi.menuSample(storeId), 'menu-example.xlsx')} />
+          <ExcelAction icon={FileDown} title={t('نزّل المنيو Excel')} subtitle={t('عدّل فيه أو املاه وارفعه')} onClick={() => download(() => catalogApi.exportMenu(storeId), `menu-${storeId}.xlsx`)} />
+          <ExcelAction icon={FileText} title={t('نزّل ملف مثال')} subtitle={t('منيو كامل بكل الأعمدة وشرحها')} onClick={() => download(() => catalogApi.menuSample(storeId), 'menu-example.xlsx')} />
           <ExcelAction
             icon={FileUp}
-            title="ارفع ملف Excel"
-            subtitle="يضيف ويحدّث المنتجات مرة واحدة"
+            title={t('ارفع ملف Excel')}
+            subtitle={t('يضيف ويحدّث المنتجات مرة واحدة')}
             onClick={() => {
               setExcelMenu(false);
               fileInput.current?.click();
@@ -210,10 +212,10 @@ export function ManageMenuPage() {
       <Sheet open={menuFor !== null} onClose={() => setMenuFor(null)} title={menuFor?.name}>
         {menuFor && (
           <div className="flex flex-col">
-            <MenuItem onClick={() => categoryAction('edit', menuFor)}>تعديل</MenuItem>
-            <MenuItem onClick={() => categoryAction('toggle', menuFor)}>{menuFor.isActive ? 'إخفاء من المنيو' : 'إظهار في المنيو'}</MenuItem>
+            <MenuItem onClick={() => categoryAction('edit', menuFor)}>{t('تعديل')}</MenuItem>
+            <MenuItem onClick={() => categoryAction('toggle', menuFor)}>{menuFor.isActive ? t('إخفاء من المنيو') : t('إظهار في المنيو')}</MenuItem>
             <MenuItem danger onClick={() => categoryAction('delete', menuFor)}>
-              مسح
+              {t('مسح')}
             </MenuItem>
           </div>
         )}
@@ -237,19 +239,19 @@ export function ManageMenuPage() {
         }
       />
 
-      <Sheet open={importResult !== null} onClose={() => setImportResult(null)} title={importResult?.imported ? 'المنيو اتحدّث' : 'في أخطاء في الملف'}>
+      <Sheet open={importResult !== null} onClose={() => setImportResult(null)} title={importResult?.imported ? t('المنيو اتحدّث') : t('في أخطاء في الملف')}>
         {importResult && (
           <div className="flex flex-col gap-3">
             {importResult.imported ? (
               <div className="flex items-start gap-3">
                 <CircleCheck className="size-8 shrink-0 text-success" />
                 <div className="text-ink">
-                  <p>{importResult.productsCreated} منتج جديد</p>
-                  <p>{importResult.productsUpdated} منتج اتحدّث</p>
-                  {importResult.categoriesCreated > 0 && <p>{importResult.categoriesCreated} قسم جديد</p>}
+                  <p>{t('{n} منتج جديد', { n: importResult.productsCreated })}</p>
+                  <p>{t('{n} منتج اتحدّث', { n: importResult.productsUpdated })}</p>
+                  {importResult.categoriesCreated > 0 && <p>{t('{n} قسم جديد', { n: importResult.categoriesCreated })}</p>}
                   {importResult.optionsCreated + importResult.optionsUpdated > 0 && (
                     <p>
-                      {importResult.optionsCreated} إضافة جديدة • {importResult.optionsUpdated} إضافة اتحدّثت
+                      {t('{n} إضافة جديدة', { n: importResult.optionsCreated })} • {t('{n} إضافة اتحدّثت', { n: importResult.optionsUpdated })}
                     </p>
                   )}
                 </div>
@@ -258,13 +260,14 @@ export function ManageMenuPage() {
               <>
                 <div className="flex items-center gap-2 text-ink-2">
                   <CircleX className="size-6 shrink-0 text-danger" />
-                  محدش اتحفظ. صلّح الصفوف دي وارفع الملف تاني:
+                  {t('محدش اتحفظ. صلّح الصفوف دي وارفع الملف تاني:')}
                 </div>
                 <ul className="max-h-80 overflow-y-auto text-sm">
                   {importResult.errors.map((e, i) => (
                     <li key={i} className="py-1">
                       <span className="font-extrabold">
-                        {e.sheet && e.sheet !== 'المنتجات' ? `${e.sheet} • ` : ''}صف {e.rowNumber}:{' '}
+                        {e.sheet && e.sheet !== 'المنتجات' ? `${e.sheet} • ` : ''}
+                        {t('صف {n}:', { n: e.rowNumber })}{' '}
                       </span>
                       {e.message}
                     </li>
@@ -274,7 +277,7 @@ export function ManageMenuPage() {
             )}
             <div className="flex justify-end">
               <Button size="md" onClick={() => setImportResult(null)}>
-                تمام
+                {t('تمام')}
               </Button>
             </div>
           </div>

@@ -5,9 +5,8 @@ import { useState, type FormEvent } from 'react';
 import { customerWalletApi } from '@/api';
 import { Button, InlineError, Segmented, Sheet, SoftCard, TextField } from '@/components/ui';
 import { formatPrice } from '@/lib/format';
+import { t } from '@/lib/i18n';
 import { runAction } from '@/lib/run-action';
-
-// Admin pages are Arabic only.
 
 const walletKey = (customerId: string) => ['admin', 'customer-wallet', customerId] as const;
 
@@ -21,12 +20,12 @@ export function CustomerWalletCard({ customerId }: { customerId: string }) {
     <SoftCard className="flex items-center gap-3 p-4">
       <Wallet className="size-5 text-brand-ink" />
       <span className="flex-1 font-bold text-ink">
-        {wallet.isError ? 'تعذّر تحميل المحفظة' : `محفظة الزبون: ${balance === undefined ? '…' : formatPrice(balance)}`}
+        {wallet.isError ? t('تعذّر تحميل المحفظة') : t('محفظة الزبون: {amount}', { amount: balance === undefined ? '…' : formatPrice(balance) })}
       </span>
       <Button variant="ghost" size="sm" disabled={balance === undefined} onClick={() => setOpen(true)}>
-        زوّد / اخصم
+        {t('زوّد / اخصم')}
       </Button>
-      <Sheet open={open} onClose={() => setOpen(false)} title={`محفظة الزبون (${formatPrice(balance ?? 0)})`}>
+      <Sheet open={open} onClose={() => setOpen(false)} title={t('محفظة الزبون ({amount})', { amount: formatPrice(balance ?? 0) })}>
         {open && balance !== undefined && <AdjustForm customerId={customerId} balance={balance} onClose={() => setOpen(false)} />}
       </Sheet>
     </SoftCard>
@@ -44,13 +43,13 @@ function AdjustForm({ customerId, balance, onClose }: { customerId: string; bala
   async function submit(e: FormEvent) {
     e.preventDefault();
     const n = Number(amount);
-    if (!(n > 0)) return setError('اكتب مبلغ');
-    if (mode === 'take' && n > balance) return setError(`الزبون معاه ${formatPrice(balance)} بس`);
-    if (!note.trim()) return setError('اكتب السبب');
+    if (!(n > 0)) return setError(t('اكتب مبلغ'));
+    if (mode === 'take' && n > balance) return setError(t('الزبون معاه {amount} بس', { amount: formatPrice(balance) }));
+    if (!note.trim()) return setError(t('اكتب السبب'));
     setBusy(true);
     const ok = await runAction(async () => {
       qc.setQueryData(walletKey(customerId), await customerWalletApi.adjust(customerId, mode === 'add' ? n : -n, note.trim()));
-    }, mode === 'add' ? 'الفلوس اتضافت للمحفظة' : 'الفلوس اتخصمت من المحفظة');
+    }, mode === 'add' ? t('الفلوس اتضافت للمحفظة') : t('الفلوس اتخصمت من المحفظة'));
     setBusy(false);
     if (ok) onClose();
   }
@@ -61,19 +60,19 @@ function AdjustForm({ customerId, balance, onClose }: { customerId: string; bala
         value={mode}
         onChange={setMode}
         options={[
-          { value: 'add', label: 'زوّد' },
-          { value: 'take', label: 'اخصم' },
+          { value: 'add', label: t('زوّد') },
+          { value: 'take', label: t('اخصم') },
         ]}
       />
-      <TextField name="amount" type="number" inputMode="decimal" ltr autoFocus label="المبلغ (ج.م)" value={amount} onChange={(e) => setAmount(e.target.value)} />
-      <TextField name="note" label="السبب (بيظهر للزبون)" maxLength={300} placeholder="مثلاً: تعويض، هدية" value={note} onChange={(e) => setNote(e.target.value)} />
+      <TextField name="amount" type="number" inputMode="decimal" ltr autoFocus label={t('المبلغ (ج.م)')} value={amount} onChange={(e) => setAmount(e.target.value)} />
+      <TextField name="note" label={t('السبب (بيظهر للزبون)')} maxLength={300} placeholder={t('مثلاً: تعويض، هدية')} value={note} onChange={(e) => setNote(e.target.value)} />
       {error && <InlineError message={error} />}
       <div className="mt-2 flex justify-end gap-2">
         <Button type="button" variant="ghost" size="md" onClick={onClose}>
-          إلغاء
+          {t('إلغاء')}
         </Button>
         <Button type="submit" size="md" loading={busy}>
-          حفظ
+          {t('حفظ')}
         </Button>
       </div>
     </form>
