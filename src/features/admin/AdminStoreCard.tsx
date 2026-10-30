@@ -8,6 +8,7 @@ import { Button, IconWell, Sheet, SoftCard, StatusChip, Switch } from '@/compone
 import { StoreAvatar } from '@/features/customer/StoreBits';
 import { formatPrice, formatStoreHours } from '@/lib/format';
 import { t } from '@/lib/i18n';
+import { localized } from '@/lib/localized';
 import { categoryOf, storeStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
@@ -53,7 +54,7 @@ export function AdminStoreCard({ store }: { store: Store }) {
   };
 
   async function reject() {
-    if (!(await confirm(t('ترفض طلب "{name}"؟', { name: store.name }), t('رفض')))) return;
+    if (!(await confirm(t('ترفض طلب "{name}"؟', { name: localized(store.name, store.nameEn, store.nameRu) }), t('رفض')))) return;
     await run(() => storesApi.suspend(store.id), t('الطلب اترفض'));
   }
 
@@ -64,7 +65,7 @@ export function AdminStoreCard({ store }: { store: Store }) {
           <StoreAvatar category={store} logoUrl={store.logoUrl} size={52} />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="flex-1 truncate font-extrabold text-ink">{store.name}</span>
+              <span className="flex-1 truncate font-extrabold text-ink">{localized(store.name, store.nameEn, store.nameRu)}</span>
               <StatusDot store={store} />
             </div>
             <p className="truncate text-[13px] text-ink-2">{store.address}</p>
@@ -128,7 +129,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
   };
 
   async function suspend() {
-    if (!(await confirm(t('توقف "{name}"؟ هيتقفل ويختفي من الزباين.', { name: store.name }), t('إيقاف')))) return;
+    if (!(await confirm(t('توقف "{name}"؟ هيتقفل ويختفي من الزباين.', { name: localized(store.name, store.nameEn, store.nameRu) }), t('إيقاف')))) return;
     await run(() => storesApi.suspend(store.id), t('المحل اتوقف'));
   }
 
@@ -145,7 +146,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
         <div className="flex items-center gap-3.5">
           <StoreAvatar category={store} logoUrl={store.logoUrl} size={56} />
           <div className="min-w-0 flex-1">
-            <h3 className="text-[19px] font-extrabold text-ink">{store.name}</h3>
+            <h3 className="text-[19px] font-extrabold text-ink">{localized(store.name, store.nameEn, store.nameRu)}</h3>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               <StatusChip label={status.label} color={status.color} />
               {store.status === 'Active' && <OpenChip store={store} />}

@@ -8,6 +8,7 @@ import { useStore } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, EmptyView, ErrorView, IconWell, InlineError, Loading, Sheet, SoftCard, TextField } from '@/components/ui';
 import { t, tIn } from '@/lib/i18n';
+import { localized } from '@/lib/localized';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
 import type { StoreEmployee } from '@/types';
@@ -33,7 +34,7 @@ export function StoreEmployeesPage() {
   return (
     <div className="mx-auto max-w-2xl pb-28">
       <PageHeader
-        title={store.data ? t('كاشير {name}', { name: store.data.name }) : t('حسابات الكاشير')}
+        title={store.data ? t('كاشير {name}', { name: localized(store.data.name, store.data.nameEn, store.data.nameRu) }) : t('حسابات الكاشير')}
         actions={
           <Button size="sm" className="hidden md:inline-flex" icon={<UserPlus className="size-4" />} onClick={() => setForm({ employee: null })}>
             {t('حساب كاشير')}

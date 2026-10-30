@@ -10,6 +10,7 @@ import { Button, EmptyView, ErrorView, Loading, Sheet, SoftCard, StatusChip, Swi
 import { MenuItem } from '@/features/addresses/AddressesPage';
 import { applyDiscount, formatPercent, formatPrice } from '@/lib/format';
 import { t } from '@/lib/i18n';
+import { localized } from '@/lib/localized';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
 import type { MenuCategory, MenuImportResult } from '@/types';
@@ -90,14 +91,14 @@ export function ManageMenuPage() {
       if (await runAction(() => catalogApi.setCategoryActive(storeId, c.id, !c.isActive))) reload();
       return;
     }
-    if (!(await confirm(t('تمسح قسم "{name}"؟', { name: c.name }), t('مسح')))) return;
+    if (!(await confirm(t('تمسح قسم "{name}"؟', { name: localized(c.name, c.nameEn, c.nameRu) }), t('مسح')))) return;
     if (await runAction(() => catalogApi.deleteCategory(storeId, c.id), t('القسم اتمسح'))) reload();
   }
 
   return (
     <div className="mx-auto max-w-3xl pb-28">
       <PageHeader
-        title={store.data ? t('منيو {name}', { name: store.data.name }) : t('المنيو')}
+        title={store.data ? t('منيو {name}', { name: localized(store.data.name, store.data.nameEn, store.data.nameRu) }) : t('المنيو')}
         actions={
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" icon={<FileSpreadsheet className="size-4" />} loading={excelBusy} onClick={() => setExcelMenu(true)}>
@@ -135,7 +136,7 @@ export function ManageMenuPage() {
                 <div className="flex items-center gap-2 px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="truncate font-extrabold text-ink">{c.name}</span>
+                      <span className="truncate font-extrabold text-ink">{localized(c.name, c.nameEn, c.nameRu)}</span>
                       {c.parentId !== null && <StatusChip label={t('فرعي')} color="var(--color-series-3)" />}
                       {!c.isActive && <StatusChip label={t('مخفي')} color="var(--color-ink-3)" />}
                     </div>
@@ -148,7 +149,7 @@ export function ManageMenuPage() {
                 {c.products.map((p) => (
                   <div key={p.id} className="flex items-center gap-3 border-t border-line px-4 py-3">
                     <button type="button" onClick={() => navigate(`${basePath}/stores/${storeId}/products/${p.id}`)} className="min-w-0 flex-1 text-start">
-                      <p className="truncate font-bold text-ink">{p.name}</p>
+                      <p className="truncate font-bold text-ink">{localized(p.name, p.nameEn, p.nameRu)}</p>
                       <p className="text-xs text-ink-2">
                         {[
                           formatPrice(p.price),
@@ -209,7 +210,7 @@ export function ManageMenuPage() {
         </div>
       </Sheet>
 
-      <Sheet open={menuFor !== null} onClose={() => setMenuFor(null)} title={menuFor?.name}>
+      <Sheet open={menuFor !== null} onClose={() => setMenuFor(null)} title={menuFor ? localized(menuFor.name, menuFor.nameEn, menuFor.nameRu) : undefined}>
         {menuFor && (
           <div className="flex flex-col">
             <MenuItem onClick={() => categoryAction('edit', menuFor)}>{t('تعديل')}</MenuItem>

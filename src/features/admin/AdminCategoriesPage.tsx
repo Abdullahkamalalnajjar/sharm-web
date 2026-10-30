@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/layout/AppShell';
 import { AppImage, Button, EmptyView, ErrorView, InlineError, Loading, Sheet, SoftCard, StatusChip, Switch, TextField } from '@/components/ui';
 import { ImagePickerField, noImageEdit, type ImageEdit } from '@/features/owner/ImagePicker';
 import { t, tIn } from '@/lib/i18n';
+import { localized } from '@/lib/localized';
 import { STORE_CATEGORY_ICONS, categoryLook } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { confirm, showMessage } from '@/store/ui';
@@ -47,7 +48,7 @@ export function AdminCategoriesPage() {
   async function toggle(c: StoreCategory) {
     const ok = await runAction(
       () => storeCategoriesApi.setVisible(c.id, !c.isVisible),
-      c.isVisible ? t('{name} اتخفى من الرئيسية', { name: c.name }) : t('{name} ظاهر في الرئيسية', { name: c.name }),
+      c.isVisible ? t('{name} اتخفى من الرئيسية', { name: localized(c.name, c.nameEn, c.nameRu) }) : t('{name} ظاهر في الرئيسية', { name: localized(c.name, c.nameEn, c.nameRu) }),
     );
     if (ok) refresh();
   }
@@ -159,7 +160,7 @@ function CategoryRow({
       <button type="button" onClick={onEdit} className="flex min-w-0 flex-1 items-center gap-3 text-start">
         <CategoryThumb category={c} size={52} />
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-extrabold text-ink">{c.name}</span>
+          <span className="block truncate font-extrabold text-ink">{localized(c.name, c.nameEn, c.nameRu)}</span>
           <span className="text-xs text-ink-3">
             {c.imageUrl ? t('{n} محل', { n: c.storesCount }) : t('{n} محل • من غير صورة', { n: c.storesCount })}
           </span>
@@ -213,7 +214,7 @@ function CategoryFormSheet({
   }
 
   async function remove() {
-    if (!category || !(await confirm(t('تمسح قسم "{name}"؟', { name: category.name }), t('امسح')))) return;
+    if (!category || !(await confirm(t('تمسح قسم "{name}"؟', { name: localized(category.name, category.nameEn, category.nameRu) }), t('امسح')))) return;
     setBusy(true);
     if (await runAction(() => storeCategoriesApi.delete(category.id), t('القسم اتمسح'))) {
       onSaved();

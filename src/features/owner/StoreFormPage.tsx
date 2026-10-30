@@ -9,6 +9,7 @@ import { useStore, useStoreCategories } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, Chip, InlineError, Loading, TextArea, TextField } from '@/components/ui';
 import { t } from '@/lib/i18n';
+import { localized } from '@/lib/localized';
 import { SHARM_AREAS, categoryLook } from '@/lib/meta';
 import { showMessage } from '@/store/ui';
 import type { Store as StoreModel, StoreInput } from '@/types';
@@ -124,10 +125,10 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
         ) : (
           <div className="flex flex-wrap gap-2">
             {[
-              ...(categories.data ?? []).map((c) => ({ id: c.id, name: c.name, icon: c.icon })),
+              ...(categories.data ?? []).map((c) => ({ id: c.id, name: localized(c.name, c.nameEn, c.nameRu), icon: c.icon })),
               // The store's current category stays selectable even if the admin hid it.
               ...(store && !(categories.data ?? []).some((c) => c.id === store.categoryId)
-                ? [{ id: store.categoryId, name: store.categoryName, icon: store.categoryIcon }]
+                ? [{ id: store.categoryId, name: localized(store.categoryName, store.categoryNameEn, store.categoryNameRu), icon: store.categoryIcon }]
                 : []),
             ].map((c) => {
               const look = categoryLook(c.icon);

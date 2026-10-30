@@ -5,13 +5,14 @@ import { storesApi } from '@/api';
 import { useRefreshAdmin } from '@/api/queries';
 import { Button, InlineError, Sheet, Switch, TextField } from '@/components/ui';
 import { t } from '@/lib/i18n';
+import { localized } from '@/lib/localized';
 import { runAction } from '@/lib/run-action';
 import type { Store } from '@/types';
 
 /** The admin's settings of a store: commission and scheduled orders. They apply to new orders only. */
 export function StoreSettingsDialog({ store, open, onClose }: { store: Store; open: boolean; onClose: () => void }) {
   return (
-    <Sheet open={open} onClose={onClose} title={t('إعدادات {name}', { name: store.name })}>
+    <Sheet open={open} onClose={onClose} title={t('إعدادات {name}', { name: localized(store.name, store.nameEn, store.nameRu) })}>
       {open && <SettingsForm key={store.id} store={store} onClose={onClose} />}
     </Sheet>
   );
