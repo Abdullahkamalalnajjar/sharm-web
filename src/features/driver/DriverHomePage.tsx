@@ -1,11 +1,11 @@
 import clsx from 'clsx';
-import { Bike, Check, Hourglass, History, Inbox, LogOut, MapPin, Megaphone, PauseCircle, Store, ToggleLeft, Wallet, type LucideIcon } from 'lucide-react';
+import { Bike, Check, HeartHandshake, Hourglass, History, Inbox, LogOut, MapPin, Megaphone, PauseCircle, Store, ToggleLeft, Wallet, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 
 import { driversApi } from '@/api';
-import { keys, useDriverOffers, useDriverOrders, useDriverProfile, useRefreshDriver } from '@/api/queries';
+import { keys, useDriverOffers, useDriverOrders, useDriverProfile, useMyDriverWallet, useRefreshDriver } from '@/api/queries';
 import { Button, EmptyView, ErrorView, IconWell, Loading, Price, SoftCard, StatusChip, Switch } from '@/components/ui';
 import { OrderStatusBadge, ScheduledChip } from '@/features/orders/OrderWidgets';
 import { formatOrderDate, formatPrice } from '@/lib/format';
@@ -79,6 +79,7 @@ export function DriverHomePage() {
       </div>
 
       <div className="mx-auto max-w-3xl px-4">
+        <TipsCard />
         <div className="mt-4 grid grid-cols-3 gap-1 rounded-full border border-line bg-surface p-1">
           {TABS.map((t) => (
             <button
@@ -223,9 +224,10 @@ function OfferCard({ offer: o, onTaken }: { offer: DriverOffer; onTaken: (orderI
       <div className="flex items-center">
         <span className="text-ink-2 me-1">توصيل</span>
         <span className="font-bold text-ink">{formatPrice(o.deliveryFee ?? 0)}</span>
+        {(o.tip ?? 0) > 0 && <StatusChip label={`+ بقشيش ${formatPrice(o.tip ?? 0)}`} color="var(--color-success)" className="ms-2" />}
         <span className="flex-1" />
         <span className="text-ink-2 me-1">حصّل</span>
-        <Price value={o.total} className="text-[17px]" />
+        <Price value={o.cashToCollect ?? o.total} className="text-[17px]" />
       </div>
       <div className="mt-3 flex gap-2.5">
         <Button variant="outline" className="border-danger/50 text-danger hover:bg-danger/10" disabled={busy} onClick={() => respond(false)}>
@@ -310,7 +312,28 @@ function DeliveryCard({ order: o, onClick }: { order: Order; onClick: () => void
         <span className="text-ink-2">{o.itemsCount} منتج</span>
         <span className="flex-1" />
         <span className="text-ink-2 me-1">حصّل</span>
-        <Price value={o.total} className="text-[17px]" />
+        <Price value={o.cashToCollect ?? o.total} className="text-[17px]" />
+      </div>
+    </SoftCard>
+  );
+}
+
+/** "بقشيش الزباين": customers' tips, all the driver's — in all and today. */
+function TipsCard() {
+  const w = useMyDriverWallet().data;
+  if (!w) return null;
+  return (
+    <SoftCard className="mt-4 flex items-center gap-3 p-4">
+      <IconWell icon={HeartHandshake} size={46} color="var(--color-success)" />
+      <div className="min-w-0 flex-1">
+        <p className="font-extrabold text-ink">بقشيش الزباين</p>
+        <p className="text-xs text-ink-3">
+          {(w.tippedOrders ?? 0) === 0 ? 'لسه مفيش بقشيش. كله ليك من غير خصم' : `من ${w.tippedOrders} أوردر • كله ليك من غير خصم`}
+        </p>
+      </div>
+      <div className="text-end">
+        <p className="text-lg font-black text-success">{formatPrice(w.totalTips ?? 0)}</p>
+        <p className="text-xs text-ink-2">النهارده {formatPrice(w.todayTips ?? 0)}</p>
       </div>
     </SoftCard>
   );

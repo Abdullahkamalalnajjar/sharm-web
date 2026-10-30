@@ -3,6 +3,8 @@ import 'leaflet/dist/leaflet.css';
 import { LocateFixed } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
+import { t } from '@/lib/i18n';
+
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -94,7 +96,7 @@ export function MapPicker({
         className="absolute bottom-3 left-3 z-[1000] flex items-center gap-1.5 rounded-full bg-surface px-3 py-2 text-xs font-extrabold text-ink shadow-md"
       >
         <LocateFixed className="size-4" />
-        {locating ? 'بحدد...' : 'موقعي الحالي'}
+        {locating ? t('بحدد...') : t('موقعي الحالي')}
       </button>
     </div>
   );

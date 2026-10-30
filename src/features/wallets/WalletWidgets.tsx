@@ -8,6 +8,8 @@ import {
   Wallet,
   Banknote,
   type LucideIcon,
+  HeartHandshake,
+  RotateCcw,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 
@@ -35,6 +37,8 @@ const KIND_ICON: Record<WalletEntryKind, LucideIcon> = {
   PurchaseCost: ShoppingBag,
   CashHandIn: Handshake,
   Adjustment: SlidersHorizontal,
+  Tip: HeartHandshake,
+  Refund: RotateCcw,
 };
 
 /** A money figure with its label, e.g. "إجمالي الأرباح 1,250 ج.م". */

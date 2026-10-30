@@ -11,6 +11,7 @@ import { formatOrderDate, formatPrice } from '@/lib/format';
 import { orderStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { ScheduledChip } from '@/features/orders/OrderWidgets';
+import { RefundsCard } from '@/features/orders/RefundsCard';
 import { OrderItemPicker, QuantityStepper } from '@/features/orders/OrderItemPicker';
 import { useAuth } from '@/store/auth';
 import { confirm } from '@/store/ui';
@@ -226,6 +227,8 @@ export function StoreOrderPage() {
                 run(() => storeOrdersApi.addItem(o.id, item.productId, item.optionIds, item.quantity, item.note), 'المنتج اتضاف للأوردر');
               }}
             />
+            {/* The owner refunds; the cashier only sees them. */}
+            {o.status === 'Delivered' && <RefundsCard side="store" orderId={o.id} canRefund={!isCashier} />}
             {o.note && (
               <SoftCard className="flex items-start gap-2.5 p-4">
                 <StickyNote className="size-5 shrink-0 text-accent" />

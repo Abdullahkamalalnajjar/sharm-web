@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { APP_LINKS, CONTACT, SITE } from '@/lib/site';
+import { t } from '@/lib/i18n';
 
 const BANNER_KEY = 'sharm.appBanner.closed';
 
@@ -22,8 +23,8 @@ export function BrandMark({ size = 36, red, className }: { size?: number; red?: 
 /** App-store badges: black pills in the style of the official ones. */
 export function StoreBadges({ small, className }: { small?: boolean; className?: string }) {
   const badges = [
-    { key: 'android', href: APP_LINKS.android, top: 'متاح على', name: 'Google Play' },
-    { key: 'ios', href: APP_LINKS.ios, top: 'حمّله من', name: 'App Store' },
+    { key: 'android', href: APP_LINKS.android, top: t('متاح على'), name: 'Google Play' },
+    { key: 'ios', href: APP_LINKS.ios, top: t('حمّله من'), name: 'App Store' },
   ];
   return (
     <div className={clsx('flex flex-wrap items-center gap-2', className)}>
@@ -69,24 +70,24 @@ export function AppBanner() {
     }
   };
   return (
-    <div className="bg-[#151515] text-white text-[0.76rem] sm:text-[0.85rem]" role="region" aria-label="حمّل التطبيق">
+    <div className="bg-[#151515] text-white text-[0.76rem] sm:text-[0.85rem]" role="region" aria-label={t('حمّل التطبيق')}>
       <div className="container-site flex items-center gap-2.5 py-1.5 sm:py-2">
         <span className="grid size-[26px] sm:size-[30px] shrink-0 place-items-center rounded-[8px] sm:rounded-[9px] bg-brand">
           <Smartphone className="size-4" />
         </span>
         <strong className="min-w-0 flex-1 truncate font-bold">
-          <span className="hidden sm:inline">اطلب من تطبيق {SITE.name}</span>
-          <span className="sm:hidden">اطلب أسرع من تطبيق {SITE.name}</span>
+          <span className="hidden sm:inline">{t('اطلب من تطبيق {name}', { name: SITE.name })}</span>
+          <span className="sm:hidden">{t('اطلب أسرع من تطبيق {name}', { name: SITE.name })}</span>
         </strong>
         <a
           href="#get-app"
           className="lg:hidden inline-flex shrink-0 items-center gap-1 rounded-[10px] bg-highlight px-2.5 py-1 text-[0.78rem] font-bold text-[#2b1d00] hover:brightness-105"
         >
           <Download className="size-3.5" />
-          حمّل التطبيق
+          {t('حمّل التطبيق')}
         </a>
         <StoreBadges small className="hidden lg:flex" />
-        <button type="button" onClick={close} aria-label="إغلاق" className="shrink-0 p-1 opacity-80 hover:opacity-100">
+        <button type="button" onClick={close} aria-label={t('إغلاق')} className="shrink-0 p-1 opacity-80 hover:opacity-100">
           <X className="size-4" />
         </button>
       </div>
@@ -101,7 +102,7 @@ function FooterTitle({ children }: { children: React.ReactNode }) {
 export function SiteFooter() {
   const contact = [
     CONTACT.phone && { icon: Phone, label: CONTACT.phone, href: `tel:${CONTACT.phone.replace(/\s/g, '')}`, ltr: true },
-    CONTACT.whatsapp && { icon: MessageCircle, label: 'واتساب', href: `https://wa.me/${CONTACT.whatsapp.replace(/\D/g, '')}` },
+    CONTACT.whatsapp && { icon: MessageCircle, label: t('واتساب'), href: `https://wa.me/${CONTACT.whatsapp.replace(/\D/g, '')}` },
   ].filter(Boolean) as { icon: typeof Phone; label: string; href: string; ltr?: boolean }[];
   const social = [
     CONTACT.facebook && { icon: Facebook, label: 'Facebook', href: CONTACT.facebook },
@@ -117,15 +118,15 @@ export function SiteFooter() {
               <BrandMark size={40} red />
               <strong className="text-xl font-extrabold text-ink">{SITE.name}</strong>
             </div>
-            <p className="mb-3 text-sm text-ink-2">{SITE.tagline}</p>
-            <p className="mb-2 text-sm font-semibold text-ink">{SITE.footerNote}</p>
+            <p className="mb-3 text-sm text-ink-2">{t(SITE.tagline)}</p>
+            <p className="mb-2 text-sm font-semibold text-ink">{t(SITE.footerNote)}</p>
             <StoreBadges />
           </section>
 
           <section className="min-w-0">
-            <FooterTitle>تواصل معانا</FooterTitle>
+            <FooterTitle>{t('تواصل معانا')}</FooterTitle>
             {contact.length === 0 ? (
-              <p className="text-sm text-ink-3">قريباً</p>
+              <p className="text-sm text-ink-3">{t('قريباً')}</p>
             ) : (
               <ul className="space-y-1.5">
                 {contact.map((c) => (
@@ -141,9 +142,9 @@ export function SiteFooter() {
           </section>
 
           <section className="min-w-0">
-            <FooterTitle>تابعنا</FooterTitle>
+            <FooterTitle>{t('تابعنا')}</FooterTitle>
             {social.length === 0 ? (
-              <p className="text-sm text-ink-3">قريباً</p>
+              <p className="text-sm text-ink-3">{t('قريباً')}</p>
             ) : (
               <div className="flex gap-2">
                 {social.map((s) => (
@@ -165,22 +166,22 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-6 border-t border-line pt-4 text-center text-[13px] text-ink-2">
-          <nav className="mb-2 flex flex-wrap justify-center gap-x-5 gap-y-2 font-semibold" aria-label="صفحات">
+          <nav className="mb-2 flex flex-wrap justify-center gap-x-5 gap-y-2 font-semibold" aria-label={t('صفحات')}>
             <a href="#get-app" className="hover:text-brand-ink">
-              حمّل تطبيق {SITE.name}
+              {t('حمّل تطبيق {name}', { name: SITE.name })}
             </a>
             <Link to="/orders" className="hover:text-brand-ink">
-              طلباتي
+              {t('طلباتي')}
             </Link>
             <Link to="/addresses" className="hover:text-brand-ink">
-              عناويني
+              {t('عناويني')}
             </Link>
             <Link to="/account" className="hover:text-brand-ink">
-              حسابي
+              {t('حسابي')}
             </Link>
           </nav>
           <span>
-            © {SITE.year} {SITE.name} — جميع الحقوق محفوظة
+            © {SITE.year} {SITE.name} — {t('جميع الحقوق محفوظة')}
           </span>
         </div>
       </div>

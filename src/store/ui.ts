@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { t } from '@/lib/i18n';
 
 // ---------- Customer browsing filters ----------
 
@@ -80,7 +81,7 @@ interface ConfirmState {
 
 export const useConfirm = create<ConfirmState>((set, get) => ({
   current: null,
-  ask: (message, confirmLabel = 'تأكيد') =>
+  ask: (message, confirmLabel = t('تأكيد')) =>
     new Promise<boolean>((resolve) => set({ current: { message, confirmLabel, resolve } })),
   answer(ok) {
     get().current?.resolve(ok);

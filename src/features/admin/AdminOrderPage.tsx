@@ -8,6 +8,8 @@ import { keys, useAdminOrder } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, ErrorView, IconWell, Loading, SoftCard, StatusChip } from '@/components/ui';
 import { CustomerPointsCard } from '@/features/loyalty/LoyaltyAdmin';
+import { RefundsCard } from '@/features/orders/RefundsCard';
+import { CustomerWalletCard } from '@/features/wallet/CustomerWalletAdmin';
 import { NumberDialog, ReasonDialog } from '@/features/owner/Dialogs';
 import {
   OrderAddressCard,
@@ -105,6 +107,8 @@ export function AdminOrderPage() {
                 )}
                 <OrderAddressCard order={o} customer={o.customer} showActions />
                 {o.customer?.userId && <CustomerPointsCard customerId={o.customer.userId} />}
+                {o.customer?.userId && <CustomerWalletCard customerId={o.customer.userId} />}
+                {o.status === 'Delivered' && <RefundsCard side="admin" orderId={o.id} />}
                 {canAssignDriver(o) ? (
                   o.driver ? (
                     <OrderDriverCard

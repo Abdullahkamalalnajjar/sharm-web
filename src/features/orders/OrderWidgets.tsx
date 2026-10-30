@@ -20,9 +20,10 @@ import {
 
 import { Button, IconWell, Price, SoftCard, StatusChip } from '@/components/ui';
 import { addressDetails, formatOrderDate, formatPrice } from '@/lib/format';
-import { formatScheduledTime } from '@/lib/localized';
+import { currentLanguage, t } from '@/lib/i18n';
+import { formatScheduledTime, localized } from '@/lib/localized';
 import { ORDER_STATUSES, isAwaitingPickup, orderStatus } from '@/lib/meta';
-import type { Order, OrderCustomer, OrderDriver, OrderItem, OrderSummary } from '@/types';
+import type { Order, OrderCustomer, OrderDriver, OrderItem, OrderStoreGroup, OrderSummary } from '@/types';
 
 import { QuantityStepper } from './OrderItemPicker';
 
@@ -37,12 +38,12 @@ export const needsDriver = (o: { status: Order['status'] }, hasDriver: boolean) 
 
 /** "⏰ مجدول بكرة ٨:٣٠ م": an order the customer scheduled for later. */
 export function ScheduledChip({ value }: { value: string }) {
-  return <StatusChip label={`⏰ مجدول ${formatScheduledTime(value)}`} color="var(--color-accent)" />;
+  return <StatusChip label={t('⏰ مجدول {time}', { time: formatScheduledTime(value) })} color="var(--color-accent)" />;
 }
 
 export function OrderStatusBadge({ status }: { status: Order['status'] }) {
   const meta = orderStatus(status);
-  return <StatusChip label={meta.label} color={meta.color} />;
+  return <StatusChip label={t(meta.label)} color={meta.color} />;
 }
 
 /** Card in order lists (customer and admin). */
@@ -56,8 +57,8 @@ export function OrderSummaryCard({ order, onClick, showCustomer }: { order: Orde
         <IconWell icon={order.isCustomOrder ? Sparkles : meta.Icon} size={42} color={order.isCustomOrder ? 'var(--color-custom)' : meta.color} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="font-extrabold text-ink">أوردر #{order.number}</p>
-            {order.isCustomOrder && <StatusChip label="طلب خاص" color="var(--color-custom)" />}
+            <p className="font-extrabold text-ink">{t('أوردر #{n}', { n: order.number })}</p>
+            {order.isCustomOrder && <StatusChip label={t('طلب خاص')} color="var(--color-custom)" />}
           </div>
           <p className="text-xs text-ink-3">{formatOrderDate(order.createdUtc)}</p>
         </div>
@@ -67,7 +68,7 @@ export function OrderSummaryCard({ order, onClick, showCustomer }: { order: Orde
         {order.isCustomOrder ? (
           <>
             <Sparkles className="size-4 shrink-0 text-custom" />
-            <span className="text-custom font-semibold">طلب خاص (من خارج المنيو)</span>
+            <span className="text-custom font-semibold">{t('طلب خاص (من خارج المنيو)')}</span>
           </>
         ) : (
           <>
@@ -92,11 +93,11 @@ export function OrderSummaryCard({ order, onClick, showCustomer }: { order: Orde
       )}
       <div className="my-2.5 border-t border-line" />
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-ink-2">{order.isCustomOrder ? 'طلب خاص' : `${order.itemsCount} منتج`}</span>
-        {needsFee && <StatusChip label="محتاج سعر توصيل" color="var(--color-warning)" />}
-        {showCustomer && order.status === 'Pending' && order.storeDecision === 'Pending' && <StatusChip label="مستني المحل" color="var(--color-warning)" />}
+        <span className="text-ink-2">{order.isCustomOrder ? t('طلب خاص') : t('{n} منتج', { n: order.itemsCount })}</span>
+        {needsFee && <StatusChip label={t('محتاج سعر توصيل')} color="var(--color-warning)" />}
+        {showCustomer && order.status === 'Pending' && order.storeDecision === 'Pending' && <StatusChip label={t('مستني المحل')} color="var(--color-warning)" />}
         {order.scheduledForUtc && meta.isActive && <ScheduledChip value={order.scheduledForUtc} />}
-        {showCustomer && missingDriver && <StatusChip label="محتاج مندوب" color="var(--color-warning)" />}
+        {showCustomer && missingDriver && <StatusChip label={t('محتاج مندوب')} color="var(--color-warning)" />}
         <span className="flex-1" />
         <Price value={order.total} className="text-base" />
       </div>
@@ -111,7 +112,7 @@ export function OrderTimeline({ order }: { order: Order }) {
       <SoftCard className="flex items-start gap-2.5 p-4 bg-danger/10">
         <XCircle className="size-6 shrink-0 text-danger" />
         <div>
-          <p className="font-extrabold text-ink">{order.cancelledBy === 'Customer' ? 'إنت لغيت الطلب' : 'الطلب اتلغى من الإدارة'}</p>
+          <p className="font-extrabold text-ink">{order.cancelledBy === 'Customer' ? t('إنت لغيت الطلب') : t('الطلب اتلغى من الإدارة')}</p>
           {order.cancellationReason && <p className="text-ink-2">{order.cancellationReason}</p>}
           {order.cancelledUtc && <p className="text-xs text-ink-3">{formatOrderDate(order.cancelledUtc)}</p>}
         </div>
@@ -120,17 +121,17 @@ export function OrderTimeline({ order }: { order: Order }) {
   }
 
   const steps: { status: Order['status']; title: string; time: string | null | undefined }[] = [
-    { status: 'Pending', title: 'الطلب وصل', time: order.createdUtc },
-    { status: 'Confirmed', title: 'اتأكد', time: order.confirmedUtc },
+    { status: 'Pending', title: t('الطلب قيد الانتظار'), time: order.createdUtc },
+    { status: 'Confirmed', title: t('اتأكد'), time: order.confirmedUtc },
     // Custom orders have no store preparing them.
     ...(order.isCustomOrder
       ? []
       : [
-          { status: 'Processing' as const, title: 'بيتجهز', time: order.processingUtc },
-          { status: 'ReadyForPickup' as const, title: 'جاهز للتسليم', time: order.readyUtc },
+          { status: 'Processing' as const, title: t('بيتجهز'), time: order.processingUtc },
+          { status: 'ReadyForPickup' as const, title: t('جاهز للتسليم'), time: order.readyUtc },
         ]),
-    { status: 'OutForDelivery', title: 'خرج للتوصيل', time: order.outForDeliveryUtc },
-    { status: 'Delivered', title: 'اتوصّل', time: order.deliveredUtc },
+    { status: 'OutForDelivery', title: t('خرج للتوصيل'), time: order.outForDeliveryUtc },
+    { status: 'Delivered', title: t('اتوصّل'), time: order.deliveredUtc },
   ];
   const current = steps.findIndex((s) => s.status === order.status);
 
@@ -139,7 +140,7 @@ export function OrderTimeline({ order }: { order: Order }) {
       {order.scheduledForUtc && (
         <p className="mb-3 flex items-center gap-2.5 font-extrabold text-ink">
           <Clock className="size-5 text-accent" />
-          التوصيل {formatScheduledTime(order.scheduledForUtc)}
+          {t('التوصيل {time}', { time: formatScheduledTime(order.scheduledForUtc) })}
         </p>
       )}
       {steps.map((step, i) => {
@@ -168,6 +169,14 @@ export function OrderTimeline({ order }: { order: Order }) {
   );
 }
 
+/** The item's options in the visitor's language (Russian falls back to English, then Arabic). */
+function optionsTextOf(item: OrderItem): string | null {
+  const language = currentLanguage();
+  if (language === 'en') return item.optionsTextEn || item.optionsText;
+  if (language === 'ru') return item.optionsTextRu || item.optionsTextEn || item.optionsText;
+  return item.optionsText;
+}
+
 /** Items grouped by store, or request details when this is a custom order. */
 /** The order's items by store; with the edit callbacks (admin, before pickup) lines get − / + and remove, plus "add a product". */
 export function OrderItemsCard({
@@ -186,21 +195,21 @@ export function OrderItemsCard({
       <SoftCard className="overflow-hidden p-4">
         <div className="flex items-center gap-2 pb-2.5 border-b border-line">
           <Sparkles className="size-5 text-custom" />
-          <span className="flex-1 font-extrabold text-ink">تفاصيل الطلب الخاص</span>
-          <StatusChip label="طلب خاص" color="var(--color-custom)" />
+          <span className="flex-1 font-extrabold text-ink">{t('تفاصيل الطلب الخاص')}</span>
+          <StatusChip label={t('طلب خاص')} color="var(--color-custom)" />
         </div>
         <div className="pt-3">
-          <p className="text-xs font-bold text-ink-3 mb-1.5">الطلب المطلوب من الزبون:</p>
+          <p className="text-xs font-bold text-ink-3 mb-1.5">{t('الطلب المطلوب من الزبون:')}</p>
           <div className="rounded-xl bg-surface-alt p-3.5 text-sm text-ink font-medium whitespace-pre-wrap leading-relaxed">
-            {order.note || 'مفيش تفاصيل إضافية مكتوبة.'}
+            {order.note || t('مفيش تفاصيل إضافية مكتوبة.')}
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between text-xs text-ink-2 pt-2 border-t border-line">
-          <span>سعر المنتجات:</span>
+          <span>{t('سعر المنتجات:')}</span>
           {order.subtotal > 0 ? (
             <span className="font-extrabold text-ink">{formatPrice(order.subtotal)}</span>
           ) : (
-            <span className="text-warning font-bold">هيتحدد بعد الشراء والتأكيد</span>
+            <span className="text-warning font-bold">{t('هيتحدد بعد الشراء والتأكيد')}</span>
           )}
         </div>
       </SoftCard>
@@ -224,13 +233,13 @@ export function OrderItemsCard({
                 <span className="rounded-lg bg-surface-alt px-2 py-0.5 font-extrabold text-ink">{item.quantity}×</span>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-ink">{item.productName}</p>
-                {item.optionsText && <p className="text-xs text-ink-2">{item.optionsText}</p>}
+                <p className="text-ink">{localized(item.productName, item.productNameEn, item.productNameRu)}</p>
+                {item.optionsText && <p className="text-xs text-ink-2">{optionsTextOf(item)}</p>}
                 {item.note && <p className="text-xs text-ink-3">📝 {item.note}</p>}
               </div>
               <span className="text-ink">{formatPrice(item.lineTotal)}</span>
               {onRemoveItem && (
-                <button type="button" title="شيل المنتج" onClick={() => onRemoveItem(item)} className="-my-1 grid size-8 place-items-center rounded-full text-danger hover:bg-danger/10">
+                <button type="button" title={t('شيل المنتج')} onClick={() => onRemoveItem(item)} className="-my-1 grid size-8 place-items-center rounded-full text-danger hover:bg-danger/10">
                   <MinusCircle className="size-5" />
                 </button>
               )}
@@ -241,7 +250,7 @@ export function OrderItemsCard({
       ))}
       {onAddItem && (
         <button type="button" onClick={onAddItem} className="flex w-full items-center justify-center gap-1.5 border-t border-line py-3 font-bold text-brand-ink hover:bg-surface-alt">
-          <Plus className="size-4" /> إضافة منتج للأوردر
+          <Plus className="size-4" /> {t('إضافة منتج للأوردر')}
         </button>
       )}
     </SoftCard>
@@ -258,29 +267,36 @@ export function OrderTotalsCard({ order }: { order: Order }) {
   );
   const productsValue =
     order.isCustomOrder && order.subtotal === 0 && order.status === 'Pending' ? (
-      <span className="text-[13px] text-warning">هيتحدد بعد الشراء</span>
+      <span className="text-[13px] text-warning">{t('هيتحدد بعد الشراء')}</span>
     ) : (
       <span className="text-ink">{formatPrice(order.subtotal)}</span>
     );
 
   return (
     <SoftCard className="p-4">
-      <Row label="المنتجات" value={productsValue} />
+      <Row label={t('المنتجات')} value={productsValue} />
       <Row
-        label={order.deliveryDistanceKm != null ? `التوصيل (${order.deliveryDistanceKm.toFixed(1)} كم)` : 'التوصيل'}
-        value={order.deliveryFee == null ? <span className="text-[13px] text-warning">هيتحدد من الإدارة</span> : <span className="text-ink">{formatPrice(order.deliveryFee)}</span>}
+        label={order.deliveryDistanceKm != null ? t('التوصيل ({km} كم)', { km: order.deliveryDistanceKm.toFixed(1) }) : t('التوصيل')}
+        value={order.deliveryFee == null ? <span className="text-[13px] text-warning">{t('هيتحدد من الإدارة')}</span> : <span className="text-ink">{formatPrice(order.deliveryFee)}</span>}
       />
       {order.taxPercent > 0 && (
-        <Row label={`الضريبة (${order.taxPercent}%)`} value={<span className="text-ink">{formatPrice(order.taxAmount)}</span>} />
+        <Row label={t('الضريبة ({p}%)', { p: order.taxPercent })} value={<span className="text-ink">{formatPrice(order.taxAmount)}</span>} />
       )}
+      {(order.tip ?? 0) > 0 && <Row label={t('بقشيش للمندوب 💚')} value={<span className="text-ink">{formatPrice(order.tip ?? 0)}</span>} />}
       <div className="my-2 border-t border-line" />
-      <Row label={order.deliveryFee == null ? 'الإجمالي (من غير التوصيل)' : 'الإجمالي'} value={<Price value={order.total} className="text-lg" />} />
+      <Row label={order.deliveryFee == null ? t('الإجمالي (من غير التوصيل)') : t('الإجمالي')} value={<Price value={order.total} className="text-lg" />} />
+      {(order.walletPaid ?? 0) > 0 && (
+        <>
+          <Row label={t('اتدفع من المحفظة')} value={<span className="text-success">− {formatPrice(order.walletPaid ?? 0)}</span>} />
+          <Row label={t('هتدفع كاش')} value={<Price value={order.cashToCollect ?? order.total} className="text-base" />} />
+        </>
+      )}
       <Row
-        label="الدفع"
+        label={t('الدفع')}
         value={
           <span className="inline-flex items-center gap-1.5 text-ink">
             <Banknote className="size-4 text-ink-2" />
-            كاش عند الاستلام
+            {t('كاش عند الاستلام')}
           </span>
         }
       />
@@ -329,14 +345,14 @@ export function OrderAddressCard({ order, customer, showActions }: { order: Orde
           {phone && (
             <a href={telHref(phone)} className="flex-1">
               <Button block size="md" icon={<Phone className="size-[18px]" />}>
-                اتصل بالزبون
+                {t('اتصل بالزبون')}
               </Button>
             </a>
           )}
           {hasMap && (
             <a href={mapHref(a.latitude!, a.longitude!)} target="_blank" rel="noreferrer" className="flex-1">
               <Button block size="md" variant="outline" icon={<Map className="size-[18px]" />}>
-                افتح الخريطة
+                {t('افتح الخريطة')}
               </Button>
             </a>
           )}
@@ -358,7 +374,7 @@ export function OrderAddressCard({ order, customer, showActions }: { order: Orde
 /** The driver on the order: name, phone and a call button. `onChange` / `onRemove` (admin) swap or take back the driver. */
 export function OrderDriverCard({
   driver,
-  title = 'المندوب',
+  title,
   onChange,
   onRemove,
   disabled,
@@ -374,13 +390,13 @@ export function OrderDriverCard({
       <div className="flex items-center gap-3">
         <IconWell icon={Bike} size={46} color="var(--color-series-1)" />
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-ink-3">{title}</p>
+          <p className="text-xs text-ink-3">{title ?? t('المندوب')}</p>
           <p className="font-extrabold text-ink">{driver.fullName}</p>
           <p className="text-[13px] text-ink-2" dir="ltr">
             {driver.phoneNumber}
           </p>
         </div>
-        <a href={telHref(driver.phoneNumber)} title="اتصل بالمندوب" className="grid size-11 place-items-center rounded-full bg-brand text-white shadow-brand hover:bg-brand-light">
+        <a href={telHref(driver.phoneNumber)} title={t('اتصل بالمندوب')} className="grid size-11 place-items-center rounded-full bg-brand text-white shadow-brand hover:bg-brand-light">
           <Phone className="size-5" />
         </a>
       </div>
@@ -390,18 +406,55 @@ export function OrderDriverCard({
           <div className="flex items-center">
             {onChange && (
               <Button variant="ghost" size="sm" disabled={disabled} icon={<ArrowLeftRight className="size-4" />} onClick={onChange}>
-                غيّر المندوب
+                {t('غيّر المندوب')}
               </Button>
             )}
             <span className="flex-1" />
             {onRemove && (
               <Button variant="ghost" size="sm" disabled={disabled} className="text-danger hover:bg-danger/10" icon={<UserRoundX className="size-4" />} onClick={onRemove}>
-                شيل المندوب
+                {t('شيل المندوب')}
               </Button>
             )}
           </div>
         </>
       )}
+    </SoftCard>
+  );
+}
+
+/** The order's store: its name, phone and address, with call and map buttons. */
+export function OrderStoreCard({ store }: { store: OrderStoreGroup }) {
+  return (
+    <SoftCard className="p-4">
+      <div className="flex items-center gap-3">
+        <IconWell icon={Store} size={46} color="var(--color-accent)" />
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-ink-3">{t('المحل')}</p>
+          <p className="font-extrabold text-ink">{localized(store.storeName, store.storeNameEn, store.storeNameRu)}</p>
+          {store.storePhone && (
+            <p className="text-[13px] text-ink-2" dir="ltr">
+              {store.storePhone}
+            </p>
+          )}
+          {store.storeAddress && <p className="text-xs text-ink-3">{store.storeAddress}</p>}
+        </div>
+        {store.storeLatitude != null && store.storeLongitude != null && (
+          <a
+            href={mapHref(store.storeLatitude, store.storeLongitude)}
+            target="_blank"
+            rel="noreferrer"
+            title={t('الخريطة')}
+            className="grid size-11 place-items-center rounded-full border border-line text-ink-2 hover:bg-surface-alt"
+          >
+            <Map className="size-5" />
+          </a>
+        )}
+        {store.storePhone && (
+          <a href={telHref(store.storePhone)} title={t('اتصل بالمحل')} className="grid size-11 place-items-center rounded-full bg-brand text-white shadow-brand hover:bg-brand-light">
+            <Phone className="size-5" />
+          </a>
+        )}
+      </div>
     </SoftCard>
   );
 }

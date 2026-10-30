@@ -1,4 +1,4 @@
-import { BellRing, BookOpen, CalendarDays, ChevronLeft, CircleCheck, Clock, Pencil, Percent, Receipt, Store, Wallet, type LucideIcon } from 'lucide-react';
+import { BellRing, BookOpen, CalendarDays, ChevronLeft, CircleCheck, Clock, Gift, Pencil, Percent, Receipt, Store, Wallet, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
@@ -195,8 +195,9 @@ export function OwnerStoreCard({ store }: { store: StoreModel }) {
         </span>
         <Switch checked={store.openSwitch} disabled={!isActive || busy} onChange={toggleOpen} label="مفتوح للطلبات" />
       </div>
-      <div className="mt-3 grid grid-cols-4 gap-2">
+      <div className="mt-3 grid grid-cols-5 gap-1.5">
         <ActionTile icon={BookOpen} label="المنيو" onClick={() => go('menu')} />
+        <ActionTile icon={Gift} label="العروض" onClick={() => go('offers')} />
         <ActionTile icon={Wallet} label="المحفظة" onClick={() => go('wallet')} />
         <ActionTile icon={Clock} label="المواعيد" onClick={() => setHoursOpen(true)} />
         <ActionTile icon={Pencil} label="تعديل" onClick={() => go('edit')} />

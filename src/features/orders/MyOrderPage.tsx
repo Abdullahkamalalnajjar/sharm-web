@@ -6,12 +6,13 @@ import { ordersApi } from '@/api';
 import { keys, useMyOrder } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, ErrorView, Loading, SoftCard, StatusChip } from '@/components/ui';
+import { t } from '@/lib/i18n';
 import { orderStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { RateOrderCard } from '@/features/ratings/Ratings';
 import { confirm } from '@/store/ui';
 
-import { OrderAddressCard, OrderDriverCard, OrderItemsCard, OrderStatusBadge, OrderTimeline, OrderTotalsCard, canAssignDriver } from './OrderWidgets';
+import { OrderAddressCard, OrderDriverCard, OrderItemsCard, OrderStoreCard, OrderStatusBadge, OrderTimeline, OrderTotalsCard, canAssignDriver } from './OrderWidgets';
 
 /** Customer view of one order: status, items, totals, address; cancel while pending. */
 export function MyOrderPage() {
@@ -22,8 +23,8 @@ export function MyOrderPage() {
 
   async function cancel() {
     const o = order.data!;
-    if (!(await confirm(`تلغي الأوردر #${o.number}؟`, 'إلغاء الأوردر'))) return;
-    if (await runAction(() => ordersApi.cancelMine(o.id), 'الأوردر اتلغى')) {
+    if (!(await confirm(t('تلغي الأوردر #{n}؟', { n: o.number }), t('إلغاء الأوردر')))) return;
+    if (await runAction(() => ordersApi.cancelMine(o.id), t('الأوردر اتلغى'))) {
       qc.invalidateQueries({ queryKey: keys.myOrder(id) });
       qc.invalidateQueries({ queryKey: keys.myOrders });
     }
@@ -31,29 +32,29 @@ export function MyOrderPage() {
 
   return (
     <div className="mx-auto max-w-2xl pb-8">
-      <PageHeader title={order.data ? `أوردر #${order.data.number}` : 'الأوردر'} />
+      <PageHeader title={order.data ? t('أوردر #{n}', { n: order.data.number }) : t('الأوردر')} />
       <div className="px-4 flex flex-col gap-3">
         {order.isLoading ? (
           <Loading />
         ) : order.isError || !order.data ? (
-          <ErrorView message={(order.error as Error)?.message ?? 'حصل خطأ'} onRetry={() => order.refetch()} />
+          <ErrorView message={(order.error as Error)?.message ?? t('حصل خطأ')} onRetry={() => order.refetch()} />
         ) : (
           <>
             {justPlaced && (
               <SoftCard className="flex items-center gap-3 p-4 bg-success/10">
                 <PartyPopper className="size-7 text-success shrink-0" />
                 <p className="font-bold text-ink leading-relaxed">
-                  {order.data.isCustomOrder ? 'طلبك الخاص وصل! 🎉' : 'طلبك وصل! 🎉'}
+                  {order.data.isCustomOrder ? t('طلبك الخاص وصل! 🎉') : t('طلبك وصل! 🎉')}
                   <br />
                   {order.data.isCustomOrder
-                    ? 'الإدارة هتراجع طلبك الخاص وتحدد تكلفة المنتجات والتوصيل.'
-                    : 'الإدارة هتراجعه وتأكده.'}
+                    ? t('الإدارة هتراجع طلبك الخاص وتحدد تكلفة المنتجات والتوصيل.')
+                    : t('الإدارة هتراجعه وتأكده.')}
                 </p>
               </SoftCard>
             )}
             <div className="flex items-center gap-2 pt-1 flex-wrap">
-              <h2 className="flex-1 text-lg font-extrabold text-ink">{orderStatus(order.data.status).customerMessage}</h2>
-              {order.data.isCustomOrder && <StatusChip label="طلب خاص" color="var(--color-custom)" />}
+              <h2 className="flex-1 text-lg font-extrabold text-ink">{t(orderStatus(order.data.status).customerMessage)}</h2>
+              {order.data.isCustomOrder && <StatusChip label={t('طلب خاص')} color="var(--color-custom)" />}
               <OrderStatusBadge status={order.data.status} />
             </div>
             {order.data.canRate && <RateOrderCard order={order.data} />}
@@ -61,8 +62,9 @@ export function MyOrderPage() {
               <div className="flex flex-col gap-3">
                 <OrderTimeline order={order.data} />
                 {order.data.driver && canAssignDriver(order.data) && (
-                  <OrderDriverCard driver={order.data.driver} title="المندوب اللي هيوصّلك" />
+                  <OrderDriverCard driver={order.data.driver} title={t('المندوب اللي هيوصّلك')} />
                 )}
+                {!order.data.isCustomOrder && order.data.stores.map((s) => <OrderStoreCard key={s.storeId} store={s} />)}
                 <OrderAddressCard order={order.data} />
               </div>
               <div className="flex flex-col gap-3">
@@ -73,9 +75,9 @@ export function MyOrderPage() {
             {order.data.canCustomerCancel && (
               <div className="mt-3 flex flex-col items-center gap-1.5">
                 <Button variant="outline" block className="text-danger border-danger/50 hover:bg-danger/10" icon={<X className="size-5" />} onClick={cancel}>
-                  إلغاء الأوردر
+                  {t('إلغاء الأوردر')}
                 </Button>
-                <p className="text-xs text-ink-3">تقدر تلغي الأوردر لحد ما الإدارة تأكده.</p>
+                <p className="text-xs text-ink-3">{t('تقدر تلغي الأوردر لحد ما الإدارة تأكده.')}</p>
               </div>
             )}
           </>

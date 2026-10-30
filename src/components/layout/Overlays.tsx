@@ -4,36 +4,37 @@ import { useNavigate } from 'react-router';
 
 import { Button, IconWell, Sheet } from '@/components/ui';
 import { useConfirm, useLoginPrompt, useToasts } from '@/store/ui';
+import { t } from '@/lib/i18n';
 
 export function Toaster() {
   const toasts = useToasts((s) => s.toasts);
   const dismiss = useToasts((s) => s.dismiss);
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+92px)] sm:bottom-6 z-[60] flex flex-col items-center gap-2 px-4">
-      {toasts.map((t) => (
+      {toasts.map((toast) => (
         <div
-          key={t.id}
+          key={toast.id}
           role="status"
           className={clsx(
             'pointer-events-auto flex items-center gap-2 rounded-2xl px-4 py-3 shadow-card text-sm font-semibold text-white max-w-md w-full animate-sheet',
-            t.isError ? 'bg-danger' : 'bg-toast',
+            toast.isError ? 'bg-danger' : 'bg-toast',
           )}
         >
-          {t.isError ? <AlertCircle className="size-5 shrink-0" /> : <CheckCircle2 className="size-5 shrink-0 text-success" />}
-          <span className="flex-1 whitespace-pre-line">{t.message}</span>
-          {t.action && (
+          {toast.isError ? <AlertCircle className="size-5 shrink-0" /> : <CheckCircle2 className="size-5 shrink-0 text-success" />}
+          <span className="flex-1 whitespace-pre-line">{toast.message}</span>
+          {toast.action && (
             <button
               type="button"
               onClick={() => {
-                t.action?.onClick();
-                dismiss(t.id);
+                toast.action?.onClick();
+                dismiss(toast.id);
               }}
               className="font-extrabold text-highlight"
             >
-              {t.action.label}
+              {toast.action.label}
             </button>
           )}
-          <button type="button" aria-label="إغلاق" onClick={() => dismiss(t.id)} className="opacity-70 hover:opacity-100">
+          <button type="button" aria-label={t('إغلاق')} onClick={() => dismiss(toast.id)} className="opacity-70 hover:opacity-100">
             <X className="size-4" />
           </button>
         </div>
@@ -52,7 +53,7 @@ export function ConfirmDialog() {
           <p className="text-ink-2 text-[15px] leading-relaxed pt-2">{current.message}</p>
           <div className="flex justify-end gap-2">
             <Button variant="ghost" size="md" onClick={() => answer(false)}>
-              إلغاء
+              {t('إلغاء')}
             </Button>
             <Button variant="danger" size="md" onClick={() => answer(true)}>
               {current.confirmLabel}
@@ -77,13 +78,13 @@ export function LoginPromptSheet() {
     <Sheet open={reason !== null} onClose={close}>
       <div className="flex flex-col items-stretch gap-3 text-center pt-2">
         <IconWell icon={Lock} size={64} filled className="mx-auto" />
-        <h3 className="text-xl font-extrabold text-ink mt-2">سجّل دخول الأول</h3>
+        <h3 className="text-xl font-extrabold text-ink mt-2">{t('سجّل دخول الأول')}</h3>
         <p className="text-ink-2">{reason}</p>
         <Button className="mt-3" onClick={() => go('/login')}>
-          تسجيل الدخول
+          {t('تسجيل الدخول')}
         </Button>
         <Button variant="outline" onClick={() => go('/signup')}>
-          حساب جديد
+          {t('حساب جديد')}
         </Button>
       </div>
     </Sheet>

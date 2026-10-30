@@ -17,6 +17,7 @@ export function ImagePickerField({
   onChange,
   placeholderIcon: Placeholder,
   aspect = 'aspect-video',
+  removable = true,
 }: {
   label?: string;
   currentUrl: string | null | undefined;
@@ -24,6 +25,8 @@ export function ImagePickerField({
   onChange: (edit: ImageEdit) => void;
   placeholderIcon: LucideIcon;
   aspect?: string;
+  /** False when the image can only be replaced (e.g. an offer needs one): a click picks a new file. */
+  removable?: boolean;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -46,7 +49,7 @@ export function ImagePickerField({
       <p className="mb-2 text-sm font-extrabold text-ink">{label}</p>
       <button
         type="button"
-        onClick={() => (hasImage ? setMenuOpen(true) : input.current?.click())}
+        onClick={() => (hasImage && removable ? setMenuOpen(true) : input.current?.click())}
         className={`relative block w-full overflow-hidden rounded-card border border-line bg-surface-alt ${aspect} hover:border-surface-high`}
       >
         {edit.kind === 'picked' && preview ? (

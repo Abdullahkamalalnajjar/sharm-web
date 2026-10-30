@@ -216,6 +216,12 @@ function WalletView({
                 value={w.totalEarnings}
                 hint={`${w.deliveredOrders} أوردر اتوصّل`}
               />
+              <MoneyTile
+                label="بقشيش الزباين"
+                value={w.totalTips ?? 0}
+                color="var(--color-success)"
+                hint={`النهارده ${formatPrice(w.todayTips ?? 0)}`}
+              />
             </div>
 
             <SectionHeader

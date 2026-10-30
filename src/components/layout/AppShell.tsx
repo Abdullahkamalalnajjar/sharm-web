@@ -3,6 +3,7 @@ import {
   BarChart3,
   Bike,
   ChevronDown,
+  Gift,
   Home,
   LayoutDashboard,
   LogIn,
@@ -28,7 +29,9 @@ import type { AppRole } from '@/types';
 import { LiveBanner, NotificationBell, useLiveNotifications } from './LiveNotifications';
 import { ConfirmDialog, LoginPromptSheet, Toaster } from './Overlays';
 import { AppBanner, BrandMark, SiteFooter } from './SiteChrome';
+import { LanguageButton } from './LanguagePicker';
 import { ThemeButton } from './ThemePicker';
+import { t, tIn } from '@/lib/i18n';
 
 interface NavItem {
   to: string;
@@ -65,6 +68,7 @@ const NAV: Record<AppRole, NavItem[]> = {
     { to: '/admin/orders', label: 'الأوردرات', icon: ReceiptText },
     { to: '/admin/stores', label: 'المحلات', icon: Store },
     { to: '/admin/drivers', label: 'المندوبين', icon: Bike },
+    { to: '/admin/offers', label: 'العروض', icon: Gift, desktopOnly: true },
     { to: '/admin/finance', label: 'المالية', icon: Wallet, desktopOnly: true },
     { to: '/admin/reports', label: 'الإحصائيات', icon: BarChart3, desktopOnly: true },
   ],
@@ -87,7 +91,7 @@ function AreaButton() {
     <button
       type="button"
       onClick={() => setPickerOpen(true)}
-      aria-label="تغيير مكان التوصيل"
+      aria-label={t('تغيير مكان التوصيل')}
       className="inline-flex min-w-0 items-center gap-1.5 rounded-[10px] px-2 py-1.5 text-[1.05rem] font-extrabold text-white hover:bg-white/12 lg:mx-0 mx-auto"
     >
       <MapPin className="size-5 shrink-0 text-highlight" fill="currentColor" stroke="var(--color-brand)" strokeWidth={1.5} />
@@ -130,7 +134,7 @@ export function AppShell() {
 
           {isCustomer && !isHome && <AreaButton />}
 
-          <nav className="hidden items-center gap-0.5 lg:flex ms-1" aria-label="الرئيسية">
+          <nav className="hidden items-center gap-0.5 lg:flex ms-1" aria-label={t('الرئيسية')}>
             {items.filter((i) => !i.phoneOnly).map((item) => (
               <NavLink
                 key={item.to}
@@ -144,7 +148,7 @@ export function AppShell() {
                 }
               >
                 <item.icon className="size-[18px]" />
-                {item.label}
+                {tIn('nav', item.label)}
                 {item.badgeKey === 'cart' && cartCount > 0 && (
                   <span className="grid min-w-5 h-5 place-items-center rounded-full bg-highlight px-1 text-[11px] font-extrabold text-black">
                     {cartCount}
@@ -158,7 +162,7 @@ export function AppShell() {
             {isCustomer && (
               <NavLink
                 to="/cart"
-                aria-label="السلة"
+                aria-label={t('السلة')}
                 className="relative grid size-[38px] place-items-center rounded-[10px] border border-white/28 text-white hover:bg-white/15 lg:hidden"
               >
                 <ShoppingBag className="size-5" />
@@ -170,6 +174,7 @@ export function AppShell() {
               </NavLink>
             )}
             <ThemeButton />
+            {isCustomer && <LanguageButton />}
             {session ? (
               <>
                 <NotificationBell />
@@ -182,12 +187,12 @@ export function AppShell() {
                     logout();
                     navigate('/');
                   }}
-                  aria-label="خروج"
-                  title="خروج"
+                  aria-label={t('خروج')}
+                  title={t('خروج')}
                   className="inline-flex h-[38px] items-center gap-1.5 rounded-[10px] border border-white/28 px-2.5 text-sm font-bold text-white hover:bg-white/15"
                 >
                   <LogOut className="size-4" />
-                  <span className="hidden sm:inline">خروج</span>
+                  <span className="hidden sm:inline">{t('خروج')}</span>
                 </button>
               </>
             ) : (
@@ -196,13 +201,13 @@ export function AppShell() {
                   to="/login"
                   className="inline-flex h-[38px] items-center rounded-[10px] border border-white/28 px-2.5 text-sm font-bold text-white hover:bg-white/15"
                 >
-                  دخول
+                  {t('دخول')}
                 </NavLink>
                 <NavLink
                   to="/signup"
                   className="hidden h-[38px] items-center rounded-[10px] bg-highlight px-3 text-sm font-extrabold text-[#2b1d00] hover:brightness-105 sm:inline-flex"
                 >
-                  حساب جديد
+                  {t('حساب جديد')}
                 </NavLink>
               </>
             )}
@@ -220,7 +225,7 @@ export function AppShell() {
       {showBar && (
         <nav
           className="md:hidden fixed inset-x-2 bottom-[calc(10px+env(safe-area-inset-bottom))] z-30 flex h-[68px] items-center justify-around rounded-[18px] border border-line bg-surface px-1 shadow-[0_6px_24px_rgb(0_0_0/0.35)]"
-          aria-label="الرئيسية"
+          aria-label={t('الرئيسية')}
         >
           {items
             .filter((i) => !i.desktopOnly)
@@ -252,7 +257,7 @@ export function AppShell() {
                         <item.icon className="size-[22px]" />
                       </span>
                     )}
-                    {(!isActive || item.raised) && <span className="max-w-full truncate">{item.label}</span>}
+                    {(!isActive || item.raised) && <span className="max-w-full truncate">{tIn('nav', item.label)}</span>}
                   </span>
                 )}
               </NavLink>
@@ -277,7 +282,7 @@ export function PageHeader({ title, actions, subtitle }: { title: string; action
       <div className="relative flex items-center justify-center min-h-11">
         <button
           type="button"
-          aria-label="رجوع"
+          aria-label={t('رجوع')}
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
           className="absolute start-0 grid size-10 place-items-center rounded-full hover:bg-surface text-ink"
         >

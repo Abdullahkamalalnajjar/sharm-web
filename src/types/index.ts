@@ -10,12 +10,17 @@ export interface StoreCategory {
   isVisible: boolean;
   /** Active stores in it. */
   storesCount: number;
+  /** Optional translations of `name` (see `localized`). */
+  nameEn?: string | null;
+  nameRu?: string | null;
 }
 
 /** The category fields embedded in stores and cart groups. */
 export interface CategoryRef {
   categoryName: string;
   categoryIcon: string;
+  categoryNameEn?: string | null;
+  categoryNameRu?: string | null;
 }
 export type StoreStatus = 'PendingApproval' | 'Active' | 'Suspended';
 
@@ -27,6 +32,8 @@ export interface Store {
   categoryId: number;
   categoryName: string;
   categoryIcon: string;
+  categoryNameEn?: string | null;
+  categoryNameRu?: string | null;
   status: StoreStatus;
   logoUrl: string | null;
   phone: string;
@@ -64,6 +71,8 @@ export interface NearbyStore {
   categoryId: number;
   categoryName: string;
   categoryIcon: string;
+  categoryNameEn?: string | null;
+  categoryNameRu?: string | null;
   logoUrl: string | null;
   address: string;
   minOrderAmount: number;
@@ -114,6 +123,8 @@ export interface ProductOption {
   name: string;
   extraPrice: number;
   isAvailable: boolean;
+  nameEn?: string | null;
+  nameRu?: string | null;
 }
 
 export interface ProductOptionGroup {
@@ -124,6 +135,8 @@ export interface ProductOptionGroup {
   isRequired: boolean;
   displayOrder: number;
   options: ProductOption[];
+  nameEn?: string | null;
+  nameRu?: string | null;
 }
 
 export interface Product {
@@ -229,6 +242,10 @@ export interface CartLine {
   imageUrl: string | null;
   optionIds: number[];
   optionNames: string[];
+  productNameEn?: string | null;
+  productNameRu?: string | null;
+  optionNamesEn?: string[] | null;
+  optionNamesRu?: string[] | null;
   quantity: number;
   note: string | null;
   unitPrice: number;
@@ -248,6 +265,9 @@ export interface CartStoreGroup {
   lines: CartLine[];
   /** Takes orders for later, even while closed now. */
   allowsScheduledOrders: boolean;
+  /** The store's tax on the products, paid by the customer. */
+  taxPercent?: number;
+  taxAmount?: number;
 }
 
 export interface Cart {
@@ -255,6 +275,8 @@ export interface Cart {
   itemsCount: number;
   subtotal: number;
   canCheckout: boolean;
+  taxPercent?: number;
+  taxAmount?: number;
 }
 
 export const EMPTY_CART: Cart = { stores: [], itemsCount: 0, subtotal: 0, canCheckout: false };
@@ -285,6 +307,10 @@ export interface OrderItem {
   id: number;
   productName: string;
   optionsText: string | null;
+  productNameEn?: string | null;
+  productNameRu?: string | null;
+  optionsTextEn?: string | null;
+  optionsTextRu?: string | null;
   note: string | null;
   unitPrice: number;
   quantity: number;
@@ -299,6 +325,13 @@ export interface OrderStoreGroup {
   /** The customer's rating of this store in this order (customer view). */
   myStars?: number | null;
   myComment?: string | null;
+  /** The store's contact and place, to call it or find it. */
+  storePhone?: string | null;
+  storeAddress?: string | null;
+  storeLatitude?: number | null;
+  storeLongitude?: number | null;
+  storeNameEn?: string | null;
+  storeNameRu?: string | null;
 }
 
 export interface OrderCustomer {
@@ -331,6 +364,11 @@ export interface Order {
   taxPercent: number;
   taxAmount: number;
   total: number;
+  /** Paid from the customer's wallet at checkout; the driver collects [cashToCollect]. */
+  walletPaid?: number;
+  cashToCollect?: number;
+  /** The customer's tip for the driver (part of the total). */
+  tip?: number;
   itemsCount: number;
   canCustomerCancel: boolean;
   stores: OrderStoreGroup[];
@@ -447,6 +485,10 @@ export interface DriverOffer {
   deliveryDistanceKm: number | null;
   deliveryFee: number | null;
   total: number;
+  /** The cash to collect: the total minus what the customer's wallet paid. */
+  cashToCollect?: number | null;
+  /** The customer's tip, all of it the driver's. */
+  tip?: number;
   itemsCount: number;
   isReady: boolean;
   scheduledForUtc: string | null;
@@ -693,7 +735,9 @@ export type WalletEntryKind =
   | 'DeliveryEarning'
   | 'PurchaseCost'
   | 'CashHandIn'
-  | 'Adjustment';
+  | 'Adjustment'
+  | 'Tip'
+  | 'Refund';
 
 /** One account line; `amount` is signed. */
 export interface WalletEntry {
@@ -737,6 +781,10 @@ export interface DriverWallet {
   /** What the driver owes the app after keeping their fees; negative = the app owes them. */
   amountToHandIn: number;
   recent: WalletEntry[];
+  /** Customers' tips (all the driver's). */
+  totalTips?: number;
+  todayTips?: number;
+  tippedOrders?: number;
 }
 
 export type PayoutMethod = 'InstaPay' | 'BankTransfer' | 'Wallet' | 'Cash';
@@ -800,4 +848,126 @@ export interface MyEmployeeStore {
   storeName: string;
   fullName: string;
   logoUrl: string | null;
+}
+
+// ---------- Customer wallet ----------
+
+export type CustomerWalletEntryKind = 'Refund' | 'Adjustment' | 'OrderPayment' | 'OrderPaymentReturned';
+
+export interface CustomerWalletEntry {
+  id: number;
+  kind: CustomerWalletEntryKind;
+  amount: number;
+  orderId: number | null;
+  orderNumber: string | null;
+  note: string | null;
+  createdUtc: string;
+}
+
+/** Money the app keeps for the customer (refunds, credit from the admin), spent at checkout. */
+export interface CustomerWallet {
+  balance: number;
+  entries: CustomerWalletEntry[];
+}
+
+// ---------- Refunds ----------
+
+/** Who bears a refund (Store/App), and how the customer gets it (cash from Store/App, or Wallet). */
+export type RefundParty = 'Store' | 'App' | 'Wallet';
+
+export interface OrderRefund {
+  id: number;
+  orderId: number;
+  amount: number;
+  reason: string;
+  chargedTo: RefundParty;
+  paidBy: RefundParty;
+  createdUtc: string;
+}
+
+export interface OrderRefunds {
+  orderTotal: number;
+  refunded: number;
+  refundable: number;
+  refunds: OrderRefund[];
+}
+
+// ---------- Daily offers (العروض اليومية) ----------
+
+/** The title fields every offer DTO has. Turkish / Italian come from the backend but the site shows ar / en / ru. */
+interface OfferTitles {
+  title: string;
+  titleEn: string | null;
+  titleRu: string | null;
+  titleTr?: string | null;
+  titleIt?: string | null;
+}
+
+/** A home tile. `storeId` null = a platform (admin) offer. */
+export interface OfferTile extends OfferTitles {
+  id: number;
+  storeId: number | null;
+  storeName: string | null;
+  imageUrl: string | null;
+  endsAtUtc: string | null;
+}
+
+/** A product of an offer, with its store (the product is the same DTO as in the store menu). */
+export interface OfferProduct {
+  product: Product;
+  storeId: number;
+  storeName: string;
+  storeNameEn: string | null;
+  storeNameRu: string | null;
+  storeNameTr?: string | null;
+  storeNameIt?: string | null;
+  storeLogoUrl: string | null;
+  storeIsOpen: boolean;
+}
+
+/** The offer page: its products, and for admin offers its stores (the same items as the store list). */
+export interface OfferDetails extends OfferTile {
+  products: OfferProduct[];
+  stores: NearbyStore[];
+}
+
+/** A product as the offer editors see it. */
+export interface OfferProductSummary {
+  id: number;
+  name: string;
+  storeId: number;
+  storeName: string;
+  imageUrl: string | null;
+  price: number;
+  discountPercent: number;
+}
+
+/** An offer as its store owner / the admin manage it. */
+export interface OfferAdmin extends OfferTitles {
+  id: number;
+  storeId: number | null;
+  storeName: string | null;
+  imageUrl: string | null;
+  isActive: boolean;
+  endsAtUtc: string | null;
+  displayOrder: number;
+  createdUtc: string;
+  productIds: number[];
+  storeIds: number[];
+  products: OfferProductSummary[];
+  stores: { id: number; name: string; logoUrl: string | null }[];
+}
+
+/** Create / edit body. Translations: null keeps, "" clears. `storeIds` is for admin (platform) offers only. */
+export interface OfferSaveInput {
+  title: string;
+  titleEn?: string | null;
+  titleRu?: string | null;
+  titleTr?: string | null;
+  titleIt?: string | null;
+  endsAtUtc?: string | null;
+  isActive: boolean;
+  displayOrder?: number | null;
+  productIds: number[];
+  storeIds?: number[];
 }

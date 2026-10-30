@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#1c0508" />
     <script>
+      // The saved language (or the browser's, on a first visit) sets lang/dir before the first paint,
+      // so an English or Russian page never flashes right-to-left. src/lib/i18n.ts keeps it in sync.
+      (function () {
+        var l = null;
+        try {
+          l = localStorage.getItem('sharm-language');
+        } catch (e) {}
+        if (l !== 'ar' && l !== 'en' && l !== 'ru') {
+          var b = (navigator.language || '').slice(0, 2).toLowerCase();
+          l = b === 'en' || b === 'ru' ? b : 'ar';
+        }
+        document.documentElement.lang = l;
+        document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+      })();
+    </script>
+    <script>
       // Resolve the saved theme choice (dark | light | system) to a palette before the first
       // paint, so there is no flash. src/lib/theme.ts keeps it in sync afterwards.
       (function () {

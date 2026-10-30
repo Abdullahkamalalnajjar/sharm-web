@@ -4,6 +4,7 @@ import { forwardRef, useEffect, type ButtonHTMLAttributes, type InputHTMLAttribu
 import { createPortal } from 'react-dom';
 
 import { formatPrice, resolveImageUrl } from '@/lib/format';
+import { t } from '@/lib/i18n';
 
 // ---------- Buttons ----------
 
@@ -351,7 +352,7 @@ export function ErrorView({ message, onRetry }: { message: string; onRetry?: () 
       <p className="text-ink-2 whitespace-pre-line">{message}</p>
       {onRetry && (
         <Button variant="outline" size="md" onClick={onRetry}>
-          حاول تاني
+          {t('حاول تاني')}
         </Button>
       )}
     </div>
@@ -430,7 +431,7 @@ export function Sheet({
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center animate-fade" role="dialog" aria-modal="true">
-      <button type="button" aria-label="إغلاق" onClick={onClose} className="absolute inset-0 bg-black/65" />
+      <button type="button" aria-label={t('إغلاق')} onClick={onClose} className="absolute inset-0 bg-black/65" />
       <div
         className={clsx(
           'relative w-full bg-surface flex flex-col max-h-[92dvh] animate-sheet',

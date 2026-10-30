@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 
 import { useAddresses, useDeliveryLocation } from '@/api/queries';
 import { IconWell, Sheet } from '@/components/ui';
+import { t } from '@/lib/i18n';
 import { SHARM_AREAS } from '@/lib/meta';
 import { useAuth } from '@/store/auth';
 import { useBrowse, useLoginPrompt } from '@/store/ui';
@@ -62,15 +63,15 @@ export function DeliveryPicker({ open, onClose }: { open: boolean; onClose: () =
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="مكان التوصيل">
-      <p className="px-2 text-sm font-extrabold text-ink mb-1">عناويني</p>
+    <Sheet open={open} onClose={onClose} title={t('مكان التوصيل')}>
+      <p className="px-2 text-sm font-extrabold text-ink mb-1">{t('عناويني')}</p>
       {session ? (
         <>
           {list.map((a) => (
             <Row
               key={a.id}
               icon={addressIcon(a.label)}
-              title={a.label}
+              title={t(a.label)}
               subtitle={a.addressLine}
               selected={location?.address?.id === a.id && selection?.kind !== 'area'}
               onClick={() => {
@@ -81,7 +82,7 @@ export function DeliveryPicker({ open, onClose }: { open: boolean; onClose: () =
           ))}
           <Row
             icon={MapPinPlus}
-            title="إضافة / إدارة العناوين"
+            title={t('إضافة / إدارة العناوين')}
             filled
             onClick={() => {
               onClose();
@@ -92,21 +93,21 @@ export function DeliveryPicker({ open, onClose }: { open: boolean; onClose: () =
       ) : (
         <Row
           icon={MapPinPlus}
-          title="سجّل دخول عشان تحفظ عناوينك"
+          title={t('سجّل دخول عشان تحفظ عناوينك')}
           filled
           onClick={() => {
             onClose();
-            openLogin('عشان تحفظ عنوان توصيل وتطلب.');
+            openLogin(t('عشان تحفظ عنوان توصيل وتطلب.'));
           }}
         />
       )}
       <div className="my-3 border-t border-line" />
-      <p className="px-2 text-sm font-extrabold text-ink mb-1">أو تصفح منطقة</p>
+      <p className="px-2 text-sm font-extrabold text-ink mb-1">{t('أو تصفح منطقة')}</p>
       {SHARM_AREAS.map((area) => (
         <Row
           key={area.name}
           icon={MapPin}
-          title={area.name}
+          title={t(area.name)}
           color="var(--color-ink-2)"
           selected={selection?.kind === 'area' && selection.name === area.name}
           onClick={() => {

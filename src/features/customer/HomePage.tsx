@@ -4,9 +4,11 @@ import { useRef } from 'react';
 import { useDeliveryLocation, useStores, useStoreCategories } from '@/api/queries';
 import { Button, EmptyView, ErrorView, Loading, CountPill } from '@/components/ui';
 import { HOME_OFFERS } from '@/lib/home-content';
+import { t, tIn } from '@/lib/i18n';
+import { localized } from '@/lib/localized';
 import { useBrowse } from '@/store/ui';
 
-import { AreaGrid, CategoryArc, HomeHeader, NearestPanel, OffersCarousel, OpenNowCarousel, SectionHead } from './HomeSections';
+import { AreaGrid, CategoryArc, DailyOffersRow, HomeHeader, NearestPanel, OffersCarousel, OpenNowCarousel, SectionHead } from './HomeSections';
 import { SHOWCASE_GRID } from './Showcase';
 import { StoreCard } from './StoreBits';
 
@@ -36,25 +38,29 @@ export function HomePage() {
   const typeLabel =
     categoryId === null
       ? undefined
-      : (categories.find((c) => c.id === categoryId)?.name ?? all.find((s) => s.categoryId === categoryId)?.categoryName);
+      : ((c) => (c ? localized(c.name, c.nameEn, c.nameRu) : undefined))(categories.find((c) => c.id === categoryId)) ??
+        ((s) => (s ? localized(s.categoryName, s.categoryNameEn, s.categoryNameRu) : undefined))(all.find((s) => s.categoryId === categoryId));
 
   const listTitle = query
-    ? `نتايج "${search.trim()}"`
+    ? t('نتايج "{q}"', { q: search.trim() })
     : openOnly
-      ? `${typeLabel ?? 'المحلات'} المفتوحة دلوقتي`
+      ? typeLabel
+        ? t('{type} المفتوحة دلوقتي', { type: typeLabel })
+        : t('المحلات المفتوحة دلوقتي')
       : categoryId !== null
-        ? (typeLabel ?? 'المحلات')
-        : 'كل المحلات';
+        ? (typeLabel ?? tIn('title', 'المحلات'))
+        : t('كل المحلات');
 
   const scrollToList = () => listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   return (
     <div>
-      <h1 className="sr-only">MARID Egypt - {location?.title ?? ''}</h1>
+      <h1 className="sr-only">MARID Egypt - {location ? t(location.title) : ''}</h1>
       <HomeHeader categories={categories} />
       <CategoryArc categories={categories} />
 
       {browsing && <OffersCarousel offers={HOME_OFFERS} categories={categories} />}
+      {browsing && <DailyOffersRow />}
 
       {locating || stores.isLoading ? (
         <Loading />
@@ -81,7 +87,7 @@ export function HomePage() {
             <SectionHead
               title={listTitle}
               icon={Store}
-              action={filtering ? 'امسح الفلتر' : undefined}
+              action={filtering ? t('امسح الفلتر') : undefined}
               onAction={filtering ? clearFilters : undefined}
             />
             {list.length === 0 ? (
@@ -89,15 +95,19 @@ export function HomePage() {
                 icon={query ? FilterX : Store}
                 message={
                   query
-                    ? `مفيش نتايج لـ "${search.trim()}"`
+                    ? t('مفيش نتايج لـ "{q}"', { q: search.trim() })
                     : openOnly
-                      ? `مفيش ${typeLabel ?? 'محلات'} مفتوحة دلوقتي`
-                      : `مفيش ${typeLabel ?? 'محلات'} لسه`
+                      ? typeLabel
+                        ? t('مفيش {type} مفتوحة دلوقتي', { type: typeLabel })
+                        : t('مفيش محلات مفتوحة دلوقتي')
+                      : typeLabel
+                        ? t('مفيش {type} لسه', { type: typeLabel })
+                        : t('مفيش محلات لسه')
                 }
                 action={
                   filtering ? (
                     <Button variant="outline" size="md" icon={<FilterX className="size-4" />} onClick={clearFilters}>
-                      اعرض الكل
+                      {t('اعرض الكل')}
                     </Button>
                   ) : undefined
                 }
@@ -105,7 +115,7 @@ export function HomePage() {
             ) : (
               <>
                 <div className="-mt-1 mb-3">
-                  <CountPill>{list.length} محل</CountPill>
+                  <CountPill>{t('{n} محل', { n: list.length })}</CountPill>
                 </div>
                 <div className={SHOWCASE_GRID}>
                   {list.map((s) => (

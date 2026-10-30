@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 
 import { AppImage, Price, StatusChip } from '@/components/ui';
 import { storeStatusLabel } from '@/lib/format';
+import { t, tIn } from '@/lib/i18n';
 import { localized } from '@/lib/localized';
 import { SHARM_AREAS, categoryOf } from '@/lib/meta';
 import { RatingBadge } from '@/features/ratings/Ratings';
@@ -77,9 +78,9 @@ export function OpenStoreCard({ store }: { store: NearbyStore }) {
       <div className="absolute inset-0 p-3 flex flex-col">
         <h3 className="font-extrabold text-white text-[15px] truncate">{localized(store.name, store.nameEn, store.nameRu)}</h3>
         {store.minOrderAmount > 0 ? (
-          <Price value={store.minOrderAmount} prefix="من" className="text-[12.5px] !text-highlight" />
+          <Price value={store.minOrderAmount} prefix={tIn('price', 'من')} className="text-[12.5px] !text-highlight" />
         ) : (
-          <span className="text-xs text-white/85">{store.categoryName}</span>
+          <span className="text-xs text-white/85">{localized(store.categoryName, store.categoryNameEn, store.categoryNameRu)}</span>
         )}
         <span className="flex-1" />
         <div className="flex items-center gap-1 text-white text-xs font-semibold">
@@ -88,7 +89,7 @@ export function OpenStoreCard({ store }: { store: NearbyStore }) {
             {store.distanceKm !== null && (
               <>
                 <Navigation className="size-3.5 shrink-0 text-brand-light" />
-                <span className="truncate">{store.distanceKm.toFixed(1)} كم</span>
+                <span className="truncate">{t('{n} كم', { n: store.distanceKm.toFixed(1) })}</span>
               </>
             )}
           </span>
@@ -128,14 +129,19 @@ export function StoreCard({ store }: { store: NearbyStore }) {
       badge={storeStatusLabel(store)}
       badgeClassName={store.isOpen ? 'bg-success text-white' : 'bg-surface-alt text-ink-2'}
       title={localized(store.name, store.nameEn, store.nameRu)}
-      subtitle={[store.categoryName, store.distanceKm !== null ? `${store.distanceKm.toFixed(1)} كم` : null].filter(Boolean).join(' • ')}
+      subtitle={[
+        localized(store.categoryName, store.categoryNameEn, store.categoryNameRu),
+        store.distanceKm !== null ? t('{n} كم', { n: store.distanceKm.toFixed(1) }) : null,
+      ]
+        .filter(Boolean)
+        .join(' • ')}
       footer={
         store.ratingsCount > 0 ? (
           <RatingBadge average={store.ratingAverage} count={store.ratingsCount} />
         ) : store.minOrderAmount > 0 ? (
-          <Price value={store.minOrderAmount} prefix="من" className="text-[13px]" />
+          <Price value={store.minOrderAmount} prefix={tIn('price', 'من')} className="text-[13px]" />
         ) : (
-          <span className="text-xs font-bold text-ink-3">جديد</span>
+          <span className="text-xs font-bold text-ink-3">{tIn('store', 'جديد')}</span>
         )
       }
       action={store.isOpen ? <ShowcaseAction icon={ArrowOut} /> : undefined}

@@ -1,5 +1,8 @@
 import { api, tokenStorage } from './client';
 import type {
+  CustomerWallet,
+  OrderRefunds,
+  RefundParty,
   Address,
   AddressInput,
   AdminDashboard,
@@ -43,6 +46,10 @@ import type {
   MyEmployeeStore,
   StoreEmployee,
   StoreEmployeeInput,
+  OfferAdmin,
+  OfferDetails,
+  OfferSaveInput,
+  OfferTile,
 } from '@/types';
 
 // ---------- Auth ----------
@@ -243,8 +250,10 @@ const adminOrders = '/api/admin/orders';
 
 export const ordersApi = {
   /** `scheduledFor`: one of the store's schedule slots (UTC ISO); null = as soon as possible. */
-  place: (addressId: number, note?: string | null, scheduledFor?: string | null) =>
-    api.post<Order>('/api/orders', { addressId, note: note ?? null, scheduledFor: scheduledFor ?? null }),
+  /** `useWallet`: pay what the wallet holds (up to the total); the driver collects the rest. */
+  /** `tip`: the customer's tip for the driver (0 to 1000 EGP). */
+  place: (addressId: number, note?: string | null, scheduledFor?: string | null, useWallet = false, tip = 0) =>
+    api.post<Order>('/api/orders', { addressId, note: note ?? null, scheduledFor: scheduledFor ?? null, useWallet, tip }),
   placeCustom: (addressId: number, requestDetails: string, paymentMethod?: string) =>
     api.post<number>('/api/orders/custom', { addressId, requestDetails, paymentMethod: paymentMethod ?? 'Cash' }),
   mine: () => api.get<OrderSummary[]>('/api/orders/mine'),
@@ -439,4 +448,57 @@ export const storeEmployeesApi = {
   remove: (storeId: number, id: number) => api.delete<void>(`${adminEmployees(storeId)}/${id}`),
   /** The signed-in cashier's store. */
   myStore: () => api.get<MyEmployeeStore>('/api/store-employee/me'),
+};
+
+// ---------- Customer wallet ----------
+
+export const customerWalletApi = {
+  mine: () => api.get<CustomerWallet>('/api/wallet'),
+  ofCustomer: (customerId: string) => api.get<CustomerWallet>(`/api/admin/customers/${customerId}/wallet`),
+  /** Positive adds, negative takes (not below zero). The note is shown to the customer. */
+  adjust: (customerId: string, amount: number, note: string) =>
+    api.post<CustomerWallet>(`/api/admin/customers/${customerId}/wallet/adjustments`, { amount, note }),
+};
+
+// ---------- Refunds (admin and store owner) ----------
+
+export const refundsApi = {
+  admin: (orderId: number) => api.get<OrderRefunds>(`/api/admin/orders/${orderId}/refunds`),
+  /** The admin picks who bears it and how the customer gets it (cash from the store / admin, or the wallet). */
+  adminCreate: (orderId: number, amount: number, reason: string, chargedTo: RefundParty, paidBy: RefundParty) =>
+    api.post<OrderRefunds>(`/api/admin/orders/${orderId}/refunds`, { amount, reason, chargedTo, paidBy }),
+  store: (orderId: number) => api.get<OrderRefunds>(`/api/store-orders/${orderId}/refunds`),
+  /** At the store's cost: cash it hands over itself, or into the customer's wallet. */
+  storeCreate: (orderId: number, amount: number, reason: string, toWallet: boolean) =>
+    api.post<OrderRefunds>(`/api/store-orders/${orderId}/refunds`, { amount, reason, toWallet }),
+};
+
+// ---------- Daily offers (العروض اليومية) ----------
+
+const storeOffers = (storeId: number) => `/api/stores/${storeId}/offers`;
+const adminOffers = '/api/admin/offers';
+
+export const offersApi = {
+  /** The home tiles: active, with an image, not expired (guests too). */
+  visible: () => api.get<OfferTile[]>('/api/offers'),
+  /** 404 when the offer is not shown to customers any more. */
+  byId: (id: number) => api.get<OfferDetails>(`/api/offers/${id}`),
+
+  // Store owner (same permission as the store's menu)
+  ofStore: (storeId: number) => api.get<OfferAdmin[]>(storeOffers(storeId)),
+  createForStore: (storeId: number, input: OfferSaveInput) => api.post<OfferAdmin>(storeOffers(storeId), input),
+  updateForStore: (storeId: number, id: number, input: OfferSaveInput) =>
+    api.put<OfferAdmin>(`${storeOffers(storeId)}/${id}`, input),
+  uploadStoreImage: (storeId: number, id: number, file: File) =>
+    api.upload<OfferAdmin>(`${storeOffers(storeId)}/${id}/image`, file),
+  deleteForStore: (storeId: number, id: number) => api.delete<void>(`${storeOffers(storeId)}/${id}`),
+
+  // Admin: every offer; creates platform offers (any stores and products)
+  all: () => api.get<OfferAdmin[]>(adminOffers),
+  create: (input: OfferSaveInput) => api.post<OfferAdmin>(adminOffers, input),
+  update: (id: number, input: OfferSaveInput) => api.put<OfferAdmin>(`${adminOffers}/${id}`, input),
+  uploadImage: (id: number, file: File) => api.upload<OfferAdmin>(`${adminOffers}/${id}/image`, file),
+  /** Hide / show any offer (a store's too). */
+  setActive: (id: number, isActive: boolean) => api.put<OfferAdmin>(`${adminOffers}/${id}/active`, { isActive }),
+  delete: (id: number) => api.delete<void>(`${adminOffers}/${id}`),
 };

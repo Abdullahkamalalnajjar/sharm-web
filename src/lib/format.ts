@@ -1,6 +1,8 @@
+import { currentLanguage, t } from '@/lib/i18n';
+
 export function formatPrice(value: number): string {
   const text = Number.isInteger(value) ? value.toFixed(0) : value.toFixed(2);
-  return `${text} ج.م`;
+  return `${text} ${t('ج.م')}`;
 }
 
 /** Server timestamps are UTC but come without a "Z". */
@@ -9,23 +11,36 @@ export function parseUtc(value: string): Date {
   return new Date(iso);
 }
 
-const dateFormat = new Intl.DateTimeFormat('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' });
-const timeFormat = new Intl.DateTimeFormat('ar-EG', { hour: 'numeric', minute: '2-digit' });
-const fullDateFormat = new Intl.DateTimeFormat('ar-EG', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
+const LOCALES = { ar: 'ar-EG', en: 'en-GB', ru: 'ru-RU' } as const;
+
+/** The Intl locale of the current language. */
+export const dateLocale = () => LOCALES[currentLanguage()];
+
+const formats = new Map<string, Intl.DateTimeFormat>();
+
+/** A cached Intl formatter for the current language (the app remounts on a language change). */
+function dateFormat(name: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = `${dateLocale()}|${name}`;
+  let format = formats.get(key);
+  if (!format) {
+    format = new Intl.DateTimeFormat(dateLocale(), options);
+    formats.set(key, format);
+  }
+  return format;
+}
+
+const DAY = { weekday: 'long', day: 'numeric', month: 'long' } as const;
+const TIME = { hour: 'numeric', minute: '2-digit' } as const;
+const FULL_DATE = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' } as const;
 
 /** "الأربعاء ٣٠ سبتمبر • ١٠:٤٥ م" */
 export function formatOrderDate(value: string | Date): string {
   const date = typeof value === 'string' ? parseUtc(value) : value;
-  return `${dateFormat.format(date)} • ${timeFormat.format(date)}`;
+  return `${dateFormat('day', DAY).format(date)} • ${dateFormat('time', TIME).format(date)}`;
 }
 
 export function formatFullDate(date: Date): string {
-  return fullDateFormat.format(date);
+  return dateFormat('full', FULL_DATE).format(date);
 }
 
 export function compactNumber(value: number): string {
@@ -36,7 +51,11 @@ export function compactNumber(value: number): string {
 
 /** e.g. "عمارة 12 • الدور 2 • شقة 5" */
 export function addressDetails(a: { building: string | null; floor: string | null; apartment: string | null }): string {
-  return [a.building && `عمارة ${a.building}`, a.floor && `الدور ${a.floor}`, a.apartment && `شقة ${a.apartment}`]
+  return [
+    a.building && t('عمارة {n}', { n: a.building }),
+    a.floor && t('الدور {n}', { n: a.floor }),
+    a.apartment && t('شقة {n}', { n: a.apartment }),
+  ]
     .filter(Boolean)
     .join(' • ');
 }
@@ -63,12 +82,12 @@ export function formatTimeOfDay(time: string): string {
   const h = Math.floor(total / 60);
   const m = total % 60;
   const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return `${hour12}:${String(m).padStart(2, '0')} ${h < 12 ? 'ص' : 'م'}`;
+  return `${hour12}:${String(m).padStart(2, '0')} ${h < 12 ? t('ص') : t('م')}`;
 }
 
 /** "من 10:00 ص لـ 2:00 ص", or null without hours. */
 export function formatStoreHours(opensAt: string | null, closesAt: string | null): string | null {
-  return opensAt && closesAt ? `من ${formatTimeOfDay(opensAt)} لـ ${formatTimeOfDay(closesAt)}` : null;
+  return opensAt && closesAt ? t('من {from} لـ {to}', { from: formatTimeOfDay(opensAt), to: formatTimeOfDay(closesAt) }) : null;
 }
 
 /** Customer-facing state of a store: open, closed for its hours ("بيفتح 10:00 ص"), or closed. */
@@ -78,10 +97,10 @@ export function storeStatusLabel(s: {
   opensAt?: string | null;
   allowsScheduledOrders?: boolean;
 }): string {
-  if (s.isOpen) return 'مفتوح';
-  if (s.allowsScheduledOrders) return 'مقفول • اطلب لبعدين';
-  if (s.openSwitch && s.opensAt) return `بيفتح ${formatTimeOfDay(s.opensAt)}`;
-  return 'مقفول';
+  if (s.isOpen) return t('مفتوح');
+  if (s.allowsScheduledOrders) return t('مقفول • اطلب لبعدين');
+  if (s.openSwitch && s.opensAt) return t('بيفتح {time}', { time: formatTimeOfDay(s.opensAt) });
+  return t('مقفول');
 }
 
 // ---------- Discounts ----------

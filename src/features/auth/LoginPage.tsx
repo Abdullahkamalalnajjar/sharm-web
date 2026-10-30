@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router';
 
 import { errorMessage } from '@/api/client';
 import { Button, InlineError, SoftCard, TextField } from '@/components/ui';
+import { t } from '@/lib/i18n';
 import { homeFor } from '@/lib/session';
 import { useAuth } from '@/store/auth';
 
@@ -27,7 +28,7 @@ export function Logo() {
         </span>
       </div>
       <h1 className="mt-4 text-[32px] font-black text-ink leading-tight">MARID Egypt</h1>
-      <p className="text-ink-2 font-semibold">أكل، سوبر ماركت، وصيدليات لحد باب البيت</p>
+      <p className="text-ink-2 font-semibold">{t('أكل، سوبر ماركت، وصيدليات لحد باب البيت')}</p>
     </div>
   );
 }
@@ -44,8 +45,8 @@ export function LoginPage() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!email.includes('@')) return setError('اكتب إيميل صحيح');
-    if (password.length < 6) return setError('الباسورد 6 حروف على الأقل');
+    if (!email.includes('@')) return setError(t('اكتب إيميل صحيح'));
+    if (password.length < 6) return setError(t('الباسورد 6 حروف على الأقل'));
     setError(null);
     setLoading(true);
     try {
@@ -68,7 +69,7 @@ export function LoginPage() {
             name="email"
             type="email"
             autoComplete="email"
-            placeholder="الإيميل"
+            placeholder={t('الإيميل')}
             ltr
             start={<Mail className="size-5" />}
             value={email}
@@ -79,11 +80,11 @@ export function LoginPage() {
             name="password"
             type={show ? 'text' : 'password'}
             autoComplete="current-password"
-            placeholder="الباسورد"
+            placeholder={t('الباسورد')}
             ltr
             start={<Lock className="size-5" />}
             end={
-              <button type="button" onClick={() => setShow((v) => !v)} aria-label="إظهار الباسورد" className="hover:text-ink">
+              <button type="button" onClick={() => setShow((v) => !v)} aria-label={t('إظهار الباسورد')} className="hover:text-ink">
                 {show ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
               </button>
             }
@@ -93,21 +94,21 @@ export function LoginPage() {
           />
           {error && <InlineError message={error} />}
           <Button type="submit" block loading={loading} className="mt-2">
-            تسجيل الدخول
+            {t('تسجيل الدخول')}
           </Button>
         </SoftCard>
       </form>
 
       <div className="mt-3 flex flex-col items-center gap-1">
         <Link to="/signup" className="text-sm font-bold text-brand-ink hover:underline py-2">
-          معندكش حساب؟ سجّل دلوقتي
+          {t('معندكش حساب؟ سجّل دلوقتي')}
         </Link>
         <Link to="/" className="text-sm font-bold text-ink-2 hover:text-ink py-1">
-          تصفح من غير حساب
+          {t('تصفح من غير حساب')}
         </Link>
       </div>
 
-      <p className="mt-8 text-center text-sm font-semibold text-ink-3">حسابات التجربة</p>
+      <p className="mt-8 text-center text-sm font-semibold text-ink-3">{t('حسابات التجربة')}</p>
       <div className="mt-2 flex flex-wrap justify-center gap-2">
         {TEST_ACCOUNTS.map((a) => (
           <button
@@ -119,7 +120,7 @@ export function LoginPage() {
             }}
             className="h-9 rounded-full border border-line bg-surface px-4 text-[13px] font-bold text-ink hover:bg-surface-alt"
           >
-            {a.label}
+            {t(a.label)}
           </button>
         ))}
       </div>

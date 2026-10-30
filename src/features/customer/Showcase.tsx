@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router';
 
 import { AppImage, Price } from '@/components/ui';
 import { applyDiscount, formatPrice } from '@/lib/format';
+import { t } from '@/lib/i18n';
 import { useAuth } from '@/store/auth';
 import { useLoginPrompt } from '@/store/ui';
 import type { Product } from '@/types';
@@ -44,14 +45,18 @@ export function DiscountedPrice({
 
 // ---------- Custom order ----------
 
+/** Arabic source; show it with `t(CUSTOM_ORDER_LOGIN_REASON)`. */
 export const CUSTOM_ORDER_LOGIN_REASON = 'عشان تطلب أي حاجة مش موجودة في المحلات، واحنا نجيبهالك.';
+
+/** The page reads right to left (Arabic). Sliders and the arc picker mirror their movement in English / Russian. */
+export const isRtl = () => document.documentElement.dir !== 'ltr';
 
 /** The custom order (طلب خاص): guests see it too, but sign in before writing one. */
 export function useOpenCustomOrder() {
   const signedIn = useAuth((s) => s.session !== null);
   const openLogin = useLoginPrompt((s) => s.open);
   const navigate = useNavigate();
-  return () => (signedIn ? navigate('/custom-order') : openLogin(CUSTOM_ORDER_LOGIN_REASON));
+  return () => (signedIn ? navigate('/custom-order') : openLogin(t(CUSTOM_ORDER_LOGIN_REASON)));
 }
 
 // ---------- Grid card ----------
@@ -88,7 +93,7 @@ export function ShowcaseCard({
 }) {
   const body = (
     <>
-      <div className="relative h-[128px] sm:h-[150px]">
+      <div className="relative aspect-square">
         <div className={clsx('absolute inset-0 overflow-hidden rounded-[20px] bg-surface-alt', dimmed && 'opacity-45')}>{image}</div>
         {badge && (
           <span
@@ -252,7 +257,7 @@ export function ArcPicker({
       if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
       e.preventDefault();
       stop();
-      setPos(posRef.current - e.deltaX / spacing);
+      setPos(posRef.current - (isRtl() ? 1 : -1) * (e.deltaX / spacing));
       if (wheelTimer.current !== null) clearTimeout(wheelTimer.current);
       wheelTimer.current = window.setTimeout(() => animateTo(Math.round(posRef.current)), 140);
     };
@@ -263,8 +268,10 @@ export function ArcPicker({
   useEffect(() => () => stop(), []);
 
   const onKeyDown = (e: KeyboardEvent) => {
-    // Right-to-left: the next item is to the left.
-    const dir = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0;
+    // Right-to-left: the next item is to the left (to the right in English / Russian).
+    const forward = isRtl() ? 'ArrowLeft' : 'ArrowRight';
+    const back = isRtl() ? 'ArrowRight' : 'ArrowLeft';
+    const dir = e.key === forward ? 1 : e.key === back ? -1 : 0;
     if (!dir) return;
     e.preventDefault();
     animateTo(Math.round(posRef.current) + dir);
@@ -272,6 +279,7 @@ export function ArcPicker({
 
   if (count === 0) return null;
 
+  const rtl = isRtl();
   // Every virtual index that can be on screen.
   const reach = Math.ceil(width / 2 / spacing) + 1;
   const visible: number[] = [];
@@ -299,7 +307,7 @@ export function ArcPicker({
           e.currentTarget.setPointerCapture(e.pointerId);
         }
         // Items follow the finger; right-to-left, so dragging right brings the next ones in.
-        if (d.moved) setPos(d.pos + dx / spacing);
+        if (d.moved) setPos(d.pos + (rtl ? dx : -dx) / spacing);
       }}
       onPointerUp={(e) => {
         const d = drag.current;
@@ -329,7 +337,7 @@ export function ArcPicker({
             scale={1 - 0.16 * d}
             // Lower and smaller away from the middle, following the curve.
             dy={18 + 16 * d * d}
-            x={width / 2 - offset * spacing - spacing / 2}
+            x={width / 2 - (rtl ? offset : -offset) * spacing - spacing / 2}
             // Items reaching the edges fade out instead of showing a clipped label.
             opacity={1 - Math.min(1, Math.max(0, Math.abs(offset) - 1.4) / 0.6)}
             width={spacing}

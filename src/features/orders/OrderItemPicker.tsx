@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useMenu } from '@/api/queries';
 import { Button, Chip, ErrorView, Loading, Sheet, TextField } from '@/components/ui';
 import { applyDiscount, formatPercent, formatPrice } from '@/lib/format';
+import { t } from '@/lib/i18n';
+import { localized } from '@/lib/localized';
 import type { Product, ProductOptionGroup } from '@/types';
 
 /** A product chosen to add to an existing order, with its options, quantity and note. */
@@ -15,12 +17,14 @@ export interface PickedOrderItem {
 }
 
 /** Mirrors the backend price rules so the button shows the price or what is missing. The discount covers base + extras. */
+const groupName = (g: ProductOptionGroup) => localized(g.name, g.nameEn, g.nameRu);
+
 function priceFor(product: Product, selected: Set<number>): { price: number; error: string | null } {
   let total = product.price;
   for (const g of product.optionGroups) {
     const chosen = g.options.filter((o) => selected.has(o.id));
-    if (chosen.length < g.minSelections) return { price: applyDiscount(total, product.discountPercent), error: `اختار ${g.name}` };
-    if (chosen.length > g.maxSelections) return { price: applyDiscount(total, product.discountPercent), error: `${g.name}: لحد ${g.maxSelections} بس` };
+    if (chosen.length < g.minSelections) return { price: applyDiscount(total, product.discountPercent), error: t('اختار {name}', { name: groupName(g) }) };
+    if (chosen.length > g.maxSelections) return { price: applyDiscount(total, product.discountPercent), error: t('{name}: لحد {n} بس', { name: groupName(g), n: g.maxSelections }) };
     total += chosen.reduce((sum, o) => sum + o.extraPrice, 0);
   }
   return { price: applyDiscount(total, product.discountPercent), error: null };
@@ -28,10 +32,10 @@ function priceFor(product: Product, selected: Set<number>): { price: number; err
 
 const rule = (g: ProductOptionGroup) =>
   g.minSelections === g.maxSelections
-    ? `اختار ${g.minSelections}`
+    ? t('اختار {n}', { n: g.minSelections })
     : g.minSelections === 0
-      ? `اختياري • لحد ${g.maxSelections}`
-      : `من ${g.minSelections} لـ ${g.maxSelections}`;
+      ? t('اختياري • لحد {n}', { n: g.maxSelections })
+      : t('من {min} لـ {max}', { min: g.minSelections, max: g.maxSelections });
 
 /**
  * The store's menu to pick a product for an order (e.g. the customer called to swap one):
@@ -92,7 +96,7 @@ export function OrderItemPicker({
     <Sheet
       open={open}
       onClose={close}
-      title={product ? product.name : 'اختار المنتج'}
+      title={product ? localized(product.name, product.nameEn, product.nameRu) : t('اختار المنتج')}
       footer={
         product && pricing ? (
           <Button
@@ -103,7 +107,7 @@ export function OrderItemPicker({
               setProduct(null);
             }}
           >
-            {pricing.error ?? `أضف للأوردر • ${formatPrice(pricing.price * quantity)}`}
+            {pricing.error ?? t('أضف للأوردر • {price}', { price: formatPrice(pricing.price * quantity) })}
           </Button>
         ) : undefined
       }
@@ -112,14 +116,14 @@ export function OrderItemPicker({
         menu.isLoading ? (
           <Loading />
         ) : menu.isError || !menu.data ? (
-          <ErrorView message={(menu.error as Error)?.message ?? 'حصل خطأ'} onRetry={() => menu.refetch()} />
+          <ErrorView message={(menu.error as Error)?.message ?? t('حصل خطأ')} onRetry={() => menu.refetch()} />
         ) : (
           <div className="flex flex-col">
             {menu.data.categories
               .filter((c) => c.products.length > 0)
               .map((c) => (
                 <div key={c.id}>
-                  <p className={c.parentId ? 'px-5 pt-3 pb-1 font-bold text-ink-2' : 'px-2 pt-4 pb-1 font-extrabold text-ink'}>{c.name}</p>
+                  <p className={c.parentId ? 'px-5 pt-3 pb-1 font-bold text-ink-2' : 'px-2 pt-4 pb-1 font-extrabold text-ink'}>{localized(c.name, c.nameEn, c.nameRu)}</p>
                   {c.products.map((p) => (
                     <button
                       key={p.id}
@@ -129,20 +133,20 @@ export function OrderItemPicker({
                       className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start hover:bg-surface-alt disabled:opacity-50"
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="block text-ink">{p.name}</span>
+                        <span className="block text-ink">{localized(p.name, p.nameEn, p.nameRu)}</span>
                         <span className="block text-xs text-ink-2">
                           {p.isAvailable
                             ? [
                                 formatPrice(applyDiscount(p.price, p.discountPercent)),
-                                p.discountPercent > 0 && `خصم ${formatPercent(p.discountPercent)}`,
-                                p.optionGroups.length > 0 && 'ليه اختيارات',
+                                p.discountPercent > 0 && t('خصم {p}', { p: formatPercent(p.discountPercent) }),
+                                p.optionGroups.length > 0 && t('ليه اختيارات'),
                               ]
                                 .filter(Boolean)
                                 .join(' • ')
-                            : 'مش متاح'}
+                            : t('مش متاح')}
                         </span>
                       </span>
-                      <ChevronLeft className="size-4 text-ink-3" />
+                      <ChevronLeft className="size-4 text-ink-3 ltr:-scale-x-100" />
                     </button>
                   ))}
                 </div>
@@ -152,12 +156,12 @@ export function OrderItemPicker({
       ) : (
         <div className="flex flex-col gap-4">
           <button type="button" onClick={() => setProduct(null)} className="inline-flex items-center gap-1 self-start text-sm font-bold text-brand-ink">
-            <ArrowRight className="size-4" /> كل المنتجات
+            <ArrowRight className="size-4 ltr:-scale-x-100" /> {t('كل المنتجات')}
           </button>
           {product.optionGroups.map((g) => (
             <div key={g.id}>
               <p className="mb-2 font-extrabold text-ink">
-                {g.name} <span className="text-xs font-bold text-ink-3">• {rule(g)}</span>
+                {groupName(g)} <span className="text-xs font-bold text-ink-3">• {rule(g)}</span>
               </p>
               <div className="flex flex-wrap gap-2">
                 {g.options.map((o) => (
@@ -167,14 +171,14 @@ export function OrderItemPicker({
                     onClick={o.isAvailable ? () => toggle(g, o.id) : undefined}
                     className={o.isAvailable ? undefined : 'opacity-50'}
                   >
-                    {o.extraPrice > 0 ? `${o.name} +${formatPrice(o.extraPrice)}` : o.name}
+                    {o.extraPrice > 0 ? `${localized(o.name, o.nameEn, o.nameRu)} +${formatPrice(o.extraPrice)}` : localized(o.name, o.nameEn, o.nameRu)}
                   </Chip>
                 ))}
               </div>
             </div>
           ))}
           <div className="flex items-center gap-3">
-            <span className="flex-1 font-extrabold text-ink">الكمية</span>
+            <span className="flex-1 font-extrabold text-ink">{t('الكمية')}</span>
             <button type="button" disabled={quantity <= 1} onClick={() => setQuantity((q) => q - 1)} className="grid size-9 place-items-center rounded-full bg-surface-alt disabled:opacity-40">
               <Minus className="size-4" />
             </button>
@@ -183,7 +187,7 @@ export function OrderItemPicker({
               <Plus className="size-4" />
             </button>
           </div>
-          <TextField label="ملاحظة (اختياري)" value={note} maxLength={300} onChange={(e) => setNote(e.target.value)} />
+          <TextField label={t('ملاحظة (اختياري)')} value={note} maxLength={300} onChange={(e) => setNote(e.target.value)} />
         </div>
       )}
     </Sheet>

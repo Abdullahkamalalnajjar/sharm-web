@@ -1,6 +1,8 @@
 import { Bike, Bell, CircleCheck, CheckCircle2, Gift, ReceiptText, XCircle, type LucideIcon } from 'lucide-react';
 
 import type { AppRole } from '@/types';
+import { t } from '@/lib/i18n';
+import { dateLocale } from '@/lib/format';
 
 /** Icon and color per event, shared by the banner and the inbox. */
 export function notificationLook(event: string): { Icon: LucideIcon; color: string } {
@@ -81,14 +83,14 @@ export const parseUtc = (text: string) => new Date(/Z|[+-]\d\d:?\d\d$/.test(text
 /** "دلوقتي"، "من 5 دقيقة"، "من 3 ساعات"، "امبارح"، or the date. */
 export function timeAgo(date: Date): string {
   const minutes = Math.floor((Date.now() - date.getTime()) / 60_000);
-  if (minutes < 1) return 'دلوقتي';
-  if (minutes < 60) return `من ${minutes} دقيقة`;
+  if (minutes < 1) return t('دلوقتي');
+  if (minutes < 60) return t('من {n} دقيقة', { n: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return hours === 1 ? 'من ساعة' : `من ${hours} ساعات`;
+  if (hours < 24) return hours === 1 ? t('من ساعة') : t('من {n} ساعات', { n: hours });
   const days = Math.floor(hours / 24);
-  if (days === 1) return 'امبارح';
-  if (days < 7) return `من ${days} أيام`;
-  return date.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' });
+  if (days === 1) return t('امبارح');
+  if (days < 7) return t('من {n} أيام', { n: days });
+  return date.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' });
 }
 
 // ---------- Alert sound ----------

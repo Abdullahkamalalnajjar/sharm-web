@@ -36,10 +36,15 @@ export function TranslationFields({
   value,
   onChange,
   withDescription = true,
+  nameLabels = ['Name (English)', 'Название (Русский)'],
+  nameMaxLength = 200,
 }: {
   value: TranslationValues;
   onChange: (v: TranslationValues) => void;
   withDescription?: boolean;
+  /** The English and Russian labels of the name fields (e.g. "Title" for an offer). */
+  nameLabels?: [string, string];
+  nameMaxLength?: number;
 }) {
   const hasAny = Object.values(value).some((x) => x.trim() !== '');
   const [open, setOpen] = useState(hasAny);
@@ -57,8 +62,8 @@ export function TranslationFields({
       </button>
       {open && (
         <div className="flex flex-col gap-3 px-3 pb-3">
-          <TextField name="nameEn" ltr maxLength={200} label="Name (English)" value={value.nameEn} onChange={set('nameEn')} />
-          <TextField name="nameRu" ltr maxLength={200} label="Название (Русский)" value={value.nameRu} onChange={set('nameRu')} />
+          <TextField name="nameEn" ltr maxLength={nameMaxLength} label={nameLabels[0]} value={value.nameEn} onChange={set('nameEn')} />
+          <TextField name="nameRu" ltr maxLength={nameMaxLength} label={nameLabels[1]} value={value.nameRu} onChange={set('nameRu')} />
           {withDescription && (
             <>
               <TextArea name="descriptionEn" dir="ltr" rows={2} label="Description (English)" value={value.descriptionEn} onChange={set('descriptionEn')} />

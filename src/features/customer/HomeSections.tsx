@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Clock,
   Flame,
+  Gift,
   MapPin,
   Search,
   SlidersHorizontal,
@@ -18,16 +19,17 @@ import {
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 
-import { useDeliveryLocation } from '@/api/queries';
+import { useDeliveryLocation, useOffers } from '@/api/queries';
 import { formatPrice, storeStatusLabel } from '@/lib/format';
 import type { HomeOffer } from '@/lib/home-content';
-import { Button, Chip, CountPill, Sheet, Switch } from '@/components/ui';
+import { t } from '@/lib/i18n';
+import { AppImage, Button, Chip, CountPill, Sheet, Switch } from '@/components/ui';
 import { localized } from '@/lib/localized';
 import { SHARM_AREAS, categoryLook, categoryOf } from '@/lib/meta';
 import { useBrowse } from '@/store/ui';
 import type { NearbyStore, StoreCategory } from '@/types';
 
-import { ArcPicker, useOpenCustomOrder, type ArcPickerItem } from './Showcase';
+import { ArcPicker, isRtl, useOpenCustomOrder, type ArcPickerItem } from './Showcase';
 import { Cover, OpenStoreCard } from './StoreBits';
 
 // ---------- Building blocks ----------
@@ -72,7 +74,7 @@ export function HomeHeader({ categories }: { categories: StoreCategory[] }) {
   const { location } = useDeliveryLocation();
   const { search, setSearch, categoryId, openOnly, setPickerOpen } = useBrowse();
   const [filterOpen, setFilterOpen] = useState(false);
-  const place = !location ? '...' : location.address ? `${location.title} • ${location.address.addressLine}` : location.title;
+  const place = !location ? '...' : location.address ? `${t(location.title)} • ${location.address.addressLine}` : t(location.title);
   const filtered = openOnly || categoryId !== null;
 
   return (
@@ -80,10 +82,10 @@ export function HomeHeader({ categories }: { categories: StoreCategory[] }) {
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
-        aria-label="تغيير مكان التوصيل"
+        aria-label={t('تغيير مكان التوصيل')}
         className="flex max-w-full flex-col items-start rounded-xl px-0.5 py-1 text-start hover:bg-surface/60"
       >
-        <span className="text-[12.5px] text-ink-3">التوصيل لـ</span>
+        <span className="text-[12.5px] text-ink-3">{t('التوصيل لـ')}</span>
         <span className="mt-0.5 flex min-w-0 max-w-full items-center gap-1">
           <MapPin className="size-[18px] shrink-0 text-brand" />
           <span className="truncate text-base font-extrabold text-ink">{place}</span>
@@ -92,8 +94,8 @@ export function HomeHeader({ categories }: { categories: StoreCategory[] }) {
       </button>
 
       <h2 className="mt-4 text-[30px] leading-[1.2] md:text-[36px]">
-        <span className="font-medium text-ink-3">اطلب </span>
-        <span className="font-black text-ink">اللي نفسك فيه</span>
+        <span className="font-medium text-ink-3">{t('اطلب')} </span>
+        <span className="font-black text-ink">{t('اللي نفسك فيه')}</span>
       </h2>
 
       <div className="mt-4 flex items-center gap-2.5">
@@ -106,20 +108,20 @@ export function HomeHeader({ categories }: { categories: StoreCategory[] }) {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="دور على مطعم أو سوبر ماركت أو صيدلية"
-            aria-label="بحث"
+            placeholder={t('دور على مطعم أو سوبر ماركت أو صيدلية')}
+            aria-label={t('بحث')}
             className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-ink outline-none placeholder:font-medium placeholder:text-ink-3"
           />
           {search && (
-            <button type="button" aria-label="امسح البحث" onClick={() => setSearch('')} className="grid size-8 shrink-0 place-items-center rounded-full text-ink-3 hover:bg-surface-alt hover:text-ink">
+            <button type="button" aria-label={t('امسح البحث')} onClick={() => setSearch('')} className="grid size-8 shrink-0 place-items-center rounded-full text-ink-3 hover:bg-surface-alt hover:text-ink">
               <X className="size-4" />
             </button>
           )}
         </form>
         <button
           type="button"
-          title="فلترة"
-          aria-label="فلترة"
+          title={t('فلترة')}
+          aria-label={t('فلترة')}
           onClick={() => setFilterOpen(true)}
           className="relative grid size-[52px] shrink-0 place-items-center rounded-full bg-brand text-white shadow-brand transition-colors hover:bg-brand-light active:scale-95"
         >
@@ -136,28 +138,28 @@ export function HomeHeader({ categories }: { categories: StoreCategory[] }) {
 function FilterSheet({ open, onClose, categories }: { open: boolean; onClose: () => void; categories: StoreCategory[] }) {
   const { categoryId, openOnly, setCategoryId, setOpenOnly } = useBrowse();
   return (
-    <Sheet open={open} onClose={onClose} title="فلترة">
-      <p className="mb-2 font-bold text-ink-2">القسم</p>
+    <Sheet open={open} onClose={onClose} title={t('فلترة')}>
+      <p className="mb-2 font-bold text-ink-2">{t('القسم')}</p>
       <div className="flex flex-wrap gap-2">
         <Chip selected={categoryId === null} onClick={() => setCategoryId(null)}>
-          الكل
+          {t('الكل')}
         </Chip>
         {categories.map((c) => {
           const look = categoryLook(c.icon);
           const on = categoryId === c.id;
           return (
             <Chip key={c.id} selected={on} onClick={() => setCategoryId(c.id)} icon={<look.Icon className="size-4" style={{ color: on ? '#fff' : look.color }} />}>
-              {c.name}
+              {localized(c.name, c.nameEn, c.nameRu)}
             </Chip>
           );
         })}
       </div>
       <label className="mt-4 flex cursor-pointer items-center justify-between gap-3 py-2">
-        <span className="font-bold text-ink">المفتوح دلوقتي بس</span>
-        <Switch checked={openOnly} onChange={setOpenOnly} label="المفتوح دلوقتي بس" />
+        <span className="font-bold text-ink">{t('المفتوح دلوقتي بس')}</span>
+        <Switch checked={openOnly} onChange={setOpenOnly} label={t('المفتوح دلوقتي بس')} />
       </label>
       <Button block className="mt-3" onClick={onClose}>
-        تمام
+        {t('تمام')}
       </Button>
     </Sheet>
   );
@@ -168,10 +170,10 @@ export function CategoryArc({ categories }: { categories: StoreCategory[] }) {
   const categoryId = useBrowse((s) => s.categoryId);
   const setCategoryId = useBrowse((s) => s.setCategoryId);
   const items: ArcPickerItem[] = [
-    { key: 'all', label: 'الكل', icon: UtensilsCrossed, color: 'var(--color-brand)' },
+    { key: 'all', label: t('الكل'), icon: UtensilsCrossed, color: 'var(--color-brand)' },
     ...categories.map((c) => {
       const look = categoryLook(c.icon);
-      return { key: `category-${c.id}`, label: c.name, icon: look.Icon, imageUrl: c.imageUrl, color: look.color };
+      return { key: `category-${c.id}`, label: localized(c.name, c.nameEn, c.nameRu), icon: look.Icon, imageUrl: c.imageUrl, color: look.color };
     }),
   ];
   const index = categoryId === null ? 0 : categories.findIndex((c) => c.id === categoryId) + 1;
@@ -180,7 +182,7 @@ export function CategoryArc({ categories }: { categories: StoreCategory[] }) {
       {/* Rebuilt when the categories arrive so the loop has the right length. */}
       <ArcPicker
         key={items.length}
-        label="الأقسام"
+        label={t('الأقسام')}
         items={items}
         selectedIndex={Math.max(index, 0)}
         onSelect={(i) => setCategoryId(i === 0 ? null : categories[i - 1].id)}
@@ -195,10 +197,10 @@ function SliderArrows({ onPrev, onNext }: { onPrev: () => void; onNext: () => vo
     'absolute top-1/2 z-[2] hidden size-11 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-[#1d1b1b] shadow-[0_4px_14px_rgb(0_0_0/0.2)] opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:hover)]:grid';
   return (
     <>
-      <button type="button" aria-label="السابق" onClick={onPrev} className={clsx(base, 'start-3.5')}>
+      <button type="button" aria-label={t('السابق')} onClick={onPrev} className={clsx(base, 'start-3.5')}>
         <ChevronLeft className="size-5 rtl:-scale-x-100" />
       </button>
-      <button type="button" aria-label="التالي" onClick={onNext} className={clsx(base, 'end-3.5')}>
+      <button type="button" aria-label={t('التالي')} onClick={onNext} className={clsx(base, 'end-3.5')}>
         <ChevronRight className="size-5 rtl:-scale-x-100" />
       </button>
     </>
@@ -228,8 +230,8 @@ function useSlider(count: number) {
     const first = el?.firstElementChild as HTMLElement | null;
     if (!el || !first) return;
     const step = first.getBoundingClientRect().width + parseFloat(getComputedStyle(el).columnGap || '0');
-    // RTL: the next slide is to the left, so scrollLeft decreases.
-    el.scrollBy({ left: -dir * step, behavior: 'smooth' });
+    // RTL: the next slide is to the left, so scrollLeft decreases; LTR the other way.
+    el.scrollBy({ left: (isRtl() ? -dir : dir) * step, behavior: 'smooth' });
   };
 
   return { ref, index, next: () => by(1), prev: () => by(-1) };
@@ -245,7 +247,7 @@ export function OffersCarousel({ offers, categories }: { offers: HomeOffer[]; ca
   const categoryFor = (icon: string | null) => (icon === null ? null : (categories.find((c) => c.icon === icon)?.id ?? null));
   return (
     <section className="container-site mt-1">
-      <SectionHead title="أحدث العروض" icon={Flame} />
+      <SectionHead title={t('أحدث العروض')} icon={Flame} />
       <div className="group relative -mx-3 sm:mx-0">
         <div ref={slider.ref} className="slider-track gap-3 px-[9%] sm:px-0 scroll-px-[9%] sm:scroll-px-0">
           {offers.map((o) => (
@@ -253,12 +255,12 @@ export function OffersCarousel({ offers, categories }: { offers: HomeOffer[]; ca
               key={o.id}
               type="button"
               onClick={() => (o.kind === 'custom-order' ? openCustomOrder() : setCategoryId(categoryFor(o.categoryIcon)))}
-              aria-label={o.title}
+              aria-label={t(o.title)}
               className="relative aspect-[1.9/1] flex-[0_0_82%] snap-start overflow-hidden rounded-[18px] border-[1.5px] border-brand/70 text-start shadow-[0_4px_12px_rgb(0_0_0/0.15)] md:aspect-[2.25/1] md:flex-[0_0_calc(50%-0.375rem)]"
               style={{ background: o.gradient }}
             >
               {o.image ? (
-                <img src={o.image} alt={o.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+                <img src={o.image} alt={t(o.title)} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
               ) : (
                 <>
                   <span className="absolute -end-10 -bottom-12 size-48 rounded-full bg-white/10" />
@@ -269,19 +271,19 @@ export function OffersCarousel({ offers, categories }: { offers: HomeOffer[]; ca
                     {o.emoji}
                   </span>
                   <span className="absolute inset-0 flex flex-col justify-center gap-1 p-4 pe-24 text-white md:p-6 md:pe-40">
-                    <span className="self-start rounded-md bg-white/20 px-2 py-0.5 text-[11px] font-bold">{o.subtitle}</span>
-                    <span className="text-[17px] font-black leading-tight sm:text-[20px] md:text-[28px]">{o.title}</span>
+                    <span className="self-start rounded-md bg-white/20 px-2 py-0.5 text-[11px] font-bold">{t(o.subtitle)}</span>
+                    <span className="text-[17px] font-black leading-tight sm:text-[20px] md:text-[28px]">{t(o.title)}</span>
                     {o.line ? (
                       <span className="text-[12px] font-semibold leading-snug sm:text-[13px] md:text-[16px]">
-                        {o.line}
-                        {o.highlight && <span className="text-[14px] font-black text-highlight sm:text-[15px] md:text-[20px]">{o.highlight}</span>}
+                        {t(o.line)}
+                        {o.highlight && <span className="text-[14px] font-black text-highlight sm:text-[15px] md:text-[20px]">{t(o.highlight)}</span>}
                       </span>
                     ) : (
-                      o.highlight && <span className="text-[17px] font-extrabold text-highlight md:text-[24px]">{o.highlight}</span>
+                      o.highlight && <span className="text-[17px] font-extrabold text-highlight md:text-[24px]">{t(o.highlight)}</span>
                     )}
                     {o.button && (
                       <span className="mt-1 self-start rounded-full bg-white px-4 py-1 text-[12.5px] font-extrabold text-brand-dark shadow-sm md:text-sm">
-                        {o.button}
+                        {t(o.button)}
                       </span>
                     )}
                   </span>
@@ -289,13 +291,45 @@ export function OffersCarousel({ offers, categories }: { offers: HomeOffer[]; ca
               )}
               {o.endsAt && (
                 <span className="absolute bottom-0 start-0 z-[1] rounded-te-xl bg-highlight px-3 py-0.5 text-[0.85rem] font-extrabold text-[#2b1d00]">
-                  ينتهي {o.endsAt}
+                  {t('ينتهي {date}', { date: o.endsAt })}
                 </span>
               )}
             </button>
           ))}
         </div>
         {offers.length > 1 && <SliderArrows onPrev={slider.prev} onNext={slider.next} />}
+      </div>
+    </section>
+  );
+}
+
+// ---------- Daily offers ----------
+
+/** "العروض اليومية": the stores' and the admin's offers as square image tiles; hidden when there are none. */
+export function DailyOffersRow() {
+  const offers = useOffers().data ?? [];
+  if (offers.length === 0) return null;
+  return (
+    <section className="container-site mt-8">
+      <SectionHead title={t('العروض اليومية')} icon={Gift} />
+      <div className="no-scrollbar -mx-3 flex snap-x gap-3 overflow-x-auto px-3 pt-1 pb-2 scroll-px-3 sm:mx-0 sm:px-0">
+        {offers.map((o) => {
+          const title = localized(o.title, o.titleEn, o.titleRu);
+          return (
+            <Link
+              key={o.id}
+              to={`/offers/${o.id}`}
+              aria-label={title}
+              title={title}
+              // A thin light frame around the picture, like an app icon.
+              className="block size-[120px] shrink-0 snap-start rounded-[22px] border border-line bg-surface p-[3px] shadow-[0_3px_10px_rgb(0_0_0/0.14)] transition-transform hover:-translate-y-0.5 active:scale-[0.97]"
+            >
+              <span className="block size-full overflow-hidden rounded-[19px] bg-surface-alt">
+                <AppImage url={o.imageUrl} alt={title} fallback={null} />
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
@@ -313,12 +347,12 @@ export function OpenNowCarousel({ stores, onAll }: { stores: NearbyStore[]; onAl
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <SectionTitle icon={Clock} className="min-w-0">
-            مفتوح دلوقتي
+            {t('مفتوح دلوقتي')}
           </SectionTitle>
-          <CountPill>{open.length} محل</CountPill>
+          <CountPill>{t('{n} محل', { n: open.length })}</CountPill>
         </div>
         <button type="button" onClick={onAll} className="section-link">
-          شوف الكل
+          {t('شوف الكل')}
           <ArrowLeft className="size-3.5 rtl:-scale-x-100" />
         </button>
       </div>
@@ -354,8 +388,8 @@ export function PlaceTile({ store }: { store: NearbyStore }) {
       >
         {store.isOpen
           ? store.minOrderAmount > 0
-            ? `أقل طلب ${formatPrice(store.minOrderAmount)}`
-            : 'مفتوح'
+            ? t('أقل طلب {p}', { p: formatPrice(store.minOrderAmount) })
+            : t('مفتوح')
           : storeStatusLabel(store)}
       </span>
       <span className="absolute inset-x-3 bottom-2 z-[1] truncate text-[1.1rem] font-black [text-shadow:0_1px_4px_rgb(0_0_0/0.5)]">{localized(store.name, store.nameEn, store.nameRu)}</span>
@@ -370,11 +404,11 @@ export function NearestPanel({ stores, onAll }: { stores: NearbyStore[]; onAll: 
       <div className="rounded-[24px] bg-gradient-to-b from-[#6A3FB5] to-[#5B34A3] p-[0.9rem] pb-4 text-white shadow-[0_3px_12px_rgb(0_0_0/0.25)]">
         <div className="mb-3 flex items-center gap-2">
           <BookmarkCheck className="size-6 shrink-0 text-highlight" />
-          <h2 className="min-w-0 flex-1 text-[1.25rem] font-black">الأقرب ليك</h2>
+          <h2 className="min-w-0 flex-1 text-[1.25rem] font-black">{t('الأقرب ليك')}</h2>
           <button
             type="button"
             onClick={onAll}
-            aria-label="عرض الكل"
+            aria-label={t('عرض الكل')}
             className="grid size-[42px] shrink-0 place-items-center rounded-full bg-highlight text-[#3a2600] shadow-[0_2px_8px_rgb(0_0_0/0.15)] hover:brightness-105"
           >
             <ArrowLeft className="size-5 rtl:-scale-x-100" />
@@ -399,7 +433,7 @@ export function AreaGrid({ currentTitle }: { currentTitle: string | undefined })
   return (
     <section className="container-site mt-8">
       <SectionTitle icon={MapPin} className="mb-3.5">
-        مناطق تانية
+        {t('مناطق تانية')}
       </SectionTitle>
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:gap-3.5">
         {SHARM_AREAS.map((area, i) => {
@@ -427,9 +461,9 @@ export function AreaGrid({ currentTitle }: { currentTitle: string | undefined })
                 </span>
               )}
               <span className="absolute inset-x-0 bottom-0 z-[1] flex items-center justify-between gap-2 px-3 py-2.5 text-[0.95rem] font-bold [text-shadow:0_1px_3px_rgb(0_0_0/0.45)] sm:text-[1.05rem]">
-                <span className="truncate">{area.name}</span>
+                <span className="truncate">{t(area.name)}</span>
                 {selected ? (
-                  <small className="shrink-0 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold [text-shadow:none]">مختارة</small>
+                  <small className="shrink-0 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold [text-shadow:none]">{t('مختارة')}</small>
                 ) : (
                   <span className="grid size-[26px] shrink-0 place-items-center rounded-full bg-white/22 backdrop-blur-sm transition-colors group-hover/city:bg-brand sm:size-[30px]">
                     <ArrowLeft className="size-4 rtl:-scale-x-100" />

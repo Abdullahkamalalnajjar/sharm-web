@@ -1,10 +1,11 @@
-import { Bike, CheckCircle2, ChevronLeft, Hourglass, Landmark, LayoutGrid, LogOut, Package, PlusSquare, SlidersHorizontal, Store, TrendingUp, UserRoundSearch, Users, type LucideIcon } from 'lucide-react';
+import { Bike, CheckCircle2, ChevronLeft, Gift, Hourglass, Landmark, LayoutGrid, LogOut, Package, PlusSquare, SlidersHorizontal, Store, TrendingUp, UserRoundSearch, Users, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { useAdminDashboard, useTodayReport, useWalletsOverview } from '@/api/queries';
 import { Button, ErrorView, IconWell, Loading, SectionHeader, SoftCard, StatusChip } from '@/components/ui';
 import { LoyaltySettingsCard } from '@/features/loyalty/LoyaltyAdmin';
+import { AppFeaturesCard } from './AppFeaturesCard';
 import { compactNumber, formatFullDate, formatPrice } from '@/lib/format';
 import { ORDER_STATUSES, categoryLook, storeStatus } from '@/lib/meta';
 import { useAuth } from '@/store/auth';
@@ -106,7 +107,11 @@ export function AdminDashboardPage() {
                   كل المحلات
                 </Button>
               </div>
+              <Button block variant="outline" icon={<Gift className="size-5" />} onClick={() => navigate('/admin/offers')}>
+                العروض اليومية
+              </Button>
               <LoyaltySettingsCard />
+              <AppFeaturesCard />
             </div>
 
             <SoftCard className="p-4">

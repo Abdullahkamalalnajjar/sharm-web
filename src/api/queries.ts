@@ -1,17 +1,19 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { addressesApi, adminApi, cartApi, catalogApi, driversApi, loyaltyApi, notificationsApi, ordersApi, reportsApi, storeCategoriesApi, storeOrdersApi, storesApi, walletsApi } from '@/api';
+import { addressesApi, adminApi, customerWalletApi, cartApi, catalogApi, driversApi, loyaltyApi, notificationsApi, offersApi, ordersApi, reportsApi, storeCategoriesApi, storeOrdersApi, storesApi, walletsApi } from '@/api';
 import { SHARM_AREAS } from '@/lib/meta';
 import { useAuth } from '@/store/auth';
 import { useBrowse } from '@/store/ui';
 import type { Address, Cart, OrderStatus, Report, StoreOrdersFilter, WithdrawalStatus } from '@/types';
 import { EMPTY_CART } from '@/types';
+import { t } from '@/lib/i18n';
 
 export const keys = {
   storeOrders: (filter: StoreOrdersFilter) => ['store-orders', 'list', filter] as const,
   storeOrder: (id: number) => ['store-orders', 'one', id] as const,
   storeRatings: (storeId: number) => ['stores', 'ratings', storeId] as const,
   myPoints: ['points', 'me'] as const,
+  myWallet: ['wallet', 'me'] as const,
   deliveryQuote: (addressId: number, storeId: number | undefined) => ['cart', 'delivery-quote', addressId, storeId] as const,
   loyaltySettings: ['admin', 'loyalty', 'settings'] as const,
   customerPoints: (customerId: string) => ['admin', 'loyalty', 'customer', customerId] as const,
@@ -48,6 +50,10 @@ export const keys = {
   walletsOverview: ['wallets', 'admin', 'overview'] as const,
   adminWithdrawals: (status: WithdrawalStatus | null) => ['wallets', 'admin', 'withdrawals', status] as const,
   adminWalletEntries: ['wallets', 'admin', 'entries'] as const,
+  offers: ['offers'] as const,
+  offer: (id: number) => ['offers', 'one', id] as const,
+  storeOffers: (storeId: number) => ['offers', 'store', storeId] as const,
+  adminOffers: ['admin', 'offers'] as const,
 };
 
 const useIsCustomer = () => {
@@ -82,7 +88,7 @@ export function useDeliveryLocation(): { location: DeliveryLocation | null; isLo
 
   if (selection?.kind === 'area') {
     const area = SHARM_AREAS.find((a) => a.name === selection.name) ?? SHARM_AREAS[0];
-    return { location: { title: area.name, latitude: area.latitude, longitude: area.longitude, address: null }, isLoading: false };
+    return { location: { title: t(area.name), latitude: area.latitude, longitude: area.longitude, address: null }, isLoading: false };
   }
 
   if (isCustomer && addresses.isLoading) return { location: null, isLoading: true };
@@ -93,7 +99,7 @@ export function useDeliveryLocation(): { location: DeliveryLocation | null; isLo
 
   if (!address) {
     const area = SHARM_AREAS[0];
-    return { location: { title: area.name, latitude: area.latitude, longitude: area.longitude, address: null }, isLoading: false };
+    return { location: { title: t(area.name), latitude: area.latitude, longitude: area.longitude, address: null }, isLoading: false };
   }
   return {
     location: { title: address.label, latitude: address.latitude, longitude: address.longitude, address },
@@ -320,6 +326,12 @@ export const useMyPoints = () => {
   });
 };
 
+/** The signed-in customer's wallet (balance and latest lines). */
+export const useMyWallet = () => {
+  const signedIn = useAuth((s) => s.session?.role === 'customer');
+  return useQuery({ queryKey: keys.myWallet, queryFn: customerWalletApi.mine, enabled: signedIn });
+};
+
 export const useLoyaltySettings = () => useQuery({ queryKey: keys.loyaltySettings, queryFn: loyaltyApi.settings });
 
 export const useCustomerPoints = (customerId: string | undefined) =>
@@ -366,4 +378,22 @@ export const useAdminWalletEntries = () =>
 export function useRefreshWallets() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: ['wallets'] });
+}
+
+// ---------- Daily offers ----------
+
+/** The home tiles (guests too). */
+export const useOffers = () => useQuery({ queryKey: keys.offers, queryFn: offersApi.visible, staleTime: 60_000 });
+export const useOffer = (id: number) => useQuery({ queryKey: keys.offer(id), queryFn: () => offersApi.byId(id), retry: false });
+export const useStoreOffers = (storeId: number) =>
+  useQuery({ queryKey: keys.storeOffers(storeId), queryFn: () => offersApi.ofStore(storeId) });
+export const useAdminOffers = () => useQuery({ queryKey: keys.adminOffers, queryFn: offersApi.all });
+
+/** Reloads every offer view (home tiles, offer pages, owner and admin lists) after a change. */
+export function useRefreshOffers() {
+  const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: ['offers'] });
+    qc.invalidateQueries({ queryKey: keys.adminOffers });
+  };
 }

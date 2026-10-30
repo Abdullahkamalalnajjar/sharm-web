@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { Sheet } from '@/components/ui';
 import { PALETTES, THEMES, useTheme, type PalettePreview } from '@/lib/theme';
+import { t } from '@/lib/i18n';
 
 /** Header button (on the brand bar) that opens the theme picker. */
 export function ThemeButton() {
@@ -13,8 +14,8 @@ export function ThemeButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="المظهر"
-        title="المظهر"
+        aria-label={t('المظهر')}
+        title={t('المظهر')}
         className="grid size-[38px] place-items-center rounded-[10px] border border-white/28 text-white hover:bg-white/15"
       >
         <Palette className="size-5" />
@@ -41,17 +42,17 @@ function Preview({ p }: { p: PalettePreview }) {
 function ThemeSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { theme, setTheme } = useTheme();
   return (
-    <Sheet open={open} onClose={onClose} title="المظهر">
+    <Sheet open={open} onClose={onClose} title={t('المظهر')}>
       <div className="grid grid-cols-3 gap-2.5">
-        {THEMES.map((t) => {
-          const selected = t.name === theme;
-          const Icon = ICONS[t.name];
+        {THEMES.map((item) => {
+          const selected = item.name === theme;
+          const Icon = ICONS[item.name];
           return (
             <button
-              key={t.name}
+              key={item.name}
               type="button"
               onClick={() => {
-                setTheme(t.name);
+                setTheme(item.name);
                 onClose();
               }}
               aria-pressed={selected}
@@ -61,18 +62,18 @@ function ThemeSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
               )}
             >
               <span className="flex h-[76px] overflow-hidden rounded-xl">
-                {t.name === 'system' ? (
+                {item.name === 'system' ? (
                   <>
                     <Preview p={PALETTES.light} />
                     <Preview p={PALETTES.dark} />
                   </>
                 ) : (
-                  <Preview p={PALETTES[t.name]} />
+                  <Preview p={PALETTES[item.name]} />
                 )}
               </span>
               <span className={clsx('flex items-center justify-center gap-1 text-[13px]', selected ? 'font-extrabold text-brand-ink' : 'font-semibold text-ink')}>
                 <Icon className={clsx('size-4 shrink-0', selected ? 'text-brand-ink' : 'text-ink-2')} />
-                <span className="truncate">{t.label}</span>
+                <span className="truncate">{t(item.label)}</span>
               </span>
             </button>
           );

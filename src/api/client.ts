@@ -1,5 +1,7 @@
 import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
 
+import { errorTexts } from '@/i18n/error-codes';
+import { currentLanguage, t } from '@/lib/i18n';
 import type { Tokens } from '@/types';
 
 const STORAGE_KEY = 'sharm.tokens';
@@ -58,6 +60,8 @@ export const setSessionExpiredHandler = (handler: () => void) => {
 const isAuthCall = (url?: string) => url?.startsWith('/identity/token') ?? false;
 
 http.interceptors.request.use(async (config) => {
+  // The backend writes pushes (and can answer) in the visitor's language.
+  config.headers['Accept-Language'] = currentLanguage();
   if (isAuthCall(config.url)) return config;
   const token = await freshAccessToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -162,15 +166,19 @@ function toApiError(e: unknown): ApiError {
     const data = e.response?.data as Partial<Envelope<unknown>> | undefined;
     const errors = Array.isArray(data?.errors) ? data.errors : [];
     if (errors.length) {
-      return new ApiError(errors.map((x) => x.description).join('\n'), errors, e.response?.status);
+      return new ApiError(
+        errors.map((x) => (errorTexts[x.code] ? t(errorTexts[x.code]) : x.description)).join('\n'),
+        errors,
+        e.response?.status,
+      );
     }
-    if (e.code === 'ECONNABORTED' || e.code === 'ETIMEDOUT') return new ApiError('السيرفر اتأخر في الرد.');
-    if (!e.response) return new ApiError('تعذر الاتصال بالسيرفر. تأكد إن الـ API شغال.');
-    if (e.response.status === 403) return new ApiError('مش مسموح لك بالعملية دي.', [], 403);
-    if (e.response.status === 401) return new ApiError('سجّل دخول الأول.', [], 401);
-    return new ApiError('حصل خطأ غير متوقع.', [], e.response.status);
+    if (e.code === 'ECONNABORTED' || e.code === 'ETIMEDOUT') return new ApiError(t('السيرفر اتأخر في الرد.'));
+    if (!e.response) return new ApiError(t('تعذر الاتصال بالسيرفر. تأكد إن الـ API شغال.'));
+    if (e.response.status === 403) return new ApiError(t('مش مسموح لك بالعملية دي.'), [], 403);
+    if (e.response.status === 401) return new ApiError(t('سجّل دخول الأول.'), [], 401);
+    return new ApiError(t('حصل خطأ غير متوقع.'), [], e.response.status);
   }
-  return new ApiError(e instanceof Error ? e.message : 'حصل خطأ غير متوقع.');
+  return new ApiError(e instanceof Error ? e.message : t('حصل خطأ غير متوقع.'));
 }
 
 /** Unwraps the backend `Result<T>` envelope (`{ isSuccess, value, errors }`). */

@@ -7,7 +7,7 @@ import { driversApi } from '@/api';
 import { keys, useDriverOrder } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, ErrorView, IconWell, Loading, Price, SoftCard, StatusChip } from '@/components/ui';
-import { OrderAddressCard, OrderItemsCard, OrderTimeline } from '@/features/orders/OrderWidgets';
+import { OrderAddressCard, OrderItemsCard, OrderStoreCard, OrderTimeline } from '@/features/orders/OrderWidgets';
 import { formatPrice } from '@/lib/format';
 import { isAwaitingPickup } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
@@ -42,7 +42,7 @@ export function DriverOrderPage() {
         ? o.isCustomOrder
           ? 'اشتريت كل المطلوب في الطلب الخاص؟'
           : `استلمت كل حاجة من ${o.stores.length === 1 ? 'المحل' : `الـ ${o.stores.length} محلات`}؟`
-        : `سلّمت الأوردر للزبون وحصّلت ${formatPrice(o.total)}؟`,
+        : `سلّمت الأوردر للزبون وحصّلت ${formatPrice(o.cashToCollect ?? o.total)}؟`,
       pickingUp ? 'استلمت' : 'وصّلت',
     );
     if (!ok) return;
@@ -93,11 +93,12 @@ export function DriverOrderPage() {
                   {o.taxAmount > 0 && <> + ضريبة {formatPrice(o.taxAmount)}</>}
                 </p>
               </div>
-              <Price value={o.total} className="text-[22px]" />
+              <Price value={o.cashToCollect ?? o.total} className="text-[22px]" />
             </SoftCard>
             <div className="grid gap-3 md:grid-cols-2 md:items-start">
               <div className="flex flex-col gap-3">
                 <Title icon={Store} text="هتستلم من" />
+                {!o.isCustomOrder && o.stores.map((s) => <OrderStoreCard key={s.storeId} store={s} />)}
                 <OrderItemsCard order={o} />
               </div>
               <div className="flex flex-col gap-3">

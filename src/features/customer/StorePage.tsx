@@ -6,12 +6,13 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { useCart, useMenu, useStore } from '@/api/queries';
 import { AppImage, EmptyView, ErrorView, Loading, SectionHeader } from '@/components/ui';
 import { discountLabel, formatPrice, formatStoreHours } from '@/lib/format';
+import { t, tIn } from '@/lib/i18n';
 import { localized } from '@/lib/localized';
 import { categoryOf } from '@/lib/meta';
 import type { Menu, MenuCategory, Product, Store } from '@/types';
 
 import { ProductSheet } from './ProductSheet';
-import { ArcPicker, DiscountedPrice, SHOWCASE_GRID, ShowcaseAction, ShowcaseCard, productPrices } from './Showcase';
+import { ArcPicker, DiscountedPrice, SHOWCASE_GRID, ShowcaseAction, ShowcaseCard, isRtl, productPrices } from './Showcase';
 import { StoreAvatar, StoreStatusChip } from './StoreBits';
 
 /** A store's menu: header, search, info chips, featured products, category arc and the product cards. */
@@ -33,7 +34,7 @@ export function StorePage() {
         {store.isLoading ? (
           <Loading />
         ) : store.isError || !store.data ? (
-          <ErrorView message={(store.error as Error)?.message ?? 'حصل خطأ'} onRetry={retry} />
+          <ErrorView message={(store.error as Error)?.message ?? t('حصل خطأ')} onRetry={retry} />
         ) : (
           <>
             <TopBar store={store.data} />
@@ -44,7 +45,7 @@ export function StorePage() {
             ) : menu.isError ? (
               <ErrorView message={(menu.error as Error).message} onRetry={retry} />
             ) : menu.data!.categories.length === 0 ? (
-              <EmptyView icon={BookOpen} message="المنيو لسه فاضي" />
+              <EmptyView icon={BookOpen} message={t('المنيو لسه فاضي')} />
             ) : (
               <MenuBody menu={menu.data!} store={store.data} query={query.trim().toLowerCase()} onOpen={setProduct} />
             )}
@@ -78,8 +79,8 @@ function MenuBody({ menu, store, query, onOpen }: { menu: Menu; store: Store; qu
     );
     return (
       <section>
-        <SectionHeader title="نتايج البحث" pill={`${matches.length} صنف`} />
-        {matches.length === 0 ? <EmptyView icon={SearchX} message="مفيش أصناف بالاسم ده" /> : grid(matches)}
+        <SectionHeader title={t('نتايج البحث')} pill={t('{n} صنف', { n: matches.length })} />
+        {matches.length === 0 ? <EmptyView icon={SearchX} message={t('مفيش أصناف بالاسم ده')} /> : grid(matches)}
       </section>
     );
   }
@@ -95,9 +96,9 @@ function MenuBody({ menu, store, query, onOpen }: { menu: Menu; store: Store; qu
         <div className="mt-3.5">
           <ArcPicker
             key={mains.length}
-            label="أقسام المنيو"
+            label={t('أقسام المنيو')}
             items={[
-              { key: 'all', label: 'الكل', icon: LayoutGrid, color: 'var(--color-brand)' },
+              { key: 'all', label: t('الكل'), icon: LayoutGrid, color: 'var(--color-brand)' },
               ...mains.map((c) => ({
                 key: `c${c.id}`,
                 label: name(c),
@@ -119,7 +120,7 @@ function MenuBody({ menu, store, query, onOpen }: { menu: Menu; store: Store; qu
             {category.parentId !== null ? (
               <h3 className="px-3 pt-2 pb-2.5 font-extrabold text-ink-2">{name(category)}</h3>
             ) : (
-              <SectionHeader title={name(category)} pill={`${withSubs(category).reduce((n, c) => n + c.products.length, 0)} أصناف`} />
+              <SectionHeader title={name(category)} pill={t('{n} أصناف', { n: withSubs(category).reduce((n, c) => n + c.products.length, 0) })} />
             )}
             {grid(category.products)}
           </section>
@@ -143,7 +144,7 @@ function TopBar({ store }: { store: Store }) {
     <div className="flex items-center gap-2.5 pt-3 pb-3 md:pt-5">
       <button
         type="button"
-        aria-label="رجوع"
+        aria-label={t('رجوع')}
         onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
         className="grid size-11 shrink-0 place-items-center rounded-full border border-line bg-surface text-ink hover:bg-surface-alt"
       >
@@ -161,8 +162,8 @@ function TopBar({ store }: { store: Store }) {
         <p className="truncate text-xs text-ink-3">{meta.label}</p>
       </div>
       <div className="shrink-0 text-end">
-        <p className="text-[15px] font-extrabold text-ink">أهلاً بيك 👋</p>
-        <p className="text-[11.5px] text-ink-2">اختار وجبتك المفضلة</p>
+        <p className="text-[15px] font-extrabold text-ink">{t('أهلاً بيك 👋')}</p>
+        <p className="text-[11.5px] text-ink-2">{t('اختار وجبتك المفضلة')}</p>
       </div>
     </div>
   );
@@ -179,12 +180,12 @@ function SearchField({ value, onChange }: { value: string; onChange: (v: string)
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="دوّر على وجبتك المفضلة"
-        aria-label="بحث في المنيو"
+        placeholder={t('دوّر على وجبتك المفضلة')}
+        aria-label={t('بحث في المنيو')}
         className="min-w-0 flex-1 bg-transparent font-semibold text-ink outline-none placeholder:font-normal placeholder:text-ink-3"
       />
       {value && (
-        <button type="button" aria-label="امسح البحث" onClick={() => onChange('')} className="grid size-8 shrink-0 place-items-center rounded-full text-ink-3 hover:bg-surface-alt hover:text-ink">
+        <button type="button" aria-label={t('امسح البحث')} onClick={() => onChange('')} className="grid size-8 shrink-0 place-items-center rounded-full text-ink-3 hover:bg-surface-alt hover:text-ink">
           <X className="size-4" />
         </button>
       )}
@@ -203,9 +204,9 @@ function StoreInfo({ store }: { store: Store }) {
       <div className="flex flex-wrap items-center gap-2">
         <StoreStatusChip store={store} className="py-1" />
         {hours && <InfoPill icon={Clock}>{hours}</InfoPill>}
-        {store.minOrderAmount > 0 && <InfoPill icon={ShoppingBag}>أقل طلب {formatPrice(store.minOrderAmount)}</InfoPill>}
+        {store.minOrderAmount > 0 && <InfoPill icon={ShoppingBag}>{t('أقل طلب {p}', { p: formatPrice(store.minOrderAmount) })}</InfoPill>}
         <InfoPill icon={Star} iconClassName="text-warning fill-warning" to={`/store/${store.id}/ratings`}>
-          {store.ratingsCount > 0 ? `${store.ratingAverage.toFixed(1)} (${store.ratingsCount})` : 'لسه مفيش تقييمات'}
+          {store.ratingsCount > 0 ? `${store.ratingAverage.toFixed(1)} (${store.ratingsCount})` : t('لسه مفيش تقييمات')}
         </InfoPill>
       </div>
     </div>
@@ -244,8 +245,8 @@ function FeaturedCarousel({ products, onOpen }: { products: Product[]; onOpen: (
 
   const goTo = (i: number) => {
     const el = ref.current;
-    // Right-to-left: later slides are at negative scroll positions.
-    el?.scrollTo({ left: -i * el.clientWidth, behavior: 'smooth' });
+    // Right-to-left: later slides are at negative scroll positions (positive in English / Russian).
+    el?.scrollTo({ left: (isRtl() ? -i : i) * el.clientWidth, behavior: 'smooth' });
   };
 
   return (
@@ -280,20 +281,20 @@ function FeaturedCard({ product, onOpen }: { product: Product; onOpen: () => voi
     <button
       type="button"
       onClick={onOpen}
-      className="flex h-[200px] w-full overflow-hidden rounded-[26px] bg-gradient-to-l from-brand-light via-brand to-brand-dark text-start text-white md:h-[230px]"
+      className="flex h-[200px] w-full overflow-hidden rounded-[26px] bg-gradient-to-l ltr:bg-gradient-to-r from-brand-light via-brand to-brand-dark text-start text-white md:h-[230px]"
     >
       <span className="flex min-w-0 flex-1 flex-col justify-center ps-[18px] pe-2 py-4 md:ps-8">
-        <span className="text-xs font-bold text-white/75">مميز عندنا</span>
+        <span className="text-xs font-bold text-white/75">{t('مميز عندنا')}</span>
         <span className="mt-1 truncate text-[19px] font-black leading-tight md:text-2xl">{localized(product.name, product.nameEn, product.nameRu)}</span>
         <DiscountedPrice
           value={price}
           full={full}
-          prefix={product.optionGroups.length > 0 ? 'من' : undefined}
+          prefix={product.optionGroups.length > 0 ? tIn('price', 'من') : undefined}
           className="mt-1 text-lg"
           priceClassName="!text-highlight"
           strikeClassName="text-white/70"
         />
-        <span className="mt-2.5 self-start rounded-full bg-white px-[18px] py-2 text-[13px] font-extrabold text-brand-dark shadow-sm">اطلب دلوقتي</span>
+        <span className="mt-2.5 self-start rounded-full bg-white px-[18px] py-2 text-[13px] font-extrabold text-brand-dark shadow-sm">{t('اطلب دلوقتي')}</span>
       </span>
       <span className="relative grid w-[150px] shrink-0 place-items-center md:w-[300px]">
         <UtensilsCrossed className="size-16 text-white/35" />
@@ -309,11 +310,11 @@ function ProductCard({ product, store, onOpen }: { product: Product; store: Stor
   const { price, full } = productPrices(product);
   // Sold out > discount > options count.
   const badge = !product.isAvailable
-    ? 'خلصان'
+    ? t('خلصان')
     : product.discountPercent > 0
       ? discountLabel(product.discountPercent)
       : hasOptions
-        ? `${product.optionGroups.length} اختيارات`
+        ? t('{n} اختيارات', { n: product.optionGroups.length })
         : null;
   return (
     <ShowcaseCard
@@ -329,7 +330,7 @@ function ProductCard({ product, store, onOpen }: { product: Product; store: Stor
       badgeClassName={!product.isAvailable ? 'bg-danger text-white' : product.discountPercent > 0 ? 'bg-brand text-white' : undefined}
       title={localized(product.name, product.nameEn, product.nameRu)}
       subtitle={product.description ? localized(product.description, product.descriptionEn, product.descriptionRu) : null}
-      footer={<DiscountedPrice value={price} full={full} prefix={hasOptions ? 'من' : undefined} className="text-[15px]" />}
+      footer={<DiscountedPrice value={price} full={full} prefix={hasOptions ? tIn('price', 'من') : undefined} className="text-[15px]" />}
       action={product.isAvailable ? <ShowcaseAction icon={Plus} /> : undefined}
     />
   );
@@ -344,7 +345,7 @@ function ViewCartBar() {
     <div className="fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(env(safe-area-inset-bottom),12px)]">
       <Link to="/cart" className="mx-auto flex max-w-3xl items-center gap-3 rounded-card bg-brand px-4 py-3.5 text-white shadow-brand hover:bg-brand-light">
         <span className="rounded-xl bg-white/20 px-2.5 py-1 font-extrabold">{value.itemsCount}</span>
-        <span className="flex-1 font-extrabold">عرض السلة</span>
+        <span className="flex-1 font-extrabold">{t('عرض السلة')}</span>
         <span className="font-extrabold">{formatPrice(value.subtotal)}</span>
       </Link>
     </div>

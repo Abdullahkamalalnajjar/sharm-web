@@ -11,6 +11,7 @@ import { useUnreadNotifications } from '@/api/queries';
 import { alertSound, notificationLook, notificationTarget } from '@/lib/notifications';
 import { useAuth } from '@/store/auth';
 import type { LiveNotification } from '@/types';
+import { t } from '@/lib/i18n';
 
 // ---------- Banner state ----------
 
@@ -200,7 +201,7 @@ export function LiveBanner() {
             <span className="line-clamp-2 text-[13px] text-ink-2">{current.body}</span>
           </span>
         </button>
-        <button type="button" aria-label="إخفاء" onClick={hide} className="grid size-8 shrink-0 place-items-center rounded-full text-ink-3 hover:bg-surface-high">
+        <button type="button" aria-label={t('إخفاء')} onClick={hide} className="grid size-8 shrink-0 place-items-center rounded-full text-ink-3 hover:bg-surface-high">
           <X className="size-4" />
         </button>
       </div>
@@ -215,8 +216,8 @@ export function NotificationBell({ className }: { className?: string }) {
   return (
     <NavLink
       to="/notifications"
-      aria-label={unread > 0 ? `الإشعارات، ${unread} جديد` : 'الإشعارات'}
-      title="الإشعارات"
+      aria-label={unread > 0 ? t('الإشعارات، {n} جديد', { n: unread }) : t('الإشعارات')}
+      title={t('الإشعارات')}
       className={clsx(
         'relative grid size-[38px] place-items-center rounded-[10px] border border-white/28 text-white hover:bg-white/15',
         className,

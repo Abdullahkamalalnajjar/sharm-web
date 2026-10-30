@@ -22,12 +22,14 @@ import { Button, EmptyView, ErrorView, IconWell, InlineError, Loading, SectionHe
 import { AddressFormSheet } from '@/features/addresses/AddressForm';
 import { addressIcon } from '@/features/customer/DeliveryPicker';
 import { addressDetails } from '@/lib/format';
+import { t } from '@/lib/i18n';
 import { isSignedIn, useAuth } from '@/store/auth';
 import { showMessage, useLoginPrompt, useToasts } from '@/store/ui';
 import type { Address } from '@/types';
 
 import { CUSTOM_ORDER_LOGIN_REASON } from './Showcase';
 
+// Arabic source texts; shown with t(...).
 const SUGGESTIONS = [
   { label: 'صيدلية 💊', prompt: 'من صيدلية: ' },
   { label: 'سوبرماركت 🛒', prompt: 'من سوبرماركت: ' },
@@ -65,15 +67,15 @@ export function CustomOrderPage() {
 
   async function submit() {
     if (!isSignedIn()) {
-      openLogin('سجّل دخول عشان ترسل طلبك الخاص وتتابعه.');
+      openLogin(t('سجّل دخول عشان ترسل طلبك الخاص وتتابعه.'));
       return;
     }
     if (!selected) {
-      setError('من فضلك اختار عنوان التوصيل أو ضيف عنوان جديد');
+      setError(t('من فضلك اختار عنوان التوصيل أو ضيف عنوان جديد'));
       return;
     }
     if (!details.trim() || details.trim().length < 5) {
-      setError('اكتب تفاصيل طلبك بالتفصيل (اسم المحل والمنتجات المطلوبة)');
+      setError(t('اكتب تفاصيل طلبك بالتفصيل (اسم المحل والمنتجات المطلوبة)'));
       return;
     }
 
@@ -82,7 +84,7 @@ export function CustomOrderPage() {
     try {
       const orderId = await ordersApi.placeCustom(selected.id, details.trim());
       qc.invalidateQueries({ queryKey: keys.myOrders });
-      toast('تم إرسال طلبك الخاص بنجاح! 🎉');
+      toast(t('تم إرسال طلبك الخاص بنجاح! 🎉'));
       navigate(`/orders/${orderId}`, { replace: true, state: { justPlaced: true } });
     } catch (e) {
       const msg = errorMessage(e);
@@ -96,17 +98,17 @@ export function CustomOrderPage() {
   if (!signedIn)
     return (
       <div className="mx-auto max-w-2xl">
-        <PageHeader title="طلب خاص" subtitle="اطلب أي حاجة من أي مكان في شرم" />
+        <PageHeader title={t('طلب خاص')} subtitle={t('اطلب أي حاجة من أي مكان في شرم')} />
         <EmptyView
           icon={Lock}
-          message={`سجّل دخول الأول\n${CUSTOM_ORDER_LOGIN_REASON}`}
+          message={t('سجّل دخول الأول\n{reason}', { reason: t(CUSTOM_ORDER_LOGIN_REASON) })}
           action={
             <div className="flex flex-wrap justify-center gap-2">
               <Button size="md" icon={<LogIn className="size-4" />} onClick={() => navigate('/login', { state: { from: '/custom-order' } })}>
-                تسجيل الدخول
+                {t('تسجيل الدخول')}
               </Button>
               <Button size="md" variant="outline" onClick={() => navigate('/signup')}>
-                حساب جديد
+                {t('حساب جديد')}
               </Button>
             </div>
           }
@@ -116,7 +118,7 @@ export function CustomOrderPage() {
 
   return (
     <div className="mx-auto max-w-2xl pb-32">
-      <PageHeader title="طلب خاص" subtitle="اطلب أي حاجة من أي مكان في شرم" />
+      <PageHeader title={t('طلب خاص')} subtitle={t('اطلب أي حاجة من أي مكان في شرم')} />
 
       <div className="px-4 flex flex-col gap-5 pt-2">
         {/* Hero Card */}
@@ -128,11 +130,11 @@ export function CustomOrderPage() {
             </span>
             <div className="min-w-0 flex-1">
               <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-bold text-highlight">
-                خدمة التوصيل السريع
+                {t('خدمة التوصيل السريع')}
               </span>
-              <h2 className="mt-1.5 text-lg font-black leading-snug">محتاج حاجة مش في القايمة؟</h2>
+              <h2 className="mt-1.5 text-lg font-black leading-snug">{t('محتاج حاجة مش في القايمة؟')}</h2>
               <p className="mt-1 text-[13px] text-white/90 leading-relaxed">
-                صيدلية، سوبرماركت، مطعم، أو أي غرض محتاجه في شرم الشيخ... اكتبلنا تفاصيله وهنبعتلك مندوب يجيبه لحد عندك.
+                {t('صيدلية، سوبرماركت، مطعم، أو أي غرض محتاجه في شرم الشيخ... اكتبلنا تفاصيله وهنبعتلك مندوب يجيبه لحد عندك.')}
               </p>
             </div>
           </div>
@@ -140,16 +142,16 @@ export function CustomOrderPage() {
 
         {/* Suggestion Chips */}
         <div>
-          <p className="mb-2 text-xs font-extrabold text-ink-3">أفكار سريعة للطلب:</p>
+          <p className="mb-2 text-xs font-extrabold text-ink-3">{t('أفكار سريعة للطلب:')}</p>
           <div className="flex flex-wrap gap-2">
             {SUGGESTIONS.map((s) => (
               <button
                 key={s.label}
                 type="button"
-                onClick={() => applySuggestion(s.prompt)}
+                onClick={() => applySuggestion(t(s.prompt))}
                 className="pill bg-surface border border-line hover:border-brand hover:text-brand transition-colors text-xs font-bold text-ink"
               >
-                {s.label}
+                {t(s.label)}
               </button>
             ))}
           </div>
@@ -157,10 +159,10 @@ export function CustomOrderPage() {
 
         {/* Request Details Input */}
         <div>
-          <SectionHeader title="تفاصيل طلبك" pill="مطلوب" />
+          <SectionHeader title={t('تفاصيل طلبك')} pill={t('مطلوب')} />
           <SoftCard className="p-4 flex flex-col gap-2.5">
             <label htmlFor="custom-request-details" className="text-xs font-bold text-ink-2">
-              اكتب المحل أو المكان والمنتجات اللي محتاجها بالكميات:
+              {t('اكتب المحل أو المكان والمنتجات اللي محتاجها بالكميات:')}
             </label>
             <TextArea
               id="custom-request-details"
@@ -173,11 +175,11 @@ export function CustomOrderPage() {
                 setDetails(e.target.value);
                 if (error) setError(null);
               }}
-              placeholder="مثال: من صيدلية العزبي في خليج نعمة: علبة بنادول أزرق وشريط فيتامين سي فوار... أو: محتاج طلب من سوبرماركت كذا كذا"
+              placeholder={t('مثال: من صيدلية العزبي في خليج نعمة: علبة بنادول أزرق وشريط فيتامين سي فوار... أو: محتاج طلب من سوبرماركت كذا كذا')}
               className="text-sm"
             />
             <div className="flex items-center justify-between text-xs text-ink-3">
-              <span>كل ما تكتب تفاصيل أوضح، المندوب هيوصلك أسرع</span>
+              <span>{t('كل ما تكتب تفاصيل أوضح، المندوب هيوصلك أسرع')}</span>
               <span dir="ltr">{details.length} / 1000</span>
             </div>
           </SoftCard>
@@ -185,7 +187,7 @@ export function CustomOrderPage() {
 
         {/* Delivery Address Section */}
         <div>
-          <SectionHeader title="عنوان التوصيل" action="إضافة عنوان جديد" onAction={() => setFormOpen(true)} />
+          <SectionHeader title={t('عنوان التوصيل')} action={t('إضافة عنوان جديد')} onAction={() => setFormOpen(true)} />
           {addresses.isLoading ? (
             <Loading className="py-4" />
           ) : addresses.isError ? (
@@ -194,8 +196,8 @@ export function CustomOrderPage() {
             <SoftCard as="button" onClick={() => setFormOpen(true)} className="flex items-center gap-3 p-4 w-full text-start">
               <IconWell icon={MapPinPlus} filled />
               <div className="flex-1">
-                <span className="block font-bold text-ink">ضيف عنوان التوصيل الأول</span>
-                <span className="block text-xs text-ink-3">عشان المندوب يعرف هيوصلك فين</span>
+                <span className="block font-bold text-ink">{t('ضيف عنوان التوصيل الأول')}</span>
+                <span className="block text-xs text-ink-3">{t('عشان المندوب يعرف هيوصلك فين')}</span>
               </div>
             </SoftCard>
           ) : (
@@ -211,7 +213,7 @@ export function CustomOrderPage() {
         <SoftCard className="p-4 bg-surface-alt/70">
           <div className="flex items-center gap-2 mb-3 text-ink font-extrabold text-[14px]">
             <HelpCircle className="size-4 text-brand" />
-            <span>إزاي بيشتغل الطلب الخاص؟</span>
+            <span>{t('إزاي بيشتغل الطلب الخاص؟')}</span>
           </div>
           <div className="grid gap-3 text-xs sm:grid-cols-3">
             <div className="flex items-start gap-2">
@@ -219,8 +221,8 @@ export function CustomOrderPage() {
                 1
               </span>
               <div>
-                <p className="font-bold text-ink">اكتب طلبك وعنوانك</p>
-                <p className="text-ink-3 mt-0.5">اكتب التفاصيل والمكان بالتحديد</p>
+                <p className="font-bold text-ink">{t('اكتب طلبك وعنوانك')}</p>
+                <p className="text-ink-3 mt-0.5">{t('اكتب التفاصيل والمكان بالتحديد')}</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
@@ -228,8 +230,8 @@ export function CustomOrderPage() {
                 2
               </span>
               <div>
-                <p className="font-bold text-ink">مراجعة وتحديد السعر</p>
-                <p className="text-ink-3 mt-0.5">الإدارة بتحدد سعر المنتجات والتوصيل</p>
+                <p className="font-bold text-ink">{t('مراجعة وتحديد السعر')}</p>
+                <p className="text-ink-3 mt-0.5">{t('الإدارة بتحدد سعر المنتجات والتوصيل')}</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
@@ -237,8 +239,8 @@ export function CustomOrderPage() {
                 3
               </span>
               <div>
-                <p className="font-bold text-ink">استلام ودفع كاش</p>
-                <p className="text-ink-3 mt-0.5">المندوب هيوصله وتدفع كاش عند الاستلام</p>
+                <p className="font-bold text-ink">{t('استلام ودفع كاش')}</p>
+                <p className="text-ink-3 mt-0.5">{t('المندوب هيوصله وتدفع كاش عند الاستلام')}</p>
               </div>
             </div>
           </div>
@@ -248,10 +250,10 @@ export function CustomOrderPage() {
         <SoftCard className="p-3.5 flex items-center gap-3">
           <IconWell icon={Banknote} color="var(--color-success)" />
           <div className="min-w-0 flex-1">
-            <p className="font-bold text-ink text-sm">الدفع كاش عند الاستلام</p>
-            <p className="text-xs text-ink-3">بتدفع قيمة المنتجات والتوصيل للمندوب لما يوصل</p>
+            <p className="font-bold text-ink text-sm">{t('الدفع كاش عند الاستلام')}</p>
+            <p className="text-xs text-ink-3">{t('بتدفع قيمة المنتجات والتوصيل للمندوب لما يوصل')}</p>
           </div>
-          <span className="pill bg-success/15 text-success text-xs font-bold">كاش</span>
+          <span className="pill bg-success/15 text-success text-xs font-bold">{t('كاش')}</span>
         </SoftCard>
 
         {error && <InlineError message={error} />}
@@ -268,7 +270,7 @@ export function CustomOrderPage() {
             icon={<Send className="size-4 rtl:-scale-x-100" />}
             onClick={submit}
           >
-            إرسال الطلب الخاص
+            {t('إرسال الطلب الخاص')}
           </Button>
         </div>
       </div>
@@ -292,7 +294,7 @@ function AddressOption({ address, selected, onSelect }: { address: Address; sele
     >
       <IconWell icon={Icon} size={42} filled={selected} />
       <span className="min-w-0 flex-1">
-        <span className="block font-extrabold text-ink">{address.label}</span>
+        <span className="block font-extrabold text-ink">{t(address.label)}</span>
         <span className="line-clamp-2 text-[13px] text-ink-2">{[address.addressLine, details].filter(Boolean).join(' • ')}</span>
       </span>
       {selected ? <CircleDot className="size-6 text-brand shrink-0" /> : <Circle className="size-6 text-ink-3 shrink-0" />}

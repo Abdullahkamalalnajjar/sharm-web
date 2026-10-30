@@ -6,6 +6,7 @@ import { addressesApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import { keys } from '@/api/queries';
 import { Button, Chip, InlineError, Sheet, Switch, TextField } from '@/components/ui';
+import { t } from '@/lib/i18n';
 import { ADDRESS_LABELS, SHARM_AREAS } from '@/lib/meta';
 import { MapPicker } from './MapPicker';
 import { showMessage } from '@/store/ui';
@@ -24,7 +25,7 @@ export function AddressFormSheet({
   onSaved?: (saved: Address) => void;
 }) {
   return (
-    <Sheet open={open} onClose={onClose} title={address ? 'تعديل العنوان' : 'عنوان جديد'} wide>
+    <Sheet open={open} onClose={onClose} title={address ? t('تعديل العنوان') : t('عنوان جديد')} wide>
       {open && <AddressForm key={address?.id ?? 'new'} address={address ?? null} onClose={onClose} onSaved={onSaved} />}
     </Sheet>
   );
@@ -55,8 +56,8 @@ function AddressForm({ address, onClose, onSaved }: { address: Address | null; o
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!label.trim()) return setError('اسم العنوان مطلوب');
-    if (!line.trim()) return setError('الشارع / العنوان مطلوب');
+    if (!label.trim()) return setError(t('اسم العنوان مطلوب'));
+    if (!line.trim()) return setError(t('الشارع / العنوان مطلوب'));
     setError(null);
     setSaving(true);
     const input: AddressInput = {
@@ -74,7 +75,7 @@ function AddressForm({ address, onClose, onSaved }: { address: Address | null; o
     try {
       const saved = isEdit ? await addressesApi.update(address.id, input) : await addressesApi.create(input);
       await qc.invalidateQueries({ queryKey: keys.addresses });
-      showMessage(isEdit ? 'العنوان اتحفظ' : 'العنوان اتضاف');
+      showMessage(isEdit ? t('العنوان اتحفظ') : t('العنوان اتضاف'));
       onSaved?.(saved);
       onClose();
     } catch (err) {
@@ -86,17 +87,17 @@ function AddressForm({ address, onClose, onSaved }: { address: Address | null; o
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
-      <p className="text-sm font-extrabold text-ink">اسم العنوان</p>
+      <p className="text-sm font-extrabold text-ink">{t('اسم العنوان')}</p>
       <div className="flex flex-wrap gap-2">
         {ADDRESS_LABELS.map((l) => (
           <Chip key={l} selected={label === l} onClick={() => setLabel(l)}>
-            {l}
+            {t(l)}
           </Chip>
         ))}
       </div>
-      <TextField name="label" placeholder="أو اكتب اسم" value={label} onChange={(e) => setLabel(e.target.value)} />
+      <TextField name="label" placeholder={t('أو اكتب اسم')} value={label} onChange={(e) => setLabel(e.target.value)} />
 
-      <p className="mt-2 text-sm font-extrabold text-ink">المنطقة</p>
+      <p className="mt-2 text-sm font-extrabold text-ink">{t('المنطقة')}</p>
       <div className="flex flex-wrap gap-2">
         {SHARM_AREAS.map((a) => (
           <Chip
@@ -109,11 +110,11 @@ function AddressForm({ address, onClose, onSaved }: { address: Address | null; o
               setLng(a.longitude);
             }}
           >
-            {a.name}
+            {t(a.name)}
           </Chip>
         ))}
       </div>
-      <p className="text-xs text-ink-3">دوس على الخريطة أو اسحب الدبوس عشان تحدد مكان التوصيل بالظبط</p>
+      <p className="text-xs text-ink-3">{t('دوس على الخريطة أو اسحب الدبوس عشان تحدد مكان التوصيل بالظبط')}</p>
       <MapPicker
         lat={lat}
         lng={lng}
@@ -127,25 +128,25 @@ function AddressForm({ address, onClose, onSaved }: { address: Address | null; o
         {lat.toFixed(5)}, {lng.toFixed(5)}
       </p>
 
-      <TextField name="line" label="الشارع / العنوان" value={line} onChange={(e) => setLine(e.target.value)} className="mt-2" />
+      <TextField name="line" label={t('الشارع / العنوان')} value={line} onChange={(e) => setLine(e.target.value)} className="mt-2" />
       <div className="grid grid-cols-3 gap-2">
-        <TextField name="building" label="عمارة" value={building} onChange={(e) => setBuilding(e.target.value)} />
-        <TextField name="floor" label="الدور" value={floor} onChange={(e) => setFloor(e.target.value)} />
-        <TextField name="apartment" label="شقة" value={apartment} onChange={(e) => setApartment(e.target.value)} />
+        <TextField name="building" label={t('عمارة')} value={building} onChange={(e) => setBuilding(e.target.value)} />
+        <TextField name="floor" label={t('الدور')} value={floor} onChange={(e) => setFloor(e.target.value)} />
+        <TextField name="apartment" label={t('شقة')} value={apartment} onChange={(e) => setApartment(e.target.value)} />
       </div>
-      <TextField name="landmark" label="علامة مميزة (اختياري)" value={landmark} onChange={(e) => setLandmark(e.target.value)} />
-      <TextField name="phone" type="tel" ltr label="رقم للتواصل (اختياري)" value={phone} onChange={(e) => setPhone(e.target.value)} />
+      <TextField name="landmark" label={t('علامة مميزة (اختياري)')} value={landmark} onChange={(e) => setLandmark(e.target.value)} />
+      <TextField name="phone" type="tel" ltr label={t('رقم للتواصل (اختياري)')} value={phone} onChange={(e) => setPhone(e.target.value)} />
 
       {!isEdit && (
         <div className="flex items-center justify-between py-1">
-          <span className="font-bold text-ink">خليه العنوان الأساسي</span>
-          <Switch checked={makeDefault} onChange={setMakeDefault} label="خليه العنوان الأساسي" />
+          <span className="font-bold text-ink">{t('خليه العنوان الأساسي')}</span>
+          <Switch checked={makeDefault} onChange={setMakeDefault} label={t('خليه العنوان الأساسي')} />
         </div>
       )}
 
       {error && <InlineError message={error} />}
       <Button type="submit" block loading={saving} className="mt-2">
-        {isEdit ? 'حفظ' : 'إضافة العنوان'}
+        {isEdit ? t('حفظ') : t('إضافة العنوان')}
       </Button>
     </form>
   );

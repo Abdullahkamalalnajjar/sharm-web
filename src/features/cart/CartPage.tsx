@@ -8,6 +8,8 @@ import { AppImage, Button, EmptyView, ErrorView, Loading, Price, SoftCard, Statu
 import { LoginRequired } from '@/features/auth/LoginRequired';
 import { StoreAvatar } from '@/features/customer/StoreBits';
 import { formatPrice } from '@/lib/format';
+import { currentLanguage, t } from '@/lib/i18n';
+import { localized } from '@/lib/localized';
 import { CART_ISSUE_MESSAGE } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { useAuth } from '@/store/auth';
@@ -21,7 +23,7 @@ export function CartPage() {
   const navigate = useNavigate();
 
   if (!session) {
-    return <LoginRequired title="السلة" icon={ShoppingBag} message="سجّل دخول عشان تضيف منتجات للسلة وتطلب." />;
+    return <LoginRequired title={t('السلة')} icon={ShoppingBag} message={t('سجّل دخول عشان تضيف منتجات للسلة وتطلب.')} />;
   }
 
   const value = cart.data;
@@ -29,17 +31,17 @@ export function CartPage() {
   return (
     <div className="mx-auto max-w-3xl pb-8">
       <TabHeader
-        title="السلة"
+        title={t('السلة')}
         actions={
           value && value.stores.length > 0 ? (
             <button
               type="button"
               className="text-sm font-bold text-danger px-2"
               onClick={async () => {
-                if (await confirm('تفضّي السلة كلها؟', 'فضّي')) await runAction(() => clear.mutateAsync());
+                if (await confirm(t('تفضّي السلة كلها؟'), t('فضّي'))) await runAction(() => clear.mutateAsync());
               }}
             >
-              فضّي السلة
+              {t('فضّي السلة')}
             </button>
           ) : null
         }
@@ -51,10 +53,10 @@ export function CartPage() {
       ) : !value || value.stores.length === 0 ? (
         <EmptyView
           icon={ShoppingBag}
-          message={'السلة فاضية.\nضيف حاجات من أي محل وهتلاقيها هنا.'}
+          message={t('السلة فاضية.\nضيف حاجات من أي محل وهتلاقيها هنا.')}
           action={
             <Button size="md" icon={<Store className="size-4" />} onClick={() => navigate('/')}>
-              تصفح المحلات
+              {t('تصفح المحلات')}
             </Button>
           }
         />
@@ -64,7 +66,7 @@ export function CartPage() {
             {value.stores.length > 1 && (
               <p className="flex items-center gap-1.5 text-[13px] text-ink-2">
                 <Info className="size-4 text-ink-3" />
-                طلبك من {value.stores.length} محلات، وهيوصلك في أوردر واحد.
+                {t('طلبك من {n} محلات، وهيوصلك في أوردر واحد.', { n: value.stores.length })}
               </p>
             )}
             {value.stores.map((g) => (
@@ -84,7 +86,7 @@ function StoreGroupCard({ group }: { group: CartStoreGroup }) {
       <div className="flex items-center gap-2.5 px-3.5 pt-3.5 pb-2.5">
         <StoreAvatar category={{ categoryName: '', categoryIcon: group.categoryIcon }} logoUrl={group.logoUrl} size={40} />
         <h3 className="flex-1 truncate font-extrabold text-ink">{group.storeName}</h3>
-        <StatusChip label={group.isOpen ? 'مفتوح' : 'مقفول'} color={group.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'} />
+        <StatusChip label={group.isOpen ? t('مفتوح') : t('مقفول')} color={group.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'} />
       </div>
       {group.lines.map((line) => (
         <div key={line.id} className="border-t border-line mx-3.5">
@@ -93,7 +95,7 @@ function StoreGroupCard({ group }: { group: CartStoreGroup }) {
       ))}
       <div className="border-t border-line px-3.5 py-3">
         <div className="flex items-center text-ink-2">
-          <span>إجمالي المحل</span>
+          <span>{t('إجمالي المحل')}</span>
           <span className="flex-1" />
           <span className="font-extrabold text-ink">{formatPrice(group.subtotal)}</span>
         </div>
@@ -101,7 +103,10 @@ function StoreGroupCard({ group }: { group: CartStoreGroup }) {
           <div className="mt-2">
             <p className="flex items-start gap-1.5 text-xs text-ink-2">
               <AlertCircle className="size-4 shrink-0 text-warning" />
-              ضيف {formatPrice(group.minOrderAmount - group.subtotal)} كمان من المحل ده عشان توصل لأقل طلب ({formatPrice(group.minOrderAmount)})
+              {t('ضيف {amount} كمان من المحل ده عشان توصل لأقل طلب ({min})', {
+                amount: formatPrice(group.minOrderAmount - group.subtotal),
+                min: formatPrice(group.minOrderAmount),
+              })}
             </p>
             <div className="mt-1.5 h-1.5 overflow-hidden rounded bg-warning/20">
               <div className="h-full bg-warning" style={{ width: `${Math.min(100, (group.subtotal / group.minOrderAmount) * 100)}%` }} />
@@ -117,7 +122,11 @@ function LineTile({ line }: { line: CartLine }) {
   const { setQuantity, remove } = useCartMutations();
   const busy = setQuantity.isPending || remove.isPending;
   const orderable = line.issue === 'None';
-  const issue = CART_ISSUE_MESSAGE[line.issue];
+  const issueText = CART_ISSUE_MESSAGE[line.issue];
+  const issue = issueText ? t(issueText) : null;
+  const language = currentLanguage();
+  const optionNames =
+    (language === 'en' ? line.optionNamesEn : language === 'ru' ? (line.optionNamesRu ?? line.optionNamesEn) : null) ?? line.optionNames;
 
   const dec = () =>
     runAction(() =>
@@ -132,8 +141,8 @@ function LineTile({ line }: { line: CartLine }) {
         <AppImage url={line.imageUrl} fallback={null} className="absolute inset-0" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-bold text-ink">{line.productName}</p>
-        {line.optionNames.length > 0 && <p className="text-xs text-ink-2">{line.optionNames.join(' • ')}</p>}
+        <p className="font-bold text-ink">{localized(line.productName, line.productNameEn, line.productNameRu)}</p>
+        {optionNames.length > 0 && <p className="text-xs text-ink-2">{optionNames.join(' • ')}</p>}
         {line.note && <p className="text-xs text-ink-3">📝 {line.note}</p>}
         {issue && (
           <div className="mt-1">
@@ -142,23 +151,23 @@ function LineTile({ line }: { line: CartLine }) {
         )}
         <p className="mt-2 flex items-baseline gap-1.5">
           <Price value={line.lineTotal} />
-          {line.quantity > 1 && <span className="text-[11px] text-ink-3">({formatPrice(line.unitPrice)} للواحدة)</span>}
+          {line.quantity > 1 && <span className="text-[11px] text-ink-3">{t('({price} للواحدة)', { price: formatPrice(line.unitPrice) })}</span>}
         </p>
       </div>
       <div className="flex flex-col items-end gap-1">
         <div className="flex h-9 items-center rounded-full bg-surface-alt">
-          <button type="button" aria-label="أقل" disabled={busy} onClick={dec} className="grid h-9 w-[34px] place-items-center text-ink disabled:text-ink-3">
+          <button type="button" aria-label={t('أقل')} disabled={busy} onClick={dec} className="grid h-9 w-[34px] place-items-center text-ink disabled:text-ink-3">
             {line.quantity > 1 ? <Minus className="size-[18px]" /> : <Trash2 className="size-[18px]" />}
           </button>
           <span className="w-[26px] text-center font-extrabold text-ink">
             {busy ? <Loader2 className="mx-auto size-3.5 animate-spin" /> : line.quantity}
           </span>
-          <button type="button" aria-label="أكتر" disabled={busy || !orderable} onClick={inc} className="grid h-9 w-[34px] place-items-center text-ink disabled:text-ink-3">
+          <button type="button" aria-label={t('أكتر')} disabled={busy || !orderable} onClick={inc} className="grid h-9 w-[34px] place-items-center text-ink disabled:text-ink-3">
             <Plus className="size-[18px]" />
           </button>
         </div>
         <button type="button" disabled={busy} onClick={() => runAction(() => remove.mutateAsync(line.id))} className="text-xs font-bold text-ink-3 px-2 py-1 hover:text-ink">
-          شيل
+          {t('شيل')}
         </button>
       </div>
     </div>
@@ -180,27 +189,31 @@ function CheckoutBar({ cart }: { cart: Cart }) {
   const schedulableOnly = isSchedulableOnly(cart);
   const hasUnavailable = cart.stores.some((s) => s.lines.some((l) => l.issue !== 'None'));
   const blocker = schedulableOnly
-    ? 'المحل مقفول دلوقتي، بس تقدر تطلب لميعاد النهارده أو بكرة'
+    ? t('المحل مقفول دلوقتي، بس تقدر تطلب لميعاد النهارده أو بكرة')
     : hasUnavailable
-      ? 'شيل المنتجات اللي مش متاحة عشان تكمّل'
+      ? t('شيل المنتجات اللي مش متاحة عشان تكمّل')
       : !cart.canCheckout
-        ? 'فيه محل لسه ماوصلش لأقل طلب'
+        ? t('فيه محل لسه ماوصلش لأقل طلب')
         : null;
   const canGo = cart.canCheckout || schedulableOnly;
 
   return (
     <SoftCard className="p-4 lg:sticky lg:top-20">
       <div className="flex items-center text-ink-2">
-        <span>{cart.itemsCount} منتج</span>
+        <span>{t('{n} منتج', { n: cart.itemsCount })}</span>
         <span className="flex-1" />
-        <span className="me-2">المجموع</span>
+        <span className="me-2">{t('المجموع')}</span>
         <Price value={cart.subtotal} className="text-lg" />
       </div>
-      <p className="text-[11px] text-ink-3 mt-0.5">سعر التوصيل حسب المسافة، هتشوفه قبل ما تأكد</p>
+      <p className="text-[11px] text-ink-3 mt-0.5">
+        {cart.taxAmount
+          ? t('غير ضريبة المحل {tax}. سعر التوصيل حسب المسافة، هتشوفه قبل ما تأكد', { tax: formatPrice(cart.taxAmount) })
+          : t('سعر التوصيل حسب المسافة، هتشوفه قبل ما تأكد')}
+      </p>
       {blocker && <p className="mt-1.5 text-xs text-warning font-semibold">{blocker}</p>}
       <Link to={schedulableOnly ? '/checkout?schedule=1' : '/checkout'} className={clsx(!canGo && 'pointer-events-none')}>
         <Button block className="mt-3" disabled={!canGo}>
-          {schedulableOnly ? 'اطلب لميعاد' : 'كمّل الطلب'}
+          {schedulableOnly ? t('اطلب لميعاد') : t('كمّل الطلب')}
         </Button>
       </Link>
     </SoftCard>
