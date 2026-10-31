@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router';
 
 import { catalogApi } from '@/api';
+import { ApiError, errorMessage } from '@/api/client';
 import { keys, useManagedMenu, useStore } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { AppImage, Button, EmptyView, ErrorView, Loading, Sheet, SoftCard, StatusChip, Switch } from '@/components/ui';
@@ -12,7 +13,7 @@ import { applyDiscount, formatPercent, formatPrice } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { localized } from '@/lib/localized';
 import { runAction } from '@/lib/run-action';
-import { confirm } from '@/store/ui';
+import { confirm, showMessage } from '@/store/ui';
 import type { MenuCategory, MenuImportResult, Product } from '@/types';
 
 import { CategoryDialog, type CategoryValues } from './Dialogs';
@@ -29,6 +30,8 @@ export function ManageMenuPage() {
   const [importResult, setImportResult] = useState<MenuImportResult | null>(null);
   // Products whose photo is being drawn; several can run at once.
   const [generating, setGenerating] = useState<ReadonlySet<number>>(new Set());
+  // Drawing the whole menu: how many of how many are done.
+  const [bulk, setBulk] = useState<{ done: number; total: number } | null>(null);
   const [excelBusy, setExcelBusy] = useState(false);
   const [excelMenu, setExcelMenu] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -37,6 +40,54 @@ export function ManageMenuPage() {
     qc.invalidateQueries({ queryKey: keys.managedMenu(storeId) });
     qc.invalidateQueries({ queryKey: keys.menu(storeId) });
   };
+
+  /**
+   * Draws photos for the whole menu: the products without one, or all of them when every product has
+   * one. Two at a time, since each takes up to two minutes on the server.
+   */
+  async function generateMenuImages() {
+    const products = (menu.data?.categories ?? []).flatMap((c) => c.products);
+    if (products.length === 0) return;
+    const missing = products.filter((p) => !p.imageUrl);
+    const targets = missing.length > 0 ? missing : products;
+    const question =
+      missing.length > 0
+        ? t('ترسم صور بالذكاء الاصطناعي لـ {n} منتج من غير صورة؟', { n: missing.length })
+        : t('كل المنتجات عندها صور. ترسم صور جديدة لكل المنتجات ({n})؟', { n: products.length });
+    if (!(await confirm(question, t('ارسم')))) return;
+
+    let done = 0;
+    let failed = 0;
+    let stopped: string | null = null;
+    const queue = [...targets];
+    setBulk({ done: 0, total: targets.length });
+    const worker = async () => {
+      for (let p = queue.shift(); p && !stopped; p = queue.shift()) {
+        const id = p.id;
+        setGenerating((s) => new Set(s).add(id));
+        try {
+          await catalogApi.generateProductImage(storeId, id);
+        } catch (e) {
+          failed++;
+          // The service is off: no point trying the rest.
+          if (e instanceof ApiError && e.errors.some((x) => x.code === 'Image.GenerationUnavailable')) stopped = errorMessage(e);
+        }
+        done++;
+        setBulk({ done, total: targets.length });
+        setGenerating((s) => {
+          const next = new Set(s);
+          next.delete(id);
+          return next;
+        });
+        reload();
+      }
+    };
+    await Promise.all([worker(), worker()]);
+    setBulk(null);
+    if (stopped) showMessage(stopped, true);
+    else if (failed > 0) showMessage(t('اترسمت {ok} صورة، و{failed} فشلوا', { ok: done - failed, failed }), true);
+    else showMessage(t('اترسمت {n} صورة', { n: done }));
+  }
 
   /** Has the server draw the product's picture with AI (from its saved name and description). */
   async function generateImage(p: Product) {
@@ -115,6 +166,16 @@ export function ManageMenuPage() {
         title={store.data ? t('منيو {name}', { name: localized(store.data.name, store.data.nameEn, store.data.nameRu) }) : t('المنيو')}
         actions={
           <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              icon={bulk ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+              disabled={bulk !== null || !menu.data?.categories.some((c) => c.products.length > 0)}
+              title={t('ارسم صور المنيو كله بالذكاء الاصطناعي')}
+              onClick={generateMenuImages}
+            >
+              {bulk ? t('بيرسم {done}/{total}', bulk) : t('صور المنيو')}
+            </Button>
             <Button size="sm" variant="outline" icon={<FileSpreadsheet className="size-4" />} loading={excelBusy} onClick={() => setExcelMenu(true)}>
               Excel
             </Button>

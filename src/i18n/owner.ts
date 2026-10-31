@@ -179,6 +179,13 @@ export const en: Record<string, string> = {
   'ارسم': 'Draw',
   'الصورة اتعملت': 'Photo created',
   'احفظ التعديلات الأول، الصورة بتترسم من الاسم والوصف المحفوظين': 'Save your changes first: the photo is drawn from the saved name and description',
+  'ترسم صور بالذكاء الاصطناعي لـ {n} منتج من غير صورة؟': 'Draw AI photos for {n} products without a photo?',
+  'كل المنتجات عندها صور. ترسم صور جديدة لكل المنتجات ({n})؟': 'Every product has a photo. Draw new photos for all {n} products?',
+  'اترسمت {ok} صورة، و{failed} فشلوا': '{ok} photos drawn, {failed} failed',
+  'اترسمت {n} صورة': '{n} photos drawn',
+  'ارسم صور المنيو كله بالذكاء الاصطناعي': 'Draw photos for the whole menu with AI',
+  'بيرسم {done}/{total}': 'Drawing {done}/{total}',
+  'صور المنيو': 'Menu photos',
 };
 
 export const ru: Record<string, string> = {
@@ -360,4 +367,11 @@ export const ru: Record<string, string> = {
   'ارسم': 'Нарисовать',
   'الصورة اتعملت': 'Фото создано',
   'احفظ التعديلات الأول، الصورة بتترسم من الاسم والوصف المحفوظين': 'Сначала сохраните изменения: фото рисуется по сохранённым названию и описанию',
+  'ترسم صور بالذكاء الاصطناعي لـ {n} منتج من غير صورة؟': 'Нарисовать фото с ИИ для товаров без фото ({n})?',
+  'كل المنتجات عندها صور. ترسم صور جديدة لكل المنتجات ({n})؟': 'У всех товаров есть фото. Нарисовать новые для всех ({n})?',
+  'اترسمت {ok} صورة، و{failed} فشلوا': 'Нарисовано фото: {ok}, ошибок: {failed}',
+  'اترسمت {n} صورة': 'Нарисовано фото: {n}',
+  'ارسم صور المنيو كله بالذكاء الاصطناعي': 'Нарисовать фото для всего меню с ИИ',
+  'بيرسم {done}/{total}': 'Рисуем {done}/{total}',
+  'صور المنيو': 'Фото меню',
 };
