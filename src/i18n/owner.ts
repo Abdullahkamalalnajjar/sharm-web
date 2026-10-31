@@ -173,6 +173,12 @@ export const en: Record<string, string> = {
   'English • Русский • Türkçe • Italiano — اختياري، لو فاضي هيظهر العربي': 'English • Русский • Türkçe • Italiano — optional; if empty, the Arabic is shown',
   'owner|فاضي': 'Empty',
   'owner|إخفاء': 'Hide',
+  'ارسم صورة بالذكاء الاصطناعي': 'Draw a photo with AI',
+  'بيجهّز الصورة... ممكن ياخد لحد دقيقتين': 'Preparing the photo... may take up to two minutes',
+  'تبدّل صورة المنتج الحالية بصورة جديدة؟': "Replace the product's current photo with a new one?",
+  'ارسم': 'Draw',
+  'الصورة اتعملت': 'Photo created',
+  'احفظ التعديلات الأول، الصورة بتترسم من الاسم والوصف المحفوظين': 'Save your changes first: the photo is drawn from the saved name and description',
 };
 
 export const ru: Record<string, string> = {
@@ -348,4 +354,10 @@ export const ru: Record<string, string> = {
   'English • Русский • Türkçe • Italiano — اختياري، لو فاضي هيظهر العربي': 'English • Русский • Türkçe • Italiano — необязательно; если пусто, показывается арабский',
   'owner|فاضي': 'Пусто',
   'owner|إخفاء': 'Скрыть',
+  'ارسم صورة بالذكاء الاصطناعي': 'Нарисовать фото с ИИ',
+  'بيجهّز الصورة... ممكن ياخد لحد دقيقتين': 'Готовим фото... это может занять до двух минут',
+  'تبدّل صورة المنتج الحالية بصورة جديدة؟': 'Заменить текущее фото товара новым?',
+  'ارسم': 'Нарисовать',
+  'الصورة اتعملت': 'Фото создано',
+  'احفظ التعديلات الأول، الصورة بتترسم من الاسم والوصف المحفوظين': 'Сначала сохраните изменения: фото рисуется по сохранённым названию и описанию',
 };

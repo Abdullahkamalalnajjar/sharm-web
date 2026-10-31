@@ -173,6 +173,9 @@ export const catalogApi = {
     api.patch<void>(`${store(storeId)}/products/${productId}/availability`, { isAvailable }),
   uploadProductImage: (storeId: number, productId: number, file: File) =>
     api.upload<Product>(`${store(storeId)}/products/${productId}/image`, file),
+  /** Draws the product's picture with AI on the server and sets it (~10 seconds to 2 minutes). */
+  generateProductImage: (storeId: number, productId: number) =>
+    api.post<Product>(`${store(storeId)}/products/${productId}/image/generate`, undefined, { timeout: 240_000 }),
   removeProductImage: (storeId: number, productId: number) =>
     api.delete<Product>(`${store(storeId)}/products/${productId}/image`),
   deleteProduct: (storeId: number, productId: number) => api.delete<void>(`${store(storeId)}/products/${productId}`),

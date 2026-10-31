@@ -1,4 +1,4 @@
-import { MoreVertical, Plus, Sandwich, Trash2, X } from 'lucide-react';
+import { MoreVertical, Plus, Sandwich, Sparkles, Trash2, X } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
@@ -49,6 +49,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
   const [translations, setTranslations] = useState(() => translationValues(initial ?? undefined));
   const [image, setImage] = useState<ImageEdit>(noImageEdit);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [groupDialog, setGroupDialog] = useState<{ group: ProductOptionGroup | null } | null>(null);
@@ -91,6 +92,20 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
     } finally {
       setSaving(false);
     }
+  }
+
+  /** Has the server draw the saved product's picture with AI (from its saved name and description). */
+  async function generateImage() {
+    if (!product) return;
+    if (product.imageUrl && !(await confirm(t('تبدّل صورة المنتج الحالية بصورة جديدة؟'), t('ارسم')))) return;
+    setGenerating(true);
+    await runAction(async () => {
+      const updated = await catalogApi.generateProductImage(storeId, product.id);
+      setImage(noImageEdit);
+      setProduct(updated);
+      invalidate();
+    }, t('الصورة اتعملت'));
+    setGenerating(false);
   }
 
   /** Runs an option-group / option call that returns the updated product. */
@@ -146,6 +161,23 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
       <div className="px-4">
         <form onSubmit={save} className="flex flex-col gap-3">
           <ImagePickerField label={t('صورة المنتج')} currentUrl={product?.imageUrl} edit={image} onChange={setImage} placeholderIcon={Sandwich} />
+          {product && (
+            <div>
+              <Button
+                type="button"
+                variant="outline"
+                size="md"
+                block
+                loading={generating}
+                disabled={generating || saving}
+                icon={<Sparkles className="size-4" />}
+                onClick={generateImage}
+              >
+                {generating ? t('بيجهّز الصورة... ممكن ياخد لحد دقيقتين') : t('ارسم صورة بالذكاء الاصطناعي')}
+              </Button>
+              <p className="mt-1 text-xs text-ink-3">{t('احفظ التعديلات الأول، الصورة بتترسم من الاسم والوصف المحفوظين')}</p>
+            </div>
+          )}
           <label className="block">
             <span className="mb-1.5 block text-[13px] font-bold text-ink-2">{t('القسم')}</span>
             <select value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))} className="field appearance-none">

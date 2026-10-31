@@ -50,4 +50,7 @@ export const errorTexts: Record<string, string> = {
   "Offer.InvalidStore": "المحل ده مش صالح للعرض",
   "Offer.NotFound": "العرض ده خلص أو مبقاش متاح",
   "Offer.HiddenByAdmin": "الإدارة موقّفة العرض ده، كلّمها عشان ترجّعه",
+  "Image.GenerationUnavailable": "رسم الصور مش متاح دلوقتي، كلّم إدارة التطبيق.",
+  "Image.GenerationRejected": "معرفناش نرسم صورة للمنتج ده، ارفع صورة بنفسك.",
+  "Image.GenerationFailed": "رسم الصورة فشل، جرّب تاني.",
 };

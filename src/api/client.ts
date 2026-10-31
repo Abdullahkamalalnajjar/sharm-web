@@ -198,7 +198,7 @@ const clean = (query?: Record<string, unknown>) =>
 
 export const api = {
   get: <T>(url: string, query?: Record<string, unknown>) => send<T>({ method: 'GET', url, params: clean(query) }),
-  post: <T>(url: string, body?: unknown) => send<T>({ method: 'POST', url, data: body }),
+  post: <T>(url: string, body?: unknown, options?: { timeout?: number }) => send<T>({ method: 'POST', url, data: body, ...options }),
   put: <T>(url: string, body?: unknown) => send<T>({ method: 'PUT', url, data: body }),
   patch: <T>(url: string, body?: unknown) => send<T>({ method: 'PATCH', url, data: body }),
   delete: <T>(url: string) => send<T>({ method: 'DELETE', url }),

@@ -47,6 +47,9 @@ export const en: Record<string, string> = {
   "المحل ده مش بيقبل طلبات مجدولة": "This store doesn't take scheduled orders",
   "التقييم من 1 لـ 5 نجوم": "Rate from 1 to 5 stars",
   "التعليق طويل": "The comment is too long",
+  "رسم الصور مش متاح دلوقتي، كلّم إدارة التطبيق.": "Photo drawing is not available right now, contact the app team.",
+  "معرفناش نرسم صورة للمنتج ده، ارفع صورة بنفسك.": "We couldn't draw a photo for this product, upload one yourself.",
+  "رسم الصورة فشل، جرّب تاني.": "Drawing the photo failed, try again.",
 };
 
 export const ru: Record<string, string> = {
@@ -96,4 +99,7 @@ export const ru: Record<string, string> = {
   "المحل ده مش بيقبل طلبات مجدولة": "Это заведение не принимает заказы на время",
   "التقييم من 1 لـ 5 نجوم": "Оценка от 1 до 5 звёзд",
   "التعليق طويل": "Слишком длинный комментарий",
+  "رسم الصور مش متاح دلوقتي، كلّم إدارة التطبيق.": "Рисование фото сейчас недоступно, свяжитесь с командой приложения.",
+  "معرفناش نرسم صورة للمنتج ده، ارفع صورة بنفسك.": "Не удалось нарисовать фото для этого товара, загрузите его сами.",
+  "رسم الصورة فشل، جرّب تاني.": "Не удалось нарисовать фото, попробуйте ещё раз.",
 };
