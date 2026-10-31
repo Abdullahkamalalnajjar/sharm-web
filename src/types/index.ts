@@ -117,6 +117,8 @@ export interface StoreInput {
   minOrderAmount: number;
   /** Admin only: register the store for this owner. */
   ownerEmail?: string;
+  /** With `ownerEmail`: creates a new store-owner account with this password. */
+  ownerPassword?: string;
   /** Admin only, when creating: the store's commission % (later changed from its settings). */
   commissionPercent?: number;
   /** Translations: null keeps the current one, "" clears it. */

@@ -1,6 +1,9 @@
 // Translations for the owner pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  'باسورد صاحب المحل': 'Store owner\'s password',
+  'اكتبه عشان تعمل حساب جديد لصاحب المحل بالإيميل ده. سيبه فاضي لو صاحب المحل عنده حساب.': 'Fill it in to create a new login for the store owner with this email. Leave it empty if the owner already has an account.',
+  'اكتب إيميل صاحب المحل الأول': 'Enter the store owner\'s email first',
   'Ad (Türkçe) — اختياري': 'Ad (Türkçe) — optional',
   'Nome (Italiano) — اختياري': 'Nome (Italiano) — optional',
   'اكتب عنوان العرض': 'Enter the offer title',
@@ -192,6 +195,9 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  'باسورد صاحب المحل': 'Пароль владельца',
+  'اكتبه عشان تعمل حساب جديد لصاحب المحل بالإيميل ده. سيبه فاضي لو صاحب المحل عنده حساب.': 'Заполните, чтобы создать новый аккаунт владельца с этим email. Оставьте пустым, если у владельца уже есть аккаунт.',
+  'اكتب إيميل صاحب المحل الأول': 'Сначала введите email владельца',
   'Ad (Türkçe) — اختياري': 'Ad (Türkçe) — необязательно',
   'Nome (Italiano) — اختياري': 'Nome (Italiano) — необязательно',
   'اكتب عنوان العرض': 'Введите заголовок предложения',

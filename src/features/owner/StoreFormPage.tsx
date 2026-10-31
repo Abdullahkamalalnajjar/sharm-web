@@ -1,4 +1,4 @@
-import { Image, MapPin, Percent, Store } from 'lucide-react';
+import { Eye, EyeOff, Image, Lock, MapPin, Percent, Store } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router';
@@ -8,7 +8,7 @@ import { errorMessage } from '@/api/client';
 import { useStore, useStoreCategories } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, Chip, InlineError, Loading, TextArea, TextField } from '@/components/ui';
-import { t } from '@/lib/i18n';
+import { t, tIn } from '@/lib/i18n';
 import { localized } from '@/lib/localized';
 import { SHARM_AREAS, categoryLook } from '@/lib/meta';
 import { showMessage } from '@/store/ui';
@@ -44,6 +44,8 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
   const [lat, setLat] = useState(String(store?.latitude ?? SHARM_AREAS[0].latitude));
   const [lng, setLng] = useState(String(store?.longitude ?? SHARM_AREAS[0].longitude));
   const [ownerEmail, setOwnerEmail] = useState('');
+  const [ownerPassword, setOwnerPassword] = useState('');
+  const [showOwnerPassword, setShowOwnerPassword] = useState(false);
   const [commission, setCommission] = useState('0');
   const [translations, setTranslations] = useState(() => translationValues(store ?? undefined));
   const [logo, setLogo] = useState<ImageEdit>(noImageEdit);
@@ -66,6 +68,10 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
     if (Number.isNaN(latValue) || latValue < -90 || latValue > 90) return setError(t('Latitude غير صحيح'));
     if (Number.isNaN(lngValue) || lngValue < -180 || lngValue > 180) return setError(t('Longitude غير صحيح'));
     if (isAdmin && !isEdit && ownerEmail.trim() && !ownerEmail.includes('@')) return setError(t('إيميل صاحب المحل غير صحيح'));
+    if (isAdmin && !isEdit && ownerPassword) {
+      if (!ownerEmail.trim()) return setError(t('اكتب إيميل صاحب المحل الأول'));
+      if (ownerPassword.length < 6) return setError(t('الباسورد ٦ حروف على الأقل'));
+    }
     const commissionValue = Number(commission);
     if (isAdmin && !isEdit && (commission.trim() === '' || Number.isNaN(commissionValue) || commissionValue < 0 || commissionValue > 100))
       return setError(t('العمولة لازم تكون من 0 لـ 100'));
@@ -80,6 +86,7 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
       longitude: lngValue,
       minOrderAmount: minOrderValue,
       ...(isAdmin && !isEdit && ownerEmail.trim() ? { ownerEmail: ownerEmail.trim() } : {}),
+      ...(isAdmin && !isEdit && ownerEmail.trim() && ownerPassword ? { ownerPassword } : {}),
       ...(isAdmin && !isEdit ? { commissionPercent: commissionValue } : {}),
       ...translationInput(translations),
     };
@@ -155,6 +162,29 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
             hint={t('لو سيبته فاضي المحل هيبقى باسمك. المحلات اللي بتضيفها بتتفعّل على طول.')}
             value={ownerEmail}
             onChange={(e) => setOwnerEmail(e.target.value)}
+          />
+        )}
+        {isAdmin && !isEdit && (
+          <TextField
+            name="ownerPassword"
+            type={showOwnerPassword ? 'text' : 'password'}
+            ltr
+            autoComplete="new-password"
+            label={t('باسورد صاحب المحل')}
+            hint={t('اكتبه عشان تعمل حساب جديد لصاحب المحل بالإيميل ده. سيبه فاضي لو صاحب المحل عنده حساب.')}
+            start={<Lock className="size-4" />}
+            end={
+              <button
+                type="button"
+                aria-label={showOwnerPassword ? tIn('admin', 'إخفاء') : t('إظهار')}
+                onClick={() => setShowOwnerPassword(!showOwnerPassword)}
+                className="text-ink-3 hover:text-ink"
+              >
+                {showOwnerPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            }
+            value={ownerPassword}
+            onChange={(e) => setOwnerPassword(e.target.value)}
           />
         )}
         {isAdmin && !isEdit && (

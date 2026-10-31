@@ -1,6 +1,9 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  'باسورد صاحب المحل': 'Password del proprietario',
+  'اكتبه عشان تعمل حساب جديد لصاحب المحل بالإيميل ده. سيبه فاضي لو صاحب المحل عنده حساب.': 'Compilala per creare un nuovo account per il proprietario con questa email. Lasciala vuota se ha già un account.',
+  'اكتب إيميل صاحب المحل الأول': 'Inserisci prima l’email del proprietario',
   'Ad (Türkçe) — اختياري': 'Ad (Türkçe) — facoltativo',
   'Nome (Italiano) — اختياري': 'Nome (Italiano) — facoltativo',
   'اكتب عنوان العرض': 'Scrivi il titolo dell’offerta',

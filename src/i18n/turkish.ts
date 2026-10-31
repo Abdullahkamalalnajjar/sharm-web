@@ -1,6 +1,9 @@
 // Turkish translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const tr: Record<string, string> = {
+  'باسورد صاحب المحل': 'Mağaza sahibinin şifresi',
+  'اكتبه عشان تعمل حساب جديد لصاحب المحل بالإيميل ده. سيبه فاضي لو صاحب المحل عنده حساب.': 'Bu e-postayla mağaza sahibine yeni bir hesap açmak için doldur. Sahibinin zaten hesabı varsa boş bırak.',
+  'اكتب إيميل صاحب المحل الأول': 'Önce mağaza sahibinin e-postasını yaz',
   'Ad (Türkçe) — اختياري': 'Ad (Türkçe) — isteğe bağlı',
   'Nome (Italiano) — اختياري': 'Nome (Italiano) — isteğe bağlı',
   'اكتب عنوان العرض': 'Teklif başlığını yazın',
