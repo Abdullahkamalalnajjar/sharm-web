@@ -1,4 +1,4 @@
-import { BookOpen, CircleCheck, CircleX, FileDown, FileSpreadsheet, FileText, FileUp, FolderPlus, MoreVertical, Plus, type LucideIcon } from 'lucide-react';
+import { BookOpen, CircleCheck, CircleX, FileDown, FileSpreadsheet, FileText, FileUp, FolderPlus, Loader2, MoreVertical, Plus, Sandwich, Sparkles, type LucideIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router';
@@ -6,14 +6,14 @@ import { useLocation, useNavigate, useParams } from 'react-router';
 import { catalogApi } from '@/api';
 import { keys, useManagedMenu, useStore } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
-import { Button, EmptyView, ErrorView, Loading, Sheet, SoftCard, StatusChip, Switch } from '@/components/ui';
+import { AppImage, Button, EmptyView, ErrorView, Loading, Sheet, SoftCard, StatusChip, Switch } from '@/components/ui';
 import { MenuItem } from '@/features/addresses/AddressesPage';
 import { applyDiscount, formatPercent, formatPrice } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { localized } from '@/lib/localized';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
-import type { MenuCategory, MenuImportResult } from '@/types';
+import type { MenuCategory, MenuImportResult, Product } from '@/types';
 
 import { CategoryDialog, type CategoryValues } from './Dialogs';
 
@@ -27,6 +27,8 @@ export function ManageMenuPage() {
   const [categoryDialog, setCategoryDialog] = useState<{ category: MenuCategory | null } | null>(null);
   const [menuFor, setMenuFor] = useState<MenuCategory | null>(null);
   const [importResult, setImportResult] = useState<MenuImportResult | null>(null);
+  // Products whose photo is being drawn; several can run at once.
+  const [generating, setGenerating] = useState<ReadonlySet<number>>(new Set());
   const [excelBusy, setExcelBusy] = useState(false);
   const [excelMenu, setExcelMenu] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -35,6 +37,18 @@ export function ManageMenuPage() {
     qc.invalidateQueries({ queryKey: keys.managedMenu(storeId) });
     qc.invalidateQueries({ queryKey: keys.menu(storeId) });
   };
+
+  /** Has the server draw the product's picture with AI (from its saved name and description). */
+  async function generateImage(p: Product) {
+    if (p.imageUrl && !(await confirm(t('تبدّل صورة المنتج الحالية بصورة جديدة؟'), t('ارسم')))) return;
+    setGenerating((s) => new Set(s).add(p.id));
+    if (await runAction(() => catalogApi.generateProductImage(storeId, p.id), t('الصورة اتعملت'))) reload();
+    setGenerating((s) => {
+      const next = new Set(s);
+      next.delete(p.id);
+      return next;
+    });
+  }
   const categories = menu.data?.categories ?? [];
   const hasSubs = (c: MenuCategory) => categories.some((x) => x.parentId === c.id);
 
@@ -148,6 +162,9 @@ export function ManageMenuPage() {
                 </div>
                 {c.products.map((p) => (
                   <div key={p.id} className="flex items-center gap-3 border-t border-line px-4 py-3">
+                    <span className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface-alt">
+                      <AppImage url={p.imageUrl} alt="" fallback={<Sandwich className="size-5 text-ink-3" />} />
+                    </span>
                     <button type="button" onClick={() => navigate(`${basePath}/stores/${storeId}/products/${p.id}`)} className="min-w-0 flex-1 text-start">
                       <p className="truncate font-bold text-ink">{localized(p.name, p.nameEn, p.nameRu)}</p>
                       <p className="text-xs text-ink-2">
@@ -160,6 +177,16 @@ export function ManageMenuPage() {
                           .filter(Boolean)
                           .join(' • ')}
                       </p>
+                    </button>
+                    <button
+                      type="button"
+                      title={generating.has(p.id) ? t('بيجهّز الصورة... ممكن ياخد لحد دقيقتين') : t('ارسم صورة بالذكاء الاصطناعي')}
+                      aria-label={t('ارسم صورة بالذكاء الاصطناعي')}
+                      disabled={generating.has(p.id)}
+                      onClick={() => generateImage(p)}
+                      className="grid size-10 shrink-0 place-items-center rounded-full text-brand hover:bg-brand/10 disabled:opacity-60"
+                    >
+                      {generating.has(p.id) ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
                     </button>
                     <Switch
                       checked={p.isAvailable}
