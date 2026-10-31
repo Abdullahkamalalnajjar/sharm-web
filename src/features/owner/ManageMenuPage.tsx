@@ -166,16 +166,6 @@ export function ManageMenuPage() {
         title={store.data ? t('منيو {name}', { name: localized(store.data.name, store.data.nameEn, store.data.nameRu) }) : t('المنيو')}
         actions={
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              icon={bulk ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-              disabled={bulk !== null || !menu.data?.categories.some((c) => c.products.length > 0)}
-              title={t('ارسم صور المنيو كله بالذكاء الاصطناعي')}
-              onClick={generateMenuImages}
-            >
-              {bulk ? t('بيرسم {done}/{total}', bulk) : t('صور المنيو')}
-            </Button>
             <Button size="sm" variant="outline" icon={<FileSpreadsheet className="size-4" />} loading={excelBusy} onClick={() => setExcelMenu(true)}>
               Excel
             </Button>
@@ -196,6 +186,20 @@ export function ManageMenuPage() {
           if (file) importExcel(file);
         }}
       />
+      {menu.data?.categories.some((c) => c.products.length > 0) && (
+        <div className="mb-3 flex justify-end px-4">
+          <Button
+            size="sm"
+            variant="outline"
+            icon={bulk ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+            disabled={bulk !== null}
+            title={t('ارسم صور المنيو كله بالذكاء الاصطناعي')}
+            onClick={generateMenuImages}
+          >
+            {bulk ? t('بيرسم {done}/{total}', bulk) : t('ارسم صور المنيو كله بالذكاء الاصطناعي')}
+          </Button>
+        </div>
+      )}
       <div className="px-4">
         {menu.isLoading ? (
           <Loading />
