@@ -76,11 +76,11 @@ export function OpenStoreCard({ store }: { store: NearbyStore }) {
       <Cover category={store} logoUrl={store.coverUrl ?? store.logoUrl} className={clsx(!store.isOpen && 'opacity-45')} />
       <div className="absolute inset-0 scrim" />
       <div className="absolute inset-0 p-3 flex flex-col">
-        <h3 className="font-extrabold text-white text-[15px] truncate">{localized(store.name, store.nameEn, store.nameRu)}</h3>
+        <h3 className="font-extrabold text-white text-[15px] truncate">{localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt)}</h3>
         {store.minOrderAmount > 0 ? (
           <Price value={store.minOrderAmount} prefix={tIn('price', 'من')} className="text-[12.5px] !text-highlight" />
         ) : (
-          <span className="text-xs text-white/85">{localized(store.categoryName, store.categoryNameEn, store.categoryNameRu)}</span>
+          <span className="text-xs text-white/85">{localized(store.categoryName, store.categoryNameEn, store.categoryNameRu, store.categoryNameTr, store.categoryNameIt)}</span>
         )}
         <span className="flex-1" />
         <div className="flex items-center gap-1 text-white text-xs font-semibold">
@@ -128,9 +128,9 @@ export function StoreCard({ store }: { store: NearbyStore }) {
       image={<Cover category={store} logoUrl={store.coverUrl ?? store.logoUrl} />}
       badge={storeStatusLabel(store)}
       badgeClassName={store.isOpen ? 'bg-success text-white' : 'bg-surface-alt text-ink-2'}
-      title={localized(store.name, store.nameEn, store.nameRu)}
+      title={localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt)}
       subtitle={[
-        localized(store.categoryName, store.categoryNameEn, store.categoryNameRu),
+        localized(store.categoryName, store.categoryNameEn, store.categoryNameRu, store.categoryNameTr, store.categoryNameIt),
         store.distanceKm !== null ? t('{n} كم', { n: store.distanceKm.toFixed(1) }) : null,
       ]
         .filter(Boolean)

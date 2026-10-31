@@ -38,8 +38,8 @@ export function HomePage() {
   const typeLabel =
     categoryId === null
       ? undefined
-      : ((c) => (c ? localized(c.name, c.nameEn, c.nameRu) : undefined))(categories.find((c) => c.id === categoryId)) ??
-        ((s) => (s ? localized(s.categoryName, s.categoryNameEn, s.categoryNameRu) : undefined))(all.find((s) => s.categoryId === categoryId));
+      : ((c) => (c ? localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt) : undefined))(categories.find((c) => c.id === categoryId)) ??
+        ((s) => (s ? localized(s.categoryName, s.categoryNameEn, s.categoryNameRu, s.categoryNameTr, s.categoryNameIt) : undefined))(all.find((s) => s.categoryId === categoryId));
 
   const listTitle = query
     ? t('نتايج "{q}"', { q: search.trim() })

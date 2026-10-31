@@ -12,7 +12,7 @@ import type { Store } from '@/types';
 /** The admin's settings of a store: commission and scheduled orders. They apply to new orders only. */
 export function StoreSettingsDialog({ store, open, onClose }: { store: Store; open: boolean; onClose: () => void }) {
   return (
-    <Sheet open={open} onClose={onClose} title={t('إعدادات {name}', { name: localized(store.name, store.nameEn, store.nameRu) })}>
+    <Sheet open={open} onClose={onClose} title={t('إعدادات {name}', { name: localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt) })}>
       {open && <SettingsForm key={store.id} store={store} onClose={onClose} />}
     </Sheet>
   );

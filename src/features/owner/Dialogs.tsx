@@ -10,6 +10,8 @@ export interface CategoryValues {
   displayOrder: number;
   nameEn: string;
   nameRu: string;
+  nameTr: string;
+  nameIt: string;
   /** The main category it is inside; null = a main category. */
   parentId: number | null;
 }
@@ -54,6 +56,8 @@ function CategoryForm({
   const [name, setName] = useState(initial?.name ?? '');
   const [nameEn, setNameEn] = useState(initial?.nameEn ?? '');
   const [nameRu, setNameRu] = useState(initial?.nameRu ?? '');
+  const [nameTr, setNameTr] = useState(initial?.nameTr ?? '');
+  const [nameIt, setNameIt] = useState(initial?.nameIt ?? '');
   const [parentId, setParentId] = useState<number | null>(initial?.parentId ?? null);
   const [order, setOrder] = useState(String(initial?.displayOrder ?? 0));
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +68,7 @@ function CategoryForm({
     if (!name.trim()) return setError(t('اسم القسم مطلوب'));
     if (!Number.isInteger(Number(order))) return setError(t('الترتيب لازم يكون رقم'));
     setBusy(true);
-    await onSubmit({ name: name.trim(), displayOrder: Number(order), nameEn: nameEn.trim(), nameRu: nameRu.trim(), parentId });
+    await onSubmit({ name: name.trim(), displayOrder: Number(order), nameEn: nameEn.trim(), nameRu: nameRu.trim(), nameTr: nameTr.trim(), nameIt: nameIt.trim(), parentId });
     setBusy(false);
     onClose();
   }
@@ -74,6 +78,8 @@ function CategoryForm({
       <TextField name="name" label={t('اسم القسم (عربي)')} autoFocus value={name} onChange={(e) => setName(e.target.value)} />
       <TextField name="nameEn" ltr label={t('Name (English) — اختياري')} value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
       <TextField name="nameRu" ltr label={t('Название (Русский) — اختياري')} value={nameRu} onChange={(e) => setNameRu(e.target.value)} />
+      <TextField name="nameTr" ltr label={t('Ad (Türkçe) — اختياري')} value={nameTr} onChange={(e) => setNameTr(e.target.value)} />
+      <TextField name="nameIt" ltr label={t('Nome (Italiano) — اختياري')} value={nameIt} onChange={(e) => setNameIt(e.target.value)} />
       {mainCategories.length > 0 && (
         <label className="block">
           <span className="block text-[13px] font-bold text-ink-2 mb-1.5">{t('جوه قسم')}</span>

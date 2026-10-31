@@ -1,31 +1,43 @@
 import { create } from 'zustand';
 
-import { englishTexts, russianTexts } from '@/i18n/all';
+import { englishTexts, italianTexts, russianTexts, turkishTexts } from '@/i18n/all';
 
 // The site's languages, matching the Flutter app (sharm_app/lib/core/i18n/i18n.dart). Arabic is the
 // default and the source text; the Arabic text is the translation key, so a missing translation shows
-// the Arabic. index.html sets <html lang dir> from the saved choice before the first paint.
+// the English (Russian, Turkish, Italian) or the Arabic. index.html sets <html lang dir> from the saved choice before the first paint.
 
-export type Language = 'ar' | 'en' | 'ru';
+export type Language = 'ar' | 'en' | 'ru' | 'tr' | 'it';
 
 export const LANGUAGES: { code: Language; nativeName: string }[] = [
   { code: 'ar', nativeName: 'العربية' },
   { code: 'en', nativeName: 'English' },
   { code: 'ru', nativeName: 'Русский' },
+  { code: 'tr', nativeName: 'Türkçe' },
+  { code: 'it', nativeName: 'Italiano' },
 ];
+
+const isLanguage = (v: string | null): v is Language => LANGUAGES.some((l) => l.code === v);
+
+/** Each language's own texts; English is the fallback for the others. */
+const TEXTS: Record<Exclude<Language, 'ar'>, Record<string, string>> = {
+  en: englishTexts,
+  ru: russianTexts,
+  tr: turkishTexts,
+  it: italianTexts,
+};
 
 const STORAGE_KEY = 'sharm-language';
 
-/** The saved choice; on a first visit, the browser's language when it is English or Russian. */
+/** The saved choice; on a first visit, the browser's language when the site has it. */
 function savedLanguage(): Language {
   try {
     const v = localStorage.getItem(STORAGE_KEY);
-    if (v === 'ar' || v === 'en' || v === 'ru') return v;
+    if (isLanguage(v)) return v;
   } catch {
     // Private mode.
   }
   const browser = (navigator.language || '').slice(0, 2).toLowerCase();
-  return browser === 'en' || browser === 'ru' ? browser : 'ar';
+  return isLanguage(browser) ? browser : 'ar';
 }
 
 let current: Language = savedLanguage();
@@ -46,7 +58,7 @@ export function currentLanguage(): Language {
  * `t('أوردر #{n}', { n: order.number })`.
  */
 export function t(ar: string, args?: Record<string, string | number>): string {
-  const text = current === 'en' ? (englishTexts[ar] ?? ar) : current === 'ru' ? (russianTexts[ar] ?? englishTexts[ar] ?? ar) : ar;
+  const text = current === 'ar' ? ar : (TEXTS[current][ar] ?? englishTexts[ar] ?? ar);
   if (!args) return text;
   return text.replace(/\{(\w+)\}/g, (whole, name: string) => (name in args ? String(args[name]) : whole));
 }
@@ -57,7 +69,7 @@ export function t(ar: string, args?: Record<string, string | number>): string {
  */
 export function tIn(context: string, ar: string, args?: Record<string, string | number>): string {
   const key = `${context}|${ar}`;
-  const own = current === 'en' ? key in englishTexts : current === 'ru' ? key in russianTexts || key in englishTexts : false;
+  const own = current !== 'ar' && (key in TEXTS[current] || key in englishTexts);
   return own ? t(key, args) : t(ar, args);
 }
 

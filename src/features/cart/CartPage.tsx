@@ -126,7 +126,9 @@ function LineTile({ line }: { line: CartLine }) {
   const issue = issueText ? t(issueText) : null;
   const language = currentLanguage();
   const optionNames =
-    (language === 'en' ? line.optionNamesEn : language === 'ru' ? (line.optionNamesRu ?? line.optionNamesEn) : null) ?? line.optionNames;
+    (language === 'ar'
+      ? null
+      : ({ en: null, ru: line.optionNamesRu, tr: line.optionNamesTr, it: line.optionNamesIt }[language] ?? line.optionNamesEn)) ?? line.optionNames;
 
   const dec = () =>
     runAction(() =>
@@ -141,7 +143,7 @@ function LineTile({ line }: { line: CartLine }) {
         <AppImage url={line.imageUrl} fallback={null} className="absolute inset-0" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-bold text-ink">{localized(line.productName, line.productNameEn, line.productNameRu)}</p>
+        <p className="font-bold text-ink">{localized(line.productName, line.productNameEn, line.productNameRu, line.productNameTr, line.productNameIt)}</p>
         {optionNames.length > 0 && <p className="text-xs text-ink-2">{optionNames.join(' • ')}</p>}
         {line.note && <p className="text-xs text-ink-3">📝 {line.note}</p>}
         {issue && (

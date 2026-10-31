@@ -4,8 +4,8 @@ import { useMyPoints } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, EmptyView, ErrorView, Loading, SectionHeader, SoftCard } from '@/components/ui';
 import { LoginRequired } from '@/features/auth/LoginRequired';
-import { formatPrice } from '@/lib/format';
-import { currentLanguage, t } from '@/lib/i18n';
+import { dateLocale, formatPrice } from '@/lib/format';
+import { t } from '@/lib/i18n';
 import { parseUtc } from '@/lib/notifications';
 import { useAuth } from '@/store/auth';
 import type { PointsTransaction } from '@/types';
@@ -91,7 +91,7 @@ export function HistoryRow({ item }: { item: PointsTransaction }) {
       <span className="min-w-0 flex-1">
         <span className="block truncate font-bold text-ink">{title}</span>
         <span className="block text-xs text-ink-3">
-          {parseUtc(item.createdUtc).toLocaleDateString({ ar: 'ar-EG', en: 'en-GB', ru: 'ru-RU' }[currentLanguage()], { day: 'numeric', month: 'long', year: 'numeric' })}
+          {parseUtc(item.createdUtc).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' })}
         </span>
       </span>
       <span dir="ltr" className="text-lg font-black" style={{ color }}>

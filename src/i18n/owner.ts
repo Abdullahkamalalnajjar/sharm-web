@@ -1,6 +1,9 @@
 // Translations for the owner pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  'Ad (Türkçe) — اختياري': 'Ad (Türkçe) — optional',
+  'Nome (Italiano) — اختياري': 'Nome (Italiano) — optional',
+  'اكتب عنوان العرض': 'Enter the offer title',
   'اختار القسم': 'Choose the category',
   'اسم المحل مطلوب': 'Store name is required',
   'رقم التليفون مطلوب': 'Phone number is required',
@@ -189,6 +192,9 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  'Ad (Türkçe) — اختياري': 'Ad (Türkçe) — необязательно',
+  'Nome (Italiano) — اختياري': 'Nome (Italiano) — необязательно',
+  'اكتب عنوان العرض': 'Введите заголовок предложения',
   'اختار القسم': 'Выберите категорию',
   'اسم المحل مطلوب': 'Укажите название магазина',
   'رقم التليفون مطلوب': 'Укажите номер телефона',

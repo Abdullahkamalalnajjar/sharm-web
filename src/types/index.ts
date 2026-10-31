@@ -13,6 +13,8 @@ export interface StoreCategory {
   /** Optional translations of `name` (see `localized`). */
   nameEn?: string | null;
   nameRu?: string | null;
+  nameTr?: string | null;
+  nameIt?: string | null;
 }
 
 /** The category fields embedded in stores and cart groups. */
@@ -21,6 +23,8 @@ export interface CategoryRef {
   categoryIcon: string;
   categoryNameEn?: string | null;
   categoryNameRu?: string | null;
+  categoryNameTr?: string | null;
+  categoryNameIt?: string | null;
 }
 export type StoreStatus = 'PendingApproval' | 'Active' | 'Suspended';
 
@@ -34,6 +38,8 @@ export interface Store {
   categoryIcon: string;
   categoryNameEn?: string | null;
   categoryNameRu?: string | null;
+  categoryNameTr?: string | null;
+  categoryNameIt?: string | null;
   status: StoreStatus;
   logoUrl: string | null;
   phone: string;
@@ -77,6 +83,8 @@ export interface NearbyStore {
   categoryIcon: string;
   categoryNameEn?: string | null;
   categoryNameRu?: string | null;
+  categoryNameTr?: string | null;
+  categoryNameIt?: string | null;
   logoUrl: string | null;
   address: string;
   minOrderAmount: number;
@@ -87,6 +95,8 @@ export interface NearbyStore {
   ratingsCount: number;
   nameEn: string | null;
   nameRu: string | null;
+  nameTr?: string | null;
+  nameIt?: string | null;
   coverUrl: string | null;
   /** A closed store that allows it still takes orders for later. */
   allowsScheduledOrders: boolean;
@@ -133,6 +143,8 @@ export interface ProductOption {
   isAvailable: boolean;
   nameEn?: string | null;
   nameRu?: string | null;
+  nameTr?: string | null;
+  nameIt?: string | null;
 }
 
 export interface ProductOptionGroup {
@@ -145,6 +157,8 @@ export interface ProductOptionGroup {
   options: ProductOption[];
   nameEn?: string | null;
   nameRu?: string | null;
+  nameTr?: string | null;
+  nameIt?: string | null;
 }
 
 export interface Product {
@@ -182,6 +196,8 @@ export interface MenuCategory {
   parentId: number | null;
   nameEn: string | null;
   nameRu: string | null;
+  nameTr?: string | null;
+  nameIt?: string | null;
 }
 
 /** What a menu Excel import did; nothing is saved when `errors` is not empty. */
@@ -260,8 +276,12 @@ export interface CartLine {
   optionNames: string[];
   productNameEn?: string | null;
   productNameRu?: string | null;
+  productNameTr?: string | null;
+  productNameIt?: string | null;
   optionNamesEn?: string[] | null;
   optionNamesRu?: string[] | null;
+  optionNamesTr?: string[] | null;
+  optionNamesIt?: string[] | null;
   quantity: number;
   note: string | null;
   unitPrice: number;
@@ -325,8 +345,12 @@ export interface OrderItem {
   optionsText: string | null;
   productNameEn?: string | null;
   productNameRu?: string | null;
+  productNameTr?: string | null;
+  productNameIt?: string | null;
   optionsTextEn?: string | null;
   optionsTextRu?: string | null;
+  optionsTextTr?: string | null;
+  optionsTextIt?: string | null;
   note: string | null;
   unitPrice: number;
   quantity: number;
@@ -348,6 +372,8 @@ export interface OrderStoreGroup {
   storeLongitude?: number | null;
   storeNameEn?: string | null;
   storeNameRu?: string | null;
+  storeNameTr?: string | null;
+  storeNameIt?: string | null;
 }
 
 export interface OrderCustomer {

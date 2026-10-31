@@ -8,7 +8,8 @@ import { ordersApi } from '@/api';
 import { keys, useStore, useStoreRatings } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, EmptyView, ErrorView, Loading, Sheet, SoftCard, TextArea } from '@/components/ui';
-import { currentLanguage, t } from '@/lib/i18n';
+import { dateLocale } from '@/lib/format';
+import { t } from '@/lib/i18n';
 import { localized } from '@/lib/localized';
 import { parseUtc } from '@/lib/notifications';
 import { runAction } from '@/lib/run-action';
@@ -133,7 +134,7 @@ export function StoreRatingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl pb-8">
-      <PageHeader title={store.data ? t('تقييمات {s}', { s: localized(store.data.name, store.data.nameEn, store.data.nameRu) }) : t('التقييمات')} />
+      <PageHeader title={store.data ? t('تقييمات {s}', { s: localized(store.data.name, store.data.nameEn, store.data.nameRu, store.data.nameTr, store.data.nameIt) }) : t('التقييمات')} />
       <div className="flex flex-col gap-3 px-4">
         {ratings.isLoading ? (
           <Loading />
@@ -157,7 +158,7 @@ export function StoreRatingsPage() {
                     <Stars value={r.stars} />
                     <span className="flex-1" />
                     <span className="text-xs text-ink-3">
-                      {parseUtc(r.createdUtc).toLocaleDateString({ ar: 'ar-EG', en: 'en-GB', ru: 'ru-RU' }[currentLanguage()], { day: 'numeric', month: 'long', year: 'numeric' })}
+                      {parseUtc(r.createdUtc).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' })}
                     </span>
                   </div>
                   {r.comment && <p className="mt-2 leading-relaxed text-ink">{r.comment}</p>}

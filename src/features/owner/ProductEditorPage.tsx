@@ -120,7 +120,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
 
   async function remove() {
     if (!product) return;
-    if (!(await confirm(t('تمسح "{name}"؟', { name: localized(product.name, product.nameEn, product.nameRu) }), t('مسح')))) return;
+    if (!(await confirm(t('تمسح "{name}"؟', { name: localized(product.name, product.nameEn, product.nameRu, product.nameTr, product.nameIt) }), t('مسح')))) return;
     if (await runAction(() => catalogApi.deleteProduct(storeId, product.id), t('المنتج اتمسح'))) {
       invalidate();
       navigate(-1);
@@ -149,7 +149,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
   return (
     <div className="mx-auto max-w-2xl pb-10">
       <PageHeader
-        title={product ? localized(product.name, product.nameEn, product.nameRu) : t('منتج جديد')}
+        title={product ? localized(product.name, product.nameEn, product.nameRu, product.nameTr, product.nameIt) : t('منتج جديد')}
         actions={
           product && (
             <button type="button" title={t('مسح')} onClick={remove} className="grid size-10 place-items-center rounded-full text-danger hover:bg-danger/10">
@@ -183,7 +183,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
             <select value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))} className="field appearance-none">
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.parentId !== null ? `    ↳ ${localized(c.name, c.nameEn, c.nameRu)}` : localized(c.name, c.nameEn, c.nameRu)}
+                  {c.parentId !== null ? `    ↳ ${localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt)}` : localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt)}
                 </option>
               ))}
             </select>
@@ -230,7 +230,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
                 <SoftCard key={g.id} className="overflow-hidden">
                   <div className="flex items-center gap-2 px-4 py-3">
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold text-ink">{localized(g.name, g.nameEn, g.nameRu)}</p>
+                      <p className="font-bold text-ink">{localized(g.name, g.nameEn, g.nameRu, g.nameTr, g.nameIt)}</p>
                       <p className="text-xs text-ink-2">
                         {g.isRequired ? t('مطلوب') : t('اختياري')} • {groupRule(g)}
                       </p>
@@ -242,7 +242,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
                   {g.options.map((o) => (
                     <div key={o.id} className="flex items-center gap-2 border-t border-line px-4 py-2.5">
                       <button type="button" onClick={() => setOptionDialog({ group: g, option: o })} className="min-w-0 flex-1 text-start">
-                        <p className="text-ink">{localized(o.name, o.nameEn, o.nameRu)}</p>
+                        <p className="text-ink">{localized(o.name, o.nameEn, o.nameRu, o.nameTr, o.nameIt)}</p>
                         <p className="text-xs text-ink-2">{o.extraPrice > 0 ? `+ ${formatPrice(o.extraPrice)}` : t('من غير زيادة')}</p>
                       </button>
                       <Switch checked={o.isAvailable} label={t('متاح')} onChange={(v) => mutate((id) => catalogApi.setOptionAvailability(storeId, id, g.id, o.id, v))} />
@@ -266,7 +266,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
         )}
       </div>
 
-      <Sheet open={groupMenu !== null} onClose={() => setGroupMenu(null)} title={groupMenu ? localized(groupMenu.name, groupMenu.nameEn, groupMenu.nameRu) : undefined}>
+      <Sheet open={groupMenu !== null} onClose={() => setGroupMenu(null)} title={groupMenu ? localized(groupMenu.name, groupMenu.nameEn, groupMenu.nameRu, groupMenu.nameTr, groupMenu.nameIt) : undefined}>
         {groupMenu && (
           <div className="flex flex-col">
             <MenuItem
@@ -282,7 +282,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
               onClick={async () => {
                 const g = groupMenu;
                 setGroupMenu(null);
-                if (!(await confirm(t('تمسح مجموعة "{name}" وكل اختياراتها؟', { name: localized(g.name, g.nameEn, g.nameRu) }), t('مسح')))) return;
+                if (!(await confirm(t('تمسح مجموعة "{name}" وكل اختياراتها؟', { name: localized(g.name, g.nameEn, g.nameRu, g.nameTr, g.nameIt) }), t('مسح')))) return;
                 await mutate((id) => catalogApi.removeOptionGroup(storeId, id, g.id));
               }}
             >

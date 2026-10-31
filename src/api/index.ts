@@ -119,13 +119,17 @@ export const storesApi = {
 
 const adminCategories = '/api/admin/store-categories';
 
+/** A store category's translated names; an empty string clears one. */
+type StoreCategoryNames = { nameEn: string; nameRu: string; nameTr: string; nameIt: string };
+
 export const storeCategoriesApi = {
   /** Visible categories in display order (the home tiles). */
   visible: () => api.get<StoreCategory[]>('/api/store-categories'),
 
   all: () => api.get<StoreCategory[]>(adminCategories),
-  create: (name: string, icon: string) => api.post<StoreCategory>(adminCategories, { name, icon }),
-  update: (id: number, name: string, icon: string) => api.put<StoreCategory>(`${adminCategories}/${id}`, { name, icon }),
+  create: (name: string, icon: string, names?: StoreCategoryNames) => api.post<StoreCategory>(adminCategories, { name, icon, ...names }),
+  update: (id: number, name: string, icon: string, names?: StoreCategoryNames) =>
+    api.put<StoreCategory>(`${adminCategories}/${id}`, { name, icon, ...names }),
   setVisible: (id: number, visible: boolean) =>
     api.post<StoreCategory>(`${adminCategories}/${id}/${visible ? 'show' : 'hide'}`),
   /** Every category id, first to last. */
@@ -148,9 +152,9 @@ export const catalogApi = {
   /** `parentId` makes it a sub-category of that main category. Translations: "" clears. */
   createCategory: (
     storeId: number,
-    input: { name: string; displayOrder: number; parentId?: number | null; nameEn?: string; nameRu?: string },
+    input: { name: string; displayOrder: number; parentId?: number | null; nameEn?: string; nameRu?: string; nameTr?: string; nameIt?: string },
   ) => api.post<void>(`${store(storeId)}/categories`, input),
-  updateCategory: (storeId: number, categoryId: number, input: { name: string; displayOrder: number; nameEn?: string; nameRu?: string }) =>
+  updateCategory: (storeId: number, categoryId: number, input: { name: string; displayOrder: number; nameEn?: string; nameRu?: string; nameTr?: string; nameIt?: string }) =>
     api.put<void>(`${store(storeId)}/categories/${categoryId}`, input),
   /** Into main category `parentId`, or out to a main category (null). */
   moveCategory: (storeId: number, categoryId: number, parentId: number | null) =>

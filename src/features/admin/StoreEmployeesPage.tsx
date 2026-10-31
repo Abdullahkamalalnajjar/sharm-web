@@ -34,7 +34,7 @@ export function StoreEmployeesPage() {
   return (
     <div className="mx-auto max-w-2xl pb-28">
       <PageHeader
-        title={store.data ? t('كاشير {name}', { name: localized(store.data.name, store.data.nameEn, store.data.nameRu) }) : t('حسابات الكاشير')}
+        title={store.data ? t('كاشير {name}', { name: localized(store.data.name, store.data.nameEn, store.data.nameRu, store.data.nameTr, store.data.nameIt) }) : t('حسابات الكاشير')}
         actions={
           <Button size="sm" className="hidden md:inline-flex" icon={<UserPlus className="size-4" />} onClick={() => setForm({ employee: null })}>
             {t('حساب كاشير')}

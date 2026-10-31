@@ -29,7 +29,7 @@ export function priceFor(product: Product, selected: Set<number>): { price: numb
   return { price: total, error: null };
 }
 
-const groupName = (g: ProductOptionGroup) => localized(g.name, g.nameEn, g.nameRu);
+const groupName = (g: ProductOptionGroup) => localized(g.name, g.nameEn, g.nameRu, g.nameTr, g.nameIt);
 
 export function groupRule(g: ProductOptionGroup): string {
   if (g.minSelections === g.maxSelections) return t('اختار {n}', { n: g.minSelections });
@@ -66,7 +66,7 @@ function ProductSheetBody({ product, store, onClose }: { product: Product; store
   const toast = useToasts((s) => s.show);
   const navigate = useNavigate();
 
-  const productName = localized(product.name, product.nameEn, product.nameRu);
+  const productName = localized(product.name, product.nameEn, product.nameRu, product.nameTr, product.nameIt);
   const pricing = priceFor(product, selected);
   // The discount is off the whole unit (base + extras), like the backend.
   const unit = applyDiscount(pricing.price, product.discountPercent);
@@ -102,7 +102,7 @@ function ProductSheetBody({ product, store, onClose }: { product: Product; store
         if (!(e instanceof ApiError) || !e.errors.some((x) => x.code === 'Cart.DifferentStore')) throw e;
         // One store per cart: offer to start over with this store.
         const current = cart.data?.stores[0]?.storeName ?? t('محل تاني');
-        const storeName = localized(store.name, store.nameEn, store.nameRu);
+        const storeName = localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt);
         if (!(await confirm(t('سلتك فيها منتجات من {c}.\nتفضّيها وتبدأ من {s}؟', { c: current, s: storeName }), t('فضّي السلة')))) return;
         await add.mutateAsync({ productId: product.id, optionIds: [...selected], quantity, replaceCart: true });
       }
@@ -123,7 +123,7 @@ function ProductSheetBody({ product, store, onClose }: { product: Product; store
         )}
         <h3 className="text-[22px] font-extrabold text-ink">{productName}</h3>
         {product.description && (
-          <p className="text-ink-2">{localized(product.description, product.descriptionEn, product.descriptionRu)}</p>
+          <p className="text-ink-2">{localized(product.description, product.descriptionEn, product.descriptionRu, product.descriptionTr, product.descriptionIt)}</p>
         )}
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
           <DiscountedPrice value={unit} full={product.discountPercent > 0 ? pricing.price : null} className="text-lg" />
@@ -153,8 +153,8 @@ function ProductSheetBody({ product, store, onClose }: { product: Product; store
                   <Icon className={clsx('size-6', on ? 'text-brand' : 'text-ink-3')} />
                   <span className={clsx('flex-1', on ? 'font-bold' : 'font-medium')}>
                     {option.isAvailable
-                      ? localized(option.name, option.nameEn, option.nameRu)
-                      : t('{o} (خلصان)', { o: localized(option.name, option.nameEn, option.nameRu) })}
+                      ? localized(option.name, option.nameEn, option.nameRu, option.nameTr, option.nameIt)
+                      : t('{o} (خلصان)', { o: localized(option.name, option.nameEn, option.nameRu, option.nameTr, option.nameIt) })}
                   </span>
                   {option.extraPrice > 0 && <Price value={option.extraPrice} prefix="+" className="text-[13px]" />}
                 </button>

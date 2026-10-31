@@ -74,7 +74,7 @@ export const categoryLook = (icon: string | null | undefined): CategoryLook =>
 /** Label, icon and color of a store's category. */
 /** The store's category in the visitor's language, with its icon and color. */
 export const categoryOf = (ref: CategoryRef) => ({
-  label: localized(ref.categoryName, ref.categoryNameEn, ref.categoryNameRu),
+  label: localized(ref.categoryName, ref.categoryNameEn, ref.categoryNameRu, ref.categoryNameTr, ref.categoryNameIt),
   ...categoryLook(ref.categoryIcon),
 });
 

@@ -2,14 +2,16 @@ import { dateLocale } from '@/lib/format';
 import { t } from '@/lib/i18n';
 
 /**
- * Stores, categories and products have an Arabic text plus optional English and Russian
- * translations. Picks the page language's version: Russian falls back to English, and both
- * fall back to Arabic. The page language is set by src/lib/i18n.ts.
+ * Stores, categories and products have an Arabic text plus optional English, Russian, Turkish and
+ * Italian translations. Picks the page language's version: the others fall back to English, and
+ * English falls back to Arabic. The page language is set by src/lib/i18n.ts.
  */
-export function localized(ar: string, en?: string | null, ru?: string | null): string {
+export function localized(ar: string, en?: string | null, ru?: string | null, tr?: string | null, it?: string | null): string {
   const lang = document.documentElement.lang || 'ar';
   if (lang.startsWith('en')) return en || ar;
   if (lang.startsWith('ru')) return ru || en || ar;
+  if (lang.startsWith('tr')) return tr || en || ar;
+  if (lang.startsWith('it')) return it || en || ar;
   return ar;
 }
 

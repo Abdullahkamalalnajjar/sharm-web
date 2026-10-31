@@ -17,7 +17,7 @@ export interface PickedOrderItem {
 }
 
 /** Mirrors the backend price rules so the button shows the price or what is missing. The discount covers base + extras. */
-const groupName = (g: ProductOptionGroup) => localized(g.name, g.nameEn, g.nameRu);
+const groupName = (g: ProductOptionGroup) => localized(g.name, g.nameEn, g.nameRu, g.nameTr, g.nameIt);
 
 function priceFor(product: Product, selected: Set<number>): { price: number; error: string | null } {
   let total = product.price;
@@ -96,7 +96,7 @@ export function OrderItemPicker({
     <Sheet
       open={open}
       onClose={close}
-      title={product ? localized(product.name, product.nameEn, product.nameRu) : t('اختار المنتج')}
+      title={product ? localized(product.name, product.nameEn, product.nameRu, product.nameTr, product.nameIt) : t('اختار المنتج')}
       footer={
         product && pricing ? (
           <Button
@@ -123,7 +123,7 @@ export function OrderItemPicker({
               .filter((c) => c.products.length > 0)
               .map((c) => (
                 <div key={c.id}>
-                  <p className={c.parentId ? 'px-5 pt-3 pb-1 font-bold text-ink-2' : 'px-2 pt-4 pb-1 font-extrabold text-ink'}>{localized(c.name, c.nameEn, c.nameRu)}</p>
+                  <p className={c.parentId ? 'px-5 pt-3 pb-1 font-bold text-ink-2' : 'px-2 pt-4 pb-1 font-extrabold text-ink'}>{localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt)}</p>
                   {c.products.map((p) => (
                     <button
                       key={p.id}
@@ -133,7 +133,7 @@ export function OrderItemPicker({
                       className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start hover:bg-surface-alt disabled:opacity-50"
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="block text-ink">{localized(p.name, p.nameEn, p.nameRu)}</span>
+                        <span className="block text-ink">{localized(p.name, p.nameEn, p.nameRu, p.nameTr, p.nameIt)}</span>
                         <span className="block text-xs text-ink-2">
                           {p.isAvailable
                             ? [
@@ -171,7 +171,7 @@ export function OrderItemPicker({
                     onClick={o.isAvailable ? () => toggle(g, o.id) : undefined}
                     className={o.isAvailable ? undefined : 'opacity-50'}
                   >
-                    {o.extraPrice > 0 ? `${localized(o.name, o.nameEn, o.nameRu)} +${formatPrice(o.extraPrice)}` : localized(o.name, o.nameEn, o.nameRu)}
+                    {o.extraPrice > 0 ? `${localized(o.name, o.nameEn, o.nameRu, o.nameTr, o.nameIt)} +${formatPrice(o.extraPrice)}` : localized(o.name, o.nameEn, o.nameRu, o.nameTr, o.nameIt)}
                   </Chip>
                 ))}
               </div>

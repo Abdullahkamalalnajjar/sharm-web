@@ -61,7 +61,7 @@ export function StorePage() {
 function MenuBody({ menu, store, query, onOpen }: { menu: Menu; store: Store; query: string; onOpen: (p: Product) => void }) {
   // Selected main category; null shows all.
   const [categoryId, setCategoryId] = useState<number | null>(null);
-  const name = (c: MenuCategory) => localized(c.name, c.nameEn, c.nameRu);
+  const name = (c: MenuCategory) => localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt);
   const mains = menu.categories.filter((c) => c.parentId === null);
   const withSubs = (main: MenuCategory) => [main, ...menu.categories.filter((c) => c.parentId === main.id)];
   const grid = (products: Product[]) => (
@@ -158,7 +158,7 @@ function TopBar({ store }: { store: Store }) {
         </span>
       </span>
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-base font-black text-ink md:text-lg">{localized(store.name, store.nameEn, store.nameRu)}</h1>
+        <h1 className="truncate text-base font-black text-ink md:text-lg">{localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt)}</h1>
         <p className="truncate text-xs text-ink-3">{meta.label}</p>
       </div>
       <div className="shrink-0 text-end">
@@ -199,7 +199,7 @@ function StoreInfo({ store }: { store: Store }) {
   return (
     <div className="pt-3.5">
       {store.description && (
-        <p className="mb-2.5 line-clamp-2 text-[13px] text-ink-2">{localized(store.description, store.descriptionEn, store.descriptionRu)}</p>
+        <p className="mb-2.5 line-clamp-2 text-[13px] text-ink-2">{localized(store.description, store.descriptionEn, store.descriptionRu, store.descriptionTr, store.descriptionIt)}</p>
       )}
       <div className="flex flex-wrap items-center gap-2">
         <StoreStatusChip store={store} className="py-1" />
@@ -285,7 +285,7 @@ function FeaturedCard({ product, onOpen }: { product: Product; onOpen: () => voi
     >
       <span className="flex min-w-0 flex-1 flex-col justify-center ps-[18px] pe-2 py-4 md:ps-8">
         <span className="text-xs font-bold text-white/75">{t('مميز عندنا')}</span>
-        <span className="mt-1 truncate text-[19px] font-black leading-tight md:text-2xl">{localized(product.name, product.nameEn, product.nameRu)}</span>
+        <span className="mt-1 truncate text-[19px] font-black leading-tight md:text-2xl">{localized(product.name, product.nameEn, product.nameRu, product.nameTr, product.nameIt)}</span>
         <DiscountedPrice
           value={price}
           full={full}
@@ -328,8 +328,8 @@ function ProductCard({ product, store, onOpen }: { product: Product; store: Stor
       }
       badge={badge}
       badgeClassName={!product.isAvailable ? 'bg-danger text-white' : product.discountPercent > 0 ? 'bg-brand text-white' : undefined}
-      title={localized(product.name, product.nameEn, product.nameRu)}
-      subtitle={product.description ? localized(product.description, product.descriptionEn, product.descriptionRu) : null}
+      title={localized(product.name, product.nameEn, product.nameRu, product.nameTr, product.nameIt)}
+      subtitle={product.description ? localized(product.description, product.descriptionEn, product.descriptionRu, product.descriptionTr, product.descriptionIt) : null}
       footer={<DiscountedPrice value={price} full={full} prefix={hasOptions ? tIn('price', 'من') : undefined} className="text-[15px]" />}
       action={product.isAvailable ? <ShowcaseAction icon={Plus} /> : undefined}
     />

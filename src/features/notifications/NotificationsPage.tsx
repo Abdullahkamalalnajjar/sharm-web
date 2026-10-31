@@ -10,7 +10,8 @@ import { TabHeader } from '@/components/layout/AppShell';
 import { Button, EmptyView, ErrorView, Loading, SoftCard, Spinner } from '@/components/ui';
 import { LoginRequired } from '@/features/auth/LoginRequired';
 import { notificationLook, notificationTarget, parseUtc, timeAgo } from '@/lib/notifications';
-import { currentLanguage, t } from '@/lib/i18n';
+import { dateLocale } from '@/lib/format';
+import { t } from '@/lib/i18n';
 import { runAction } from '@/lib/run-action';
 import { useAuth } from '@/store/auth';
 import type { AppNotification } from '@/types';
@@ -29,7 +30,7 @@ function groupByDay(items: AppNotification[]): [string, AppNotification[]][] {
         ? t('النهارده')
         : diff === 1
           ? t('امبارح')
-          : day.toLocaleDateString({ ar: 'ar-EG', en: 'en-GB', ru: 'ru-RU' }[currentLanguage()], { weekday: 'long', day: 'numeric', month: 'long' });
+          : day.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
     if (groups.length === 0 || groups[groups.length - 1][0] !== label) groups.push([label, []]);
     groups[groups.length - 1][1].push(n);
   }

@@ -169,12 +169,12 @@ export function OrderTimeline({ order }: { order: Order }) {
   );
 }
 
-/** The item's options in the visitor's language (Russian falls back to English, then Arabic). */
+/** The item's options in the visitor's language (the others fall back to English, then Arabic). */
 function optionsTextOf(item: OrderItem): string | null {
   const language = currentLanguage();
-  if (language === 'en') return item.optionsTextEn || item.optionsText;
-  if (language === 'ru') return item.optionsTextRu || item.optionsTextEn || item.optionsText;
-  return item.optionsText;
+  if (language === 'ar') return item.optionsText;
+  const own = { en: null, ru: item.optionsTextRu, tr: item.optionsTextTr, it: item.optionsTextIt }[language];
+  return own || item.optionsTextEn || item.optionsText;
 }
 
 /** Items grouped by store, or request details when this is a custom order. */
@@ -233,7 +233,7 @@ export function OrderItemsCard({
                 <span className="rounded-lg bg-surface-alt px-2 py-0.5 font-extrabold text-ink">{item.quantity}×</span>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-ink">{localized(item.productName, item.productNameEn, item.productNameRu)}</p>
+                <p className="text-ink">{localized(item.productName, item.productNameEn, item.productNameRu, item.productNameTr, item.productNameIt)}</p>
                 {item.optionsText && <p className="text-xs text-ink-2">{optionsTextOf(item)}</p>}
                 {item.note && <p className="text-xs text-ink-3">📝 {item.note}</p>}
               </div>
@@ -430,7 +430,7 @@ export function OrderStoreCard({ store }: { store: OrderStoreGroup }) {
         <IconWell icon={Store} size={46} color="var(--color-accent)" />
         <div className="min-w-0 flex-1">
           <p className="text-xs text-ink-3">{t('المحل')}</p>
-          <p className="font-extrabold text-ink">{localized(store.storeName, store.storeNameEn, store.storeNameRu)}</p>
+          <p className="font-extrabold text-ink">{localized(store.storeName, store.storeNameEn, store.storeNameRu, store.storeNameTr, store.storeNameIt)}</p>
           {store.storePhone && (
             <p className="text-[13px] text-ink-2" dir="ltr">
               {store.storePhone}

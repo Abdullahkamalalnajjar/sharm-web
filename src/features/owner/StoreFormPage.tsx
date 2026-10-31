@@ -125,10 +125,10 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
         ) : (
           <div className="flex flex-wrap gap-2">
             {[
-              ...(categories.data ?? []).map((c) => ({ id: c.id, name: localized(c.name, c.nameEn, c.nameRu), icon: c.icon })),
+              ...(categories.data ?? []).map((c) => ({ id: c.id, name: localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt), icon: c.icon })),
               // The store's current category stays selectable even if the admin hid it.
               ...(store && !(categories.data ?? []).some((c) => c.id === store.categoryId)
-                ? [{ id: store.categoryId, name: localized(store.categoryName, store.categoryNameEn, store.categoryNameRu), icon: store.categoryIcon }]
+                ? [{ id: store.categoryId, name: localized(store.categoryName, store.categoryNameEn, store.categoryNameRu, store.categoryNameTr, store.categoryNameIt), icon: store.categoryIcon }]
                 : []),
             ].map((c) => {
               const look = categoryLook(c.icon);

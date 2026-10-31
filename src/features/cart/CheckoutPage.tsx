@@ -11,8 +11,8 @@ import { PageHeader } from '@/components/layout/AppShell';
 import { Button, Chip, EmptyView, ErrorView, IconWell, Loading, SectionHeader, Sheet, SoftCard, Switch, TextArea, TextField } from '@/components/ui';
 import { AddressFormSheet } from '@/features/addresses/AddressForm';
 import { addressIcon } from '@/features/customer/DeliveryPicker';
-import { addressDetails, formatPercent, formatPrice } from '@/lib/format';
-import { currentLanguage, t } from '@/lib/i18n';
+import { addressDetails, dateLocale, formatPercent, formatPrice } from '@/lib/format';
+import { t } from '@/lib/i18n';
 import { formatScheduledTime } from '@/lib/localized';
 import { showMessage } from '@/store/ui';
 import { EMPTY_CART, type Address } from '@/types';
@@ -270,7 +270,7 @@ function SlotsSheet({
     days.set(day, [...(days.get(day) ?? []), s]);
   }
   const timeOf = (s: string) =>
-    new Date(/Z|[+-]\d\d:?\d\d$/.test(s) ? s : `${s}Z`).toLocaleTimeString(TIME_LOCALE[currentLanguage()], { hour: 'numeric', minute: '2-digit' });
+    new Date(/Z|[+-]\d\d:?\d\d$/.test(s) ? s : `${s}Z`).toLocaleTimeString(dateLocale(), { hour: 'numeric', minute: '2-digit' });
 
   return (
     <Sheet open={open} onClose={onClose} title={t('ميعاد التوصيل')}>
@@ -300,7 +300,6 @@ function SlotsSheet({
   );
 }
 
-const TIME_LOCALE = { ar: 'ar-EG', en: 'en-GB', ru: 'ru-RU' } as const;
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (

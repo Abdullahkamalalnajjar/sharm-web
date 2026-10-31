@@ -149,7 +149,7 @@ function FilterSheet({ open, onClose, categories }: { open: boolean; onClose: ()
           const on = categoryId === c.id;
           return (
             <Chip key={c.id} selected={on} onClick={() => setCategoryId(c.id)} icon={<look.Icon className="size-4" style={{ color: on ? '#fff' : look.color }} />}>
-              {localized(c.name, c.nameEn, c.nameRu)}
+              {localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt)}
             </Chip>
           );
         })}
@@ -173,7 +173,7 @@ export function CategoryArc({ categories }: { categories: StoreCategory[] }) {
     { key: 'all', label: t('الكل'), icon: UtensilsCrossed, color: 'var(--color-brand)' },
     ...categories.map((c) => {
       const look = categoryLook(c.icon);
-      return { key: `category-${c.id}`, label: localized(c.name, c.nameEn, c.nameRu), icon: look.Icon, imageUrl: c.imageUrl, color: look.color };
+      return { key: `category-${c.id}`, label: localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt), icon: look.Icon, imageUrl: c.imageUrl, color: look.color };
     }),
   ];
   const index = categoryId === null ? 0 : categories.findIndex((c) => c.id === categoryId) + 1;
@@ -314,7 +314,7 @@ export function DailyOffersRow() {
       <SectionHead title={t('العروض اليومية')} icon={Gift} />
       <div className="no-scrollbar -mx-3 flex snap-x gap-3 overflow-x-auto px-3 pt-1 pb-2 scroll-px-3 sm:mx-0 sm:px-0">
         {offers.map((o) => {
-          const title = localized(o.title, o.titleEn, o.titleRu);
+          const title = localized(o.title, o.titleEn, o.titleRu, o.titleTr, o.titleIt);
           return (
             <Link
               key={o.id}
@@ -392,7 +392,7 @@ export function PlaceTile({ store }: { store: NearbyStore }) {
             : t('مفتوح')
           : storeStatusLabel(store)}
       </span>
-      <span className="absolute inset-x-3 bottom-2 z-[1] truncate text-[1.1rem] font-black [text-shadow:0_1px_4px_rgb(0_0_0/0.5)]">{localized(store.name, store.nameEn, store.nameRu)}</span>
+      <span className="absolute inset-x-3 bottom-2 z-[1] truncate text-[1.1rem] font-black [text-shadow:0_1px_4px_rgb(0_0_0/0.5)]">{localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt)}</span>
     </Link>
   );
 }

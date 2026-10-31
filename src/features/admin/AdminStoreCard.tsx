@@ -54,7 +54,7 @@ export function AdminStoreCard({ store }: { store: Store }) {
   };
 
   async function reject() {
-    if (!(await confirm(t('ترفض طلب "{name}"؟', { name: localized(store.name, store.nameEn, store.nameRu) }), t('رفض')))) return;
+    if (!(await confirm(t('ترفض طلب "{name}"؟', { name: localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt) }), t('رفض')))) return;
     await run(() => storesApi.suspend(store.id), t('الطلب اترفض'));
   }
 
@@ -65,7 +65,7 @@ export function AdminStoreCard({ store }: { store: Store }) {
           <StoreAvatar category={store} logoUrl={store.logoUrl} size={52} />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="flex-1 truncate font-extrabold text-ink">{localized(store.name, store.nameEn, store.nameRu)}</span>
+              <span className="flex-1 truncate font-extrabold text-ink">{localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt)}</span>
               <StatusDot store={store} />
             </div>
             <p className="truncate text-[13px] text-ink-2">{store.address}</p>
@@ -129,7 +129,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
   };
 
   async function suspend() {
-    if (!(await confirm(t('توقف "{name}"؟ هيتقفل ويختفي من الزباين.', { name: localized(store.name, store.nameEn, store.nameRu) }), t('إيقاف')))) return;
+    if (!(await confirm(t('توقف "{name}"؟ هيتقفل ويختفي من الزباين.', { name: localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt) }), t('إيقاف')))) return;
     await run(() => storesApi.suspend(store.id), t('المحل اتوقف'));
   }
 
@@ -146,7 +146,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
         <div className="flex items-center gap-3.5">
           <StoreAvatar category={store} logoUrl={store.logoUrl} size={56} />
           <div className="min-w-0 flex-1">
-            <h3 className="text-[19px] font-extrabold text-ink">{localized(store.name, store.nameEn, store.nameRu)}</h3>
+            <h3 className="text-[19px] font-extrabold text-ink">{localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt)}</h3>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               <StatusChip label={status.label} color={status.color} />
               {store.status === 'Active' && <OpenChip store={store} />}

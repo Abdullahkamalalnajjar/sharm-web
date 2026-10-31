@@ -57,7 +57,7 @@ function BackButton() {
 }
 
 function OfferBody({ offer }: { offer: OfferDetails }) {
-  const title = localized(offer.title, offer.titleEn, offer.titleRu);
+  const title = localized(offer.title, offer.titleEn, offer.titleRu, offer.titleTr, offer.titleIt);
   return (
     <>
       <BackButton />
@@ -136,8 +136,8 @@ function OfferProductCard({ item }: { item: OfferProduct }) {
       }
       badge={badge}
       badgeClassName={!product.isAvailable ? 'bg-danger text-white' : product.discountPercent > 0 ? 'bg-brand text-white' : undefined}
-      title={localized(product.name, product.nameEn, product.nameRu)}
-      subtitle={localized(item.storeName, item.storeNameEn, item.storeNameRu)}
+      title={localized(product.name, product.nameEn, product.nameRu, product.nameTr, product.nameIt)}
+      subtitle={localized(item.storeName, item.storeNameEn, item.storeNameRu, item.storeNameTr, item.storeNameIt)}
       footer={<DiscountedPrice value={price} full={full} prefix={hasOptions ? tIn('price', 'من') : undefined} className="text-[15px]" />}
       action={product.isAvailable ? <ShowcaseAction icon={Store} /> : undefined}
     />

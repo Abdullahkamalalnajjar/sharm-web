@@ -12,9 +12,10 @@
         try {
           l = localStorage.getItem('sharm-language');
         } catch (e) {}
-        if (l !== 'ar' && l !== 'en' && l !== 'ru') {
+        var known = ['ar', 'en', 'ru', 'tr', 'it'];
+        if (known.indexOf(l) < 0) {
           var b = (navigator.language || '').slice(0, 2).toLowerCase();
-          l = b === 'en' || b === 'ru' ? b : 'ar';
+          l = known.indexOf(b) >= 0 ? b : 'ar';
         }
         document.documentElement.lang = l;
         document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';

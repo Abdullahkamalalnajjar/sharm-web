@@ -11,7 +11,7 @@ export function parseUtc(value: string): Date {
   return new Date(iso);
 }
 
-const LOCALES = { ar: 'ar-EG', en: 'en-GB', ru: 'ru-RU' } as const;
+const LOCALES = { ar: 'ar-EG', en: 'en-GB', ru: 'ru-RU', tr: 'tr-TR', it: 'it-IT' } as const;
 
 /** The Intl locale of the current language. */
 export const dateLocale = () => LOCALES[currentLanguage()];

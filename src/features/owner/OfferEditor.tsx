@@ -398,7 +398,7 @@ function ProductsPicker({
                 onToggle({ id: p.id, name: p.name, storeId, storeName, imageUrl: p.imageUrl, price: p.price, discountPercent: p.discountPercent })
               }
               image={<AppImage url={p.imageUrl} fallback={<Gift className="size-4 text-ink-3" />} />}
-              title={localized(p.name, p.nameEn, p.nameRu)}
+              title={localized(p.name, p.nameEn, p.nameRu, p.nameTr, p.nameIt)}
               subtitle={
                 <>
                   {formatPrice(p.price)}
@@ -432,7 +432,7 @@ function PlatformProductsPicker({ selected, onToggle }: { selected: Map<number, 
             const n = pickedIn(s.id);
             return (
               <option key={s.id} value={s.id}>
-                {localized(s.name, s.nameEn, s.nameRu)}
+                {localized(s.name, s.nameEn, s.nameRu, s.nameTr, s.nameIt)}
                 {s.status !== 'Active' ? ` (${t('مش نشط')})` : ''}
                 {n > 0 ? ` • ${t('{n} مختار', { n })}` : ''}
               </option>
@@ -476,8 +476,8 @@ function StoresPicker({ selected, onChange }: { selected: number[]; onChange: (i
                 checked={selected.includes(s.id)}
                 onClick={() => toggle(s.id)}
                 image={<AppImage url={s.logoUrl} fallback={<StoreIcon className="size-4 text-ink-3" />} />}
-                title={localized(s.name, s.nameEn, s.nameRu)}
-                subtitle={s.status !== 'Active' ? t('مش نشط (مش هيظهر للزبون)') : localized(s.categoryName ?? '', s.categoryNameEn, s.categoryNameRu)}
+                title={localized(s.name, s.nameEn, s.nameRu, s.nameTr, s.nameIt)}
+                subtitle={s.status !== 'Active' ? t('مش نشط (مش هيظهر للزبون)') : localized(s.categoryName ?? '', s.categoryNameEn, s.categoryNameRu, s.categoryNameTr, s.categoryNameIt)}
               />
             ))}
           </div>

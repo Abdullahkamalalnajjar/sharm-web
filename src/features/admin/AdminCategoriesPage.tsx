@@ -9,6 +9,7 @@ import { keys, useAdminStoreCategories } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { AppImage, Button, EmptyView, ErrorView, InlineError, Loading, Sheet, SoftCard, StatusChip, Switch, TextField } from '@/components/ui';
 import { ImagePickerField, noImageEdit, type ImageEdit } from '@/features/owner/ImagePicker';
+import { TranslationFields, translationInput, translationValues } from '@/features/owner/TranslationFields';
 import { t, tIn } from '@/lib/i18n';
 import { localized } from '@/lib/localized';
 import { STORE_CATEGORY_ICONS, categoryLook } from '@/lib/meta';
@@ -48,7 +49,7 @@ export function AdminCategoriesPage() {
   async function toggle(c: StoreCategory) {
     const ok = await runAction(
       () => storeCategoriesApi.setVisible(c.id, !c.isVisible),
-      c.isVisible ? t('{name} اتخفى من الرئيسية', { name: localized(c.name, c.nameEn, c.nameRu) }) : t('{name} ظاهر في الرئيسية', { name: localized(c.name, c.nameEn, c.nameRu) }),
+      c.isVisible ? t('{name} اتخفى من الرئيسية', { name: localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt) }) : t('{name} ظاهر في الرئيسية', { name: localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt) }),
     );
     if (ok) refresh();
   }
@@ -160,7 +161,7 @@ function CategoryRow({
       <button type="button" onClick={onEdit} className="flex min-w-0 flex-1 items-center gap-3 text-start">
         <CategoryThumb category={c} size={52} />
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-extrabold text-ink">{localized(c.name, c.nameEn, c.nameRu)}</span>
+          <span className="block truncate font-extrabold text-ink">{localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt)}</span>
           <span className="text-xs text-ink-3">
             {c.imageUrl ? t('{n} محل', { n: c.storesCount }) : t('{n} محل • من غير صورة', { n: c.storesCount })}
           </span>
@@ -187,6 +188,7 @@ function CategoryFormSheet({
   const isNew = category === null;
   const [name, setName] = useState(category?.name ?? '');
   const [icon, setIcon] = useState(category?.icon ?? 'other');
+  const [translations, setTranslations] = useState(() => translationValues(category ?? undefined));
   const [image, setImage] = useState<ImageEdit>(noImageEdit);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -197,9 +199,11 @@ function CategoryFormSheet({
     setBusy(true);
     setError(null);
     try {
+      const { nameEn, nameRu, nameTr, nameIt } = translationInput(translations);
+      const names = { nameEn, nameRu, nameTr, nameIt };
       const saved = isNew
-        ? await storeCategoriesApi.create(name.trim(), icon)
-        : await storeCategoriesApi.update(category.id, name.trim(), icon);
+        ? await storeCategoriesApi.create(name.trim(), icon, names)
+        : await storeCategoriesApi.update(category.id, name.trim(), icon, names);
       // Saved first, so a failed upload never loses the name and icon.
       if (image.kind === 'picked') await storeCategoriesApi.uploadImage(saved.id, image.file);
       else if (image.kind === 'removed' && category?.imageUrl) await storeCategoriesApi.removeImage(saved.id);
@@ -214,7 +218,7 @@ function CategoryFormSheet({
   }
 
   async function remove() {
-    if (!category || !(await confirm(t('تمسح قسم "{name}"؟', { name: localized(category.name, category.nameEn, category.nameRu) }), t('امسح')))) return;
+    if (!category || !(await confirm(t('تمسح قسم "{name}"؟', { name: localized(category.name, category.nameEn, category.nameRu, category.nameTr, category.nameIt) }), t('امسح')))) return;
     setBusy(true);
     if (await runAction(() => storeCategoriesApi.delete(category.id), t('القسم اتمسح'))) {
       onSaved();
@@ -229,6 +233,7 @@ function CategoryFormSheet({
     <Sheet open={open} onClose={onClose} title={isNew ? t('قسم جديد') : t('تعديل القسم')} wide>
       <form onSubmit={submit} className="flex flex-col gap-3">
         <TextField name="name" label={t('اسم القسم')} placeholder={t('مثلاً: مخبوزات')} maxLength={50} value={name} onChange={(e) => setName(e.target.value)} />
+        <TranslationFields value={translations} onChange={setTranslations} withDescription={false} nameMaxLength={50} />
 
         <p className="text-sm font-bold text-ink-2">{t('الأيقونة (بتظهر لو مفيش صورة)')}</p>
         <div className="flex flex-wrap gap-2">
