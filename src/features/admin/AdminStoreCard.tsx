@@ -1,4 +1,4 @@
-import { Ban, BookOpen, CalendarClock, Check, Clock, IdCard, Lock, LockOpen, Pencil, Percent, Phone, RotateCcw, ShoppingBag, MapPin, Crosshair, SlidersHorizontal, Wallet, type LucideIcon } from 'lucide-react';
+import { Ban, BookOpen, UserRound, CalendarClock, Check, Clock, IdCard, Lock, LockOpen, Pencil, Percent, Phone, RotateCcw, ShoppingBag, MapPin, Crosshair, SlidersHorizontal, Wallet, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -11,11 +11,13 @@ import { t } from '@/lib/i18n';
 import { localized } from '@/lib/localized';
 import { categoryOf, storeStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
+import { useAuth } from '@/store/auth';
 import { confirm } from '@/store/ui';
 import type { Store } from '@/types';
 
 import { StoreHoursDialog } from '@/features/owner/StoreHoursDialog';
 
+import { StoreOwnerDialog } from './StoreOwnerDialog';
 import { StoreSettingsDialog } from './StoreSettingsDialog';
 
 /** Open right now (`isOpen` = switch on and within the hours) as a chip. */
@@ -122,6 +124,8 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
   const status = storeStatus(store.status);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [hoursOpen, setHoursOpen] = useState(false);
+  const [ownerOpen, setOwnerOpen] = useState(false);
+  const ownedByMe = useAuth((a) => a.session?.userId === store.ownerId);
 
   const run = async (action: () => Promise<unknown>, success: string) => {
     onClose();
@@ -142,6 +146,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
     <>
       <StoreSettingsDialog store={store} open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <StoreHoursDialog store={store} open={hoursOpen} onClose={() => setHoursOpen(false)} />
+      <StoreOwnerDialog store={store} currentEmail={ownedByMe ? null : (store.ownerEmail ?? null)} open={ownerOpen} onClose={() => setOwnerOpen(false)} />
       <Sheet open={open} onClose={onClose}>
         <div className="flex items-center gap-3.5">
           <StoreAvatar category={store} logoUrl={store.logoUrl} size={56} />
@@ -197,6 +202,16 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
             onClick={() => {
               onClose();
               setHoursOpen(true);
+            }}
+          />
+          <ActionTile
+            icon={UserRound}
+            color={ownedByMe ? 'var(--color-warning)' : 'var(--color-ink)'}
+            title={t('صاحب المحل')}
+            subtitle={ownedByMe ? t('باسمك لسه. اربطه بإيميل وباسورد لصاحبه') : (store.ownerEmail ?? t('غيّر صاحب المحل'))}
+            onClick={() => {
+              onClose();
+              setOwnerOpen(true);
             }}
           />
           <ActionTile

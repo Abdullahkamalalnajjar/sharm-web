@@ -1,6 +1,16 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  "صاحب المحل": "Proprietario del negozio",
+  "storeOwner|حساب جديد": "Nuovo account",
+  "عنده حساب": "Ha un account",
+  "إيميل صاحب المحل": "Email del proprietario",
+  "هيتعمل حساب صاحب محل بالإيميل والباسورد دول، ويدخل بيهم أبلكيشن المحلات.": "Viene creato un account proprietario con questa email e password; con queste accede all'app negozi.",
+  "المحل هيتنقل لحساب صاحب المحل اللي بالإيميل ده.": "Il negozio passa all'account proprietario con questa email.",
+  "اتعمل حساب لصاحب المحل والمحل اتنقل له": "Creato un account proprietario e il negozio è passato a lui",
+  "المحل اتنقل لصاحبه": "Il negozio è passato al proprietario",
+  "باسمك لسه. اربطه بإيميل وباسورد لصاحبه": "Ancora a tuo nome. Collegalo al proprietario con email e password",
+  "غيّر صاحب المحل": "Cambia proprietario",
   'باسورد صاحب المحل': 'Password del proprietario',
   'اكتبه عشان تعمل حساب جديد لصاحب المحل بالإيميل ده. سيبه فاضي لو صاحب المحل عنده حساب.': 'Compilala per creare un nuovo account per il proprietario con questa email. Lasciala vuota se ha già un account.',
   'اكتب إيميل صاحب المحل الأول': 'Inserisci prima l’email del proprietario',

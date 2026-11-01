@@ -111,6 +111,9 @@ export const storesApi = {
   all: (status?: StoreStatus | null) => api.get<Store[]>('/api/stores/admin', { status }),
   approve: (storeId: number) => api.post<void>(`/api/stores/${storeId}/approve`),
   suspend: (storeId: number) => api.post<void>(`/api/stores/${storeId}/suspend`),
+  /** Admin only: gives the store to a store owner by email; with a password, a new login made with that email. */
+  assignOwner: (storeId: number, ownerEmail: string, ownerPassword: string | null) =>
+    api.put<Store>(`/api/stores/${storeId}/owner`, { ownerEmail, ownerPassword }),
   /** Commission and scheduled orders (admin only; affects new orders). */
   updateSettings: (storeId: number, input: StoreSettingsInput) => api.put<Store>(`/api/stores/${storeId}/settings`, input),
 };

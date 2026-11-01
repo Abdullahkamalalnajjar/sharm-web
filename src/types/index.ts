@@ -31,6 +31,8 @@ export type StoreStatus = 'PendingApproval' | 'Active' | 'Suspended';
 export interface Store {
   id: number;
   ownerId: string;
+  /** The owner's login email; in the admin's store list only. */
+  ownerEmail?: string | null;
   name: string;
   description: string | null;
   categoryId: number;

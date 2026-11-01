@@ -1,6 +1,16 @@
 // Translations for the admin store pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  "صاحب المحل": "Store owner",
+  "storeOwner|حساب جديد": "New account",
+  "عنده حساب": "Has an account",
+  "إيميل صاحب المحل": "Store owner's email",
+  "هيتعمل حساب صاحب محل بالإيميل والباسورد دول، ويدخل بيهم أبلكيشن المحلات.": "A store owner account is created with this email and password; they sign in to the store app with them.",
+  "المحل هيتنقل لحساب صاحب المحل اللي بالإيميل ده.": "The store moves to the store owner account with this email.",
+  "اتعمل حساب لصاحب المحل والمحل اتنقل له": "An owner account was created and the store moved to it",
+  "المحل اتنقل لصاحبه": "The store moved to its owner",
+  "باسمك لسه. اربطه بإيميل وباسورد لصاحبه": "Still under your name. Link it to its owner with an email and password",
+  "غيّر صاحب المحل": "Change the store's owner",
   'محل جديد': 'New store',
   '{n} محل • {open} مفتوح دلوقتي': '{n} stores • {open} open now',
   'دور باسم المحل أو العنوان أو الرقم': 'Search by store name, address or phone',
@@ -131,6 +141,16 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  "صاحب المحل": "Владелец магазина",
+  "storeOwner|حساب جديد": "Новый аккаунт",
+  "عنده حساب": "Есть аккаунт",
+  "إيميل صاحب المحل": "Email владельца",
+  "هيتعمل حساب صاحب محل بالإيميل والباسورد دول، ويدخل بيهم أبلكيشن المحلات.": "Будет создан аккаунт владельца с этим email и паролем, с ними он входит в приложение магазинов.",
+  "المحل هيتنقل لحساب صاحب المحل اللي بالإيميل ده.": "Магазин перейдёт к аккаунту владельца с этим email.",
+  "اتعمل حساب لصاحب المحل والمحل اتنقل له": "Создан аккаунт владельца, магазин передан ему",
+  "المحل اتنقل لصاحبه": "Магазин передан владельцу",
+  "باسمك لسه. اربطه بإيميل وباسورد لصاحبه": "Пока на ваше имя. Привяжите к владельцу по email и паролю",
+  "غيّر صاحب المحل": "Сменить владельца",
   'محل جديد': 'Новый магазин',
   '{n} محل • {open} مفتوح دلوقتي': 'Магазинов: {n} • Открыто: {open}',
   'دور باسم المحل أو العنوان أو الرقم': 'Поиск по названию, адресу или телефону',
