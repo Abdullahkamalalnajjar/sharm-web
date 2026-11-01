@@ -1,4 +1,4 @@
-import { Bike, Check, CheckCheck, ChevronLeft, Pencil, Store as StoreIcon, UserRoundPlus, UserRoundSearch, XCircle } from 'lucide-react';
+import { Bike, Check, CheckCheck, ChevronLeft, ListChecks, Pencil, Store as StoreIcon, UserRoundPlus, UserRoundSearch, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router';
@@ -6,7 +6,7 @@ import { useParams } from 'react-router';
 import { ordersApi } from '@/api';
 import { keys, useAdminOrder } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
-import { Button, ErrorView, IconWell, Loading, SoftCard, StatusChip } from '@/components/ui';
+import { Button, ErrorView, IconWell, Loading, Sheet, SoftCard, StatusChip } from '@/components/ui';
 import { CustomerPointsCard } from '@/features/loyalty/LoyaltyAdmin';
 import { RefundsCard } from '@/features/orders/RefundsCard';
 import { CustomerWalletCard } from '@/features/wallet/CustomerWalletAdmin';
@@ -22,10 +22,10 @@ import {
 } from '@/features/orders/OrderWidgets';
 import { formatOrderDate } from '@/lib/format';
 import { t } from '@/lib/i18n';
-import { isAwaitingPickup, orderStatus } from '@/lib/meta';
+import { ORDER_STATUSES, isAwaitingPickup, orderStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
-import type { Order, OrderItem } from '@/types';
+import type { Order, OrderItem, OrderStatus } from '@/types';
 
 import { ChargesDialog } from './ChargesDialog';
 import { DriverPicker } from './DriverPicker';
@@ -42,6 +42,7 @@ export function AdminOrderPage() {
   const [feeDialog, setFeeDialog] = useState<'confirm' | 'edit' | null>(null);
   const [subtotalOpen, setSubtotalOpen] = useState(false);
   const [reasonOpen, setReasonOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [itemPickerOpen, setItemPickerOpen] = useState(false);
 
@@ -58,6 +59,12 @@ export function AdminOrderPage() {
   async function removeItem(o: Order, item: OrderItem) {
     if (!(await confirm(t('تشيل "{name}" من الأوردر؟', { name: item.productName }), t('شيل')))) return;
     await run(() => ordersApi.removeItem(o.id, item.id), t('المنتج اتشال'));
+  }
+
+  async function setStatus(status: OrderStatus) {
+    if (status === 'Delivered' && !(await confirm(t('تعلّم الأوردر إنه اتوصّل؟ دي آخر خطوة ومش هتقدر تغيّرها بعد كده.'), t('اتوصّل')))) return;
+    setStatusOpen(false);
+    await run(() => ordersApi.setStatus(id, status), t('حالة الأوردر اتغيّرت لـ "{s}"', { s: orderStatus(status).label }));
   }
 
   async function removeDriver(o: Order) {
@@ -79,6 +86,10 @@ export function AdminOrderPage() {
           o?.status === 'Pending' ? (
             <button type="button" title={t('إلغاء الأوردر')} disabled={busy} onClick={() => setReasonOpen(true)} className="grid size-10 place-items-center rounded-full text-danger hover:bg-danger/10 disabled:opacity-50">
               <XCircle className="size-5" />
+            </button>
+          ) : o && active ? (
+            <button type="button" title={t('تغيير حالة الأوردر')} disabled={busy} onClick={() => setStatusOpen(true)} className="grid size-10 place-items-center rounded-full text-ink hover:bg-surface-alt disabled:opacity-50">
+              <ListChecks className="size-5" />
             </button>
           ) : null
         }
@@ -224,6 +235,28 @@ export function AdminOrderPage() {
         onClose={() => setSubtotalOpen(false)}
         onSubmit={(subtotal) => run(() => ordersApi.setCustomSubtotal(id, subtotal), t('سعر المنتجات اتعدّل'))}
       />
+      <Sheet open={statusOpen} onClose={() => setStatusOpen(false)} title={t('تغيير حالة الأوردر')}>
+        <p className="mb-3 text-sm text-ink-2">{t('اختار الحالة اللي الأوردر فيها فعلاً. تقدر ترجع لورا أو تقدّم لقدام. الأوردر المتأكد مينفعش يتلغي.')}</p>
+        <div className="flex flex-col gap-2">
+          {ORDER_STATUSES.filter((s) => !(['Pending', 'Cancelled'] as OrderStatus[]).includes(s.value)).map((s) => {
+            const current = o?.status === s.value;
+            return (
+              <button
+                key={s.value}
+                type="button"
+                disabled={busy || current}
+                onClick={() => setStatus(s.value)}
+                className="flex items-center gap-3 rounded-2xl border border-line p-3 text-start hover:bg-surface-alt disabled:cursor-default disabled:hover:bg-transparent"
+                style={current ? { borderColor: s.color } : undefined}
+              >
+                <s.Icon className="size-5 shrink-0" style={{ color: s.color }} />
+                <span className="flex-1 font-bold text-ink">{s.label}</span>
+                {current && <Check className="size-5" style={{ color: s.color }} />}
+              </button>
+            );
+          })}
+        </div>
+      </Sheet>
       <ReasonDialog open={reasonOpen} onClose={() => setReasonOpen(false)} onSubmit={(reason) => run(() => ordersApi.cancel(id, reason || null), t('الأوردر اتلغى'))} />
       <DriverPicker
         open={pickerOpen}

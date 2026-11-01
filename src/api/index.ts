@@ -291,6 +291,8 @@ export const ordersApi = {
   acceptForStore: (id: number) => api.post<Order>(`${adminOrders}/${id}/store-accept`),
   startDelivery: (id: number) => api.post<Order>(`${adminOrders}/${id}/out-for-delivery`),
   markDelivered: (id: number) => api.post<Order>(`${adminOrders}/${id}/delivered`),
+  /** Moves a confirmed order to any step, forwards or back (not Pending or Cancelled; Delivered is final). */
+  setStatus: (id: number, status: OrderStatus) => api.put<Order>(`${adminOrders}/${id}/status`, { status }),
   cancel: (id: number, reason?: string | null) => api.post<Order>(`${adminOrders}/${id}/cancel`, { reason: reason ?? null }),
   removeItem: (id: number, itemId: number) => api.delete<Order>(`${adminOrders}/${id}/items/${itemId}`),
   /** A product of the order's store (e.g. the customer called to swap one), until pickup. */

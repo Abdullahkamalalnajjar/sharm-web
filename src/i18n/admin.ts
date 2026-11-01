@@ -1,6 +1,10 @@
 // Translations for the admin pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  "تغيير حالة الأوردر": "Change order status",
+  "اختار الحالة اللي الأوردر فيها فعلاً. تقدر ترجع لورا أو تقدّم لقدام. الأوردر المتأكد مينفعش يتلغي.": "Pick the step the order is really at. You can move it back or forward. A confirmed order can't be cancelled.",
+  "تعلّم الأوردر إنه اتوصّل؟ دي آخر خطوة ومش هتقدر تغيّرها بعد كده.": "Mark the order as delivered? This is the last step and can't be changed afterwards.",
+  "حالة الأوردر اتغيّرت لـ \"{s}\"": "Order status changed to \"{s}\"",
   'أهلاً يا أدمن 👋': 'Hi, Admin 👋',
   'المحلات على المنصة': 'Stores on the platform',
   '{n} مفتوح دلوقتي': '{n} open now',
@@ -154,6 +158,10 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  "تغيير حالة الأوردر": "Изменить статус заказа",
+  "اختار الحالة اللي الأوردر فيها فعلاً. تقدر ترجع لورا أو تقدّم لقدام. الأوردر المتأكد مينفعش يتلغي.": "Выберите, на каком этапе заказ на самом деле. Можно вернуть назад или продвинуть вперёд. Подтверждённый заказ отменить нельзя.",
+  "تعلّم الأوردر إنه اتوصّل؟ دي آخر خطوة ومش هتقدر تغيّرها بعد كده.": "Отметить заказ как доставленный? Это последний шаг, изменить его потом нельзя.",
+  "حالة الأوردر اتغيّرت لـ \"{s}\"": "Статус заказа изменён на «{s}»",
   'أهلاً يا أدمن 👋': 'Привет, админ 👋',
   'المحلات على المنصة': 'Магазины на платформе',
   '{n} مفتوح دلوقتي': 'Открыто сейчас: {n}',

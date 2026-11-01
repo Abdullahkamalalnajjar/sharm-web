@@ -1,6 +1,10 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  "تغيير حالة الأوردر": "Cambia stato dell'ordine",
+  "اختار الحالة اللي الأوردر فيها فعلاً. تقدر ترجع لورا أو تقدّم لقدام. الأوردر المتأكد مينفعش يتلغي.": "Scegli la fase in cui si trova davvero l'ordine. Puoi tornare indietro o andare avanti. Un ordine confermato non può essere annullato.",
+  "تعلّم الأوردر إنه اتوصّل؟ دي آخر خطوة ومش هتقدر تغيّرها بعد كده.": "Segnare l'ordine come consegnato? È l'ultimo passo e non potrà essere modificato.",
+  "حالة الأوردر اتغيّرت لـ \"{s}\"": "Stato dell'ordine cambiato in \"{s}\"",
   "الأوردر اتأكد من المحل أو الإدارة، مينفعش يتلغي": "L'ordine è stato accettato dal negozio o dall'amministrazione, non può essere annullato",
   "صاحب المحل": "Proprietario del negozio",
   "storeOwner|حساب جديد": "Nuovo account",
