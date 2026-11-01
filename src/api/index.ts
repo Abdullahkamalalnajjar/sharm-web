@@ -114,6 +114,8 @@ export const storesApi = {
   /** Admin only: gives the store to a store owner by email; with a password, a new login made with that email. */
   assignOwner: (storeId: number, ownerEmail: string, ownerPassword: string | null) =>
     api.put<Store>(`/api/stores/${storeId}/owner`, { ownerEmail, ownerPassword }),
+  /** The store's tax % (admin only; affects new orders). */
+  setTax: (storeId: number, taxPercent: number) => api.put<void>(`/api/stores/${storeId}/tax`, { taxPercent }),
   /** Commission and scheduled orders (admin only; affects new orders). */
   updateSettings: (storeId: number, input: StoreSettingsInput) => api.put<Store>(`/api/stores/${storeId}/settings`, input),
 };

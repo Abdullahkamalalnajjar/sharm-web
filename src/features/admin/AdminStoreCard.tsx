@@ -1,4 +1,4 @@
-import { Ban, BookOpen, UserRound, CalendarClock, Check, Clock, IdCard, Lock, LockOpen, Pencil, Percent, Phone, RotateCcw, ShoppingBag, MapPin, Crosshair, SlidersHorizontal, Wallet, type LucideIcon } from 'lucide-react';
+import { Ban, BookOpen, UserRound, CalendarClock, Check, Clock, IdCard, Lock, LockOpen, Pencil, Percent, Phone, ReceiptText, RotateCcw, ShoppingBag, MapPin, Crosshair, SlidersHorizontal, Wallet, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -18,6 +18,7 @@ import type { Store } from '@/types';
 import { StoreHoursDialog } from '@/features/owner/StoreHoursDialog';
 
 import { StoreOwnerDialog } from './StoreOwnerDialog';
+import { StoreTaxDialog } from './StoreTaxDialog';
 import { StoreSettingsDialog } from './StoreSettingsDialog';
 
 /** Open right now (`isOpen` = switch on and within the hours) as a chip. */
@@ -125,6 +126,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [hoursOpen, setHoursOpen] = useState(false);
   const [ownerOpen, setOwnerOpen] = useState(false);
+  const [taxOpen, setTaxOpen] = useState(false);
   const ownedByMe = useAuth((a) => a.session?.userId === store.ownerId);
 
   const run = async (action: () => Promise<unknown>, success: string) => {
@@ -147,6 +149,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
       <StoreSettingsDialog store={store} open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <StoreHoursDialog store={store} open={hoursOpen} onClose={() => setHoursOpen(false)} />
       <StoreOwnerDialog store={store} currentEmail={ownedByMe ? null : (store.ownerEmail ?? null)} open={ownerOpen} onClose={() => setOwnerOpen(false)} />
+      <StoreTaxDialog store={store} open={taxOpen} onClose={() => setTaxOpen(false)} />
       <Sheet open={open} onClose={onClose}>
         <div className="flex items-center gap-3.5">
           <StoreAvatar category={store} logoUrl={store.logoUrl} size={56} />
@@ -166,6 +169,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
           <InfoRow icon={Phone} label={t('التليفون')} value={store.phone} ltr />
           <InfoRow icon={ShoppingBag} label={t('أقل طلب')} value={store.minOrderAmount > 0 ? formatPrice(store.minOrderAmount) : t('مفيش حد أدنى')} />
           <InfoRow icon={Percent} label={t('العمولة')} value={`${store.commissionPercent ?? 0}%`} />
+          <InfoRow icon={ReceiptText} label={t('الضريبة')} value={store.taxPercent ? `${store.taxPercent}%` : t('من غير ضريبة')} />
           <InfoRow icon={Clock} label={t('المواعيد')} value={formatStoreHours(store.opensAt, store.closesAt) ?? t('مفيش (الزرار بس)')} />
           <InfoRow icon={CalendarClock} label={t('المجدولة')} value={store.allowsScheduledOrders ? t('بياخد طلبات مجدولة') : t('مقفولة')} />
           <InfoRow icon={Crosshair} label={t('الإحداثيات')} value={`${store.latitude.toFixed(4)}, ${store.longitude.toFixed(4)}`} ltr />
@@ -192,6 +196,16 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
             onClick={() => {
               onClose();
               setSettingsOpen(true);
+            }}
+          />
+          <ActionTile
+            icon={ReceiptText}
+            color="var(--color-ink)"
+            title={t('ضريبة المحل')}
+            subtitle={store.taxPercent ? t('{p}% على المنتجات، الزبون بيدفعها', { p: store.taxPercent }) : t('من غير ضريبة')}
+            onClick={() => {
+              onClose();
+              setTaxOpen(true);
             }}
           />
           <ActionTile

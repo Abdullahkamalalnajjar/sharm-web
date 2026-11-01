@@ -69,6 +69,8 @@ export interface Store {
   allowsScheduledOrders: boolean;
   /** The app's % of the products; null for customers (admin setting). */
   commissionPercent: number | null;
+  /** The store's tax % on the products, paid by the customer and kept by the store. */
+  taxPercent?: number;
   /** The owner's open/closed switch; `isOpen` is that AND within `opensAt`–`closesAt`. */
   openSwitch: boolean;
   /** Daily local (Egypt) hours, "HH:mm:ss"; both null when only the switch decides. Closing before
