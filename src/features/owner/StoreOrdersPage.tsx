@@ -10,7 +10,7 @@ import { Button, EmptyView, ErrorView, IconWell, Loading, Price, Segmented, Soft
 import { formatOrderDate, formatPrice } from '@/lib/format';
 import { orderStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
-import { ScheduledChip } from '@/features/orders/OrderWidgets';
+import { ProductThumb, ScheduledChip } from '@/features/orders/OrderWidgets';
 import { RefundsCard } from '@/features/orders/RefundsCard';
 import { OrderItemPicker, QuantityStepper } from '@/features/orders/OrderItemPicker';
 import { useAuth } from '@/store/auth';
@@ -149,6 +149,7 @@ export function StoreOrderPage() {
             <SoftCard className="overflow-hidden">
               {o.items.map((i) => (
                 <div key={i.id} className="flex items-start gap-3 border-b border-line px-4 py-3">
+                  <ProductThumb storeId={o.storeId} productId={i.productId} />
                   {o.canEditItems ? (
                     <QuantityStepper
                       quantity={i.quantity}

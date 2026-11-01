@@ -347,6 +347,7 @@ export interface OrderDriver {
 
 export interface OrderItem {
   id: number;
+  productId: number;
   productName: string;
   optionsText: string | null;
   productNameEn?: string | null;

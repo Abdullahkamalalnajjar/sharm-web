@@ -16,9 +16,11 @@ import {
   UserRoundX,
   XCircle,
   ArrowLeftRight,
+  Sandwich,
 } from 'lucide-react';
 
-import { Button, IconWell, Price, SoftCard, StatusChip } from '@/components/ui';
+import { useMenu } from '@/api/queries';
+import { AppImage, Button, IconWell, Price, SoftCard, StatusChip } from '@/components/ui';
 import { addressDetails, formatOrderDate, formatPrice } from '@/lib/format';
 import { currentLanguage, t } from '@/lib/i18n';
 import { formatScheduledTime, localized } from '@/lib/localized';
@@ -227,6 +229,7 @@ export function OrderItemsCard({
           </div>
           {g.items.map((item) => (
             <div key={item.id} className="flex items-start gap-2.5 px-3.5 py-1.5">
+              <ProductThumb storeId={g.storeId} productId={item.productId} />
               {onQuantityChange ? (
                 <QuantityStepper quantity={item.quantity} onChange={(q) => onQuantityChange(item, q)} />
               ) : (
@@ -254,6 +257,20 @@ export function OrderItemsCard({
         </button>
       )}
     </SoftCard>
+  );
+}
+
+/**
+ * An order line's product photo. Order lines don't carry it, so it comes from the store's menu (one cached
+ * request per store); a product no longer on the menu shows the placeholder.
+ */
+export function ProductThumb({ storeId, productId }: { storeId: number; productId: number }) {
+  const menu = useMenu(storeId);
+  const imageUrl = menu.data?.categories.flatMap((c) => c.products).find((p) => p.id === productId)?.imageUrl;
+  return (
+    <span className="size-11 shrink-0 overflow-hidden rounded-lg bg-surface-alt">
+      <AppImage url={imageUrl} alt="" fallback={<Sandwich className="size-5 text-ink-3" />} />
+    </span>
   );
 }
 
