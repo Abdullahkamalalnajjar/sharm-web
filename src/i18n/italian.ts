@@ -1,6 +1,7 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  "الأوردر اتأكد من المحل أو الإدارة، مينفعش يتلغي": "L'ordine è stato accettato dal negozio o dall'amministrazione, non può essere annullato",
   "صاحب المحل": "Proprietario del negozio",
   "storeOwner|حساب جديد": "Nuovo account",
   "عنده حساب": "Ha un account",

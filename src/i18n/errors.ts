@@ -1,6 +1,7 @@
 // Server error messages, by their Arabic text (see error-codes.ts). Same as the app's errors.dart.
 
 export const en: Record<string, string> = {
+  "الأوردر اتأكد من المحل أو الإدارة، مينفعش يتلغي": "The store or the admin accepted this order; it can't be cancelled",
   "العنوان ده مش موجود": "This address doesn't exist",
   "السلة فيها منتجات من محل تاني. فضّيها عشان تطلب من المحل ده.": "Your cart has items from another store. Empty it to order from this one.",
   "الكمية مش مسموحة": "This quantity isn't allowed",
@@ -53,6 +54,7 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  "الأوردر اتأكد من المحل أو الإدارة، مينفعش يتلغي": "Заказ принят магазином или администрацией, отменить его нельзя",
   "العنوان ده مش موجود": "Этот адрес не найден",
   "السلة فيها منتجات من محل تاني. فضّيها عشان تطلب من المحل ده.": "В корзине товары из другого заведения. Очистите её, чтобы заказать здесь.",
   "الكمية مش مسموحة": "Недопустимое количество",

@@ -75,7 +75,8 @@ export function AdminOrderPage() {
       <PageHeader
         title={o ? t('أوردر #{n}', { n: o.number }) : t('الأوردر')}
         actions={
-          o && active ? (
+          // Only before the store or the admin accepts it: after that nobody can cancel it (the server refuses too).
+          o?.status === 'Pending' ? (
             <button type="button" title={t('إلغاء الأوردر')} disabled={busy} onClick={() => setReasonOpen(true)} className="grid size-10 place-items-center rounded-full text-danger hover:bg-danger/10 disabled:opacity-50">
               <XCircle className="size-5" />
             </button>

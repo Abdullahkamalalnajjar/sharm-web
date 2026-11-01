@@ -1,6 +1,7 @@
 // Turkish translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const tr: Record<string, string> = {
+  "الأوردر اتأكد من المحل أو الإدارة، مينفعش يتلغي": "Sipariş mağaza veya yönetim tarafından onaylandı, iptal edilemez",
   "صاحب المحل": "Mağaza sahibi",
   "storeOwner|حساب جديد": "Yeni hesap",
   "عنده حساب": "Hesabı var",
