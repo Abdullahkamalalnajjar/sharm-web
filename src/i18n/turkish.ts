@@ -1,6 +1,7 @@
 // Turkish translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const tr: Record<string, string> = {
+  "قبلت الأوردر ده، مينفعش ترجّعه. كلّم الإدارة": "Bu siparişi kabul ettin, geri veremezsin. Yönetimi ara",
   "تغيير حالة الأوردر": "Sipariş durumunu değiştir",
   "اختار الحالة اللي الأوردر فيها فعلاً. تقدر ترجع لورا أو تقدّم لقدام. الأوردر المتأكد مينفعش يتلغي.": "Siparişin gerçekte hangi aşamada olduğunu seç. Geri veya ileri alabilirsin. Onaylanmış sipariş iptal edilemez.",
   "تعلّم الأوردر إنه اتوصّل؟ دي آخر خطوة ومش هتقدر تغيّرها بعد كده.": "Sipariş teslim edildi olarak işaretlensin mi? Bu son adım, sonra değiştirilemez.",

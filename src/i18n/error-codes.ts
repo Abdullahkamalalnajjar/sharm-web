@@ -2,6 +2,7 @@
 // Same list as the app (sharm_app/lib/core/api/error_texts.dart). Unlisted codes keep the server's English description.
 
 export const errorTexts: Record<string, string> = {
+  "Order.DriverCannotDecline": "قبلت الأوردر ده، مينفعش ترجّعه. كلّم الإدارة",
   "Order.CannotCancelConfirmed": "الأوردر اتأكد من المحل أو الإدارة، مينفعش يتلغي",
   "Address.NotFound": "العنوان ده مش موجود",
   "Cart.DifferentStore": "السلة فيها منتجات من محل تاني. فضّيها عشان تطلب من المحل ده.",

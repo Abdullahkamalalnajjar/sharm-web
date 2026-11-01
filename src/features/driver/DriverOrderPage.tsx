@@ -1,7 +1,7 @@
 import { Banknote, Bike, CheckCheck, MapPin, PackageCheck, Store, XCircle, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
 import { driversApi } from '@/api';
 import { keys, useDriverOrder } from '@/api/queries';
@@ -20,20 +20,7 @@ export function DriverOrderPage() {
   const id = Number(useParams().id);
   const order = useDriverOrder(id);
   const qc = useQueryClient();
-  const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
-
-  /** Give the order back before pickup: it goes to the other drivers. */
-  async function giveBack(o: Order) {
-    if (!(await confirm(`مش هتقدر توصّل أوردر #${o.number}؟ هيرجع للمناديب التانيين.`, 'رجّع الأوردر'))) return;
-    setBusy(true);
-    const done = await runAction(() => driversApi.reject(o.id), 'الأوردر رجع');
-    setBusy(false);
-    if (done) {
-      qc.invalidateQueries({ queryKey: ['driver'] });
-      navigate('/driver');
-    }
-  }
 
   async function step(o: Order) {
     const pickingUp = isAwaitingPickup(o.status);
@@ -115,14 +102,10 @@ export function DriverOrderPage() {
         <div className="fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-bg via-bg/95 to-transparent px-4 pt-4 pb-[max(env(safe-area-inset-bottom),12px)]">
           <div className="mx-auto max-w-3xl">
             {beforePickup ? (
-              <div className="flex gap-2.5">
-                <Button variant="outline" className="border-danger/50 text-danger hover:bg-danger/10" disabled={busy} onClick={() => giveBack(o)}>
-                  رجّعه
-                </Button>
-                <Button className="flex-1" loading={busy} icon={<PackageCheck className="size-5" />} onClick={() => step(o)}>
-                  استلمت الأوردر
-                </Button>
-              </div>
+              // An accepted order can't be handed back (only the admin can take it off the driver).
+              <Button block loading={busy} icon={<PackageCheck className="size-5" />} onClick={() => step(o)}>
+                استلمت الأوردر
+              </Button>
             ) : (
               <Button block variant="success" loading={busy} icon={<CheckCheck className="size-5" />} onClick={() => step(o)}>
                 وصّلت الأوردر
