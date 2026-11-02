@@ -8,9 +8,10 @@ import { keys, useStoreOrder, useStoreOrders } from '@/api/queries';
 import { PageHeader, TabHeader } from '@/components/layout/AppShell';
 import { Button, EmptyView, ErrorView, IconWell, Loading, Price, Segmented, SoftCard, StatusChip } from '@/components/ui';
 import { formatOrderDate, formatPrice } from '@/lib/format';
+import { localized } from '@/lib/localized';
 import { orderStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
-import { ProductThumb, ScheduledChip } from '@/features/orders/OrderWidgets';
+import { ProductThumb, ScheduledChip, optionsTextOf } from '@/features/orders/OrderWidgets';
 import { RefundsCard } from '@/features/orders/RefundsCard';
 import { OrderItemPicker, QuantityStepper } from '@/features/orders/OrderItemPicker';
 import { useAuth } from '@/store/auth';
@@ -160,8 +161,8 @@ export function StoreOrderPage() {
                     <span className="rounded-lg bg-surface-alt px-2 py-0.5 font-extrabold text-ink">{i.quantity}×</span>
                   )}
                   <span className="min-w-0 flex-1">
-                    <span className="block text-ink">{i.productName}</span>
-                    {i.optionsText && <span className="block text-xs text-ink-2">{i.optionsText}</span>}
+                    <span className="block text-ink">{localized(i.productName, i.productNameEn, i.productNameRu, i.productNameTr, i.productNameIt)}</span>
+                    {i.optionsText && <span className="block text-xs text-ink-2">{optionsTextOf(i)}</span>}
                     {i.note && <span className="block text-xs text-accent">{i.note}</span>}
                   </span>
                   <span className="text-ink-2">{formatPrice(i.lineTotal)}</span>
@@ -171,7 +172,7 @@ export function StoreOrderPage() {
                       title="شيل المنتج"
                       disabled={busy}
                       onClick={async () => {
-                        if (!(await confirm(`تشيل "${i.productName}" من الأوردر؟`, 'شيل'))) return;
+                        if (!(await confirm(`تشيل "${localized(i.productName, i.productNameEn, i.productNameRu, i.productNameTr, i.productNameIt)}" من الأوردر؟`, 'شيل'))) return;
                         await run(() => storeOrdersApi.removeItem(o.id, i.id), 'المنتج اتشال');
                       }}
                       className="-my-1 grid size-8 place-items-center rounded-full text-danger hover:bg-danger/10"

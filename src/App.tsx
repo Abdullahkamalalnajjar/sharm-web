@@ -78,6 +78,7 @@ export function App() {
           <Route path="owner/stores/:id/menu" element={<ManageMenuPage />} />
           <Route path="owner/stores/:id/offers" element={<StoreOffersPage />} />
           <Route path="owner/stores/:id/wallet" element={<StoreWalletPage />} />
+          <Route path="owner/stores/:id/employees" element={<StoreEmployeesPage asOwner />} />
           <Route path="owner/stores/:id/products/new" element={<ProductEditorPage />} />
           <Route path="owner/stores/:id/products/:productId" element={<ProductEditorPage />} />
         </Route>

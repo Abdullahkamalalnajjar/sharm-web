@@ -13,22 +13,22 @@ import { runAction } from '@/lib/run-action';
 import { confirm } from '@/store/ui';
 import type { StoreEmployee } from '@/types';
 
-const employeesKey = (storeId: number) => ['admin', 'store-employees', storeId] as const;
+const employeesKey = (storeId: number, asOwner: boolean) => [asOwner ? 'owner' : 'admin', 'store-employees', storeId] as const;
 
-/** The admin's list of a store's cashiers: add, edit (name, phone, password) or remove them. */
-export function StoreEmployeesPage() {
+/** A store's cashiers, for the admin or (`asOwner`) the store's owner: add, edit (name, phone, password) or remove them. */
+export function StoreEmployeesPage({ asOwner = false }: { asOwner?: boolean }) {
   const storeId = Number(useParams().id);
   const store = useStore(storeId);
-  const employees = useQuery({ queryKey: employeesKey(storeId), queryFn: () => storeEmployeesApi.list(storeId) });
+  const employees = useQuery({ queryKey: employeesKey(storeId, asOwner), queryFn: () => storeEmployeesApi.list(storeId, asOwner) });
   const qc = useQueryClient();
   // null = closed; { employee: null } = a new account.
   const [form, setForm] = useState<{ employee: StoreEmployee | null } | null>(null);
 
-  const reload = () => qc.invalidateQueries({ queryKey: employeesKey(storeId) });
+  const reload = () => qc.invalidateQueries({ queryKey: employeesKey(storeId, asOwner) });
 
   async function remove(e: StoreEmployee) {
     if (!(await confirm(t('تشيل {name}؟ حسابه هيتقفل ومش هيقدر يدخل تاني.', { name: e.fullName }), t('شيل')))) return;
-    if (await runAction(() => storeEmployeesApi.remove(storeId, e.id), t('الحساب اتشال'))) reload();
+    if (await runAction(() => storeEmployeesApi.remove(storeId, e.id, asOwner), t('الحساب اتشال'))) reload();
   }
 
   return (
@@ -92,6 +92,7 @@ export function StoreEmployeesPage() {
           <EmployeeForm
             key={form.employee?.id ?? 'new'}
             storeId={storeId}
+            asOwner={asOwner}
             employee={form.employee}
             onDone={() => {
               setForm(null);
@@ -104,7 +105,7 @@ export function StoreEmployeesPage() {
   );
 }
 
-function EmployeeForm({ storeId, employee, onDone }: { storeId: number; employee: StoreEmployee | null; onDone: () => void }) {
+function EmployeeForm({ storeId, asOwner, employee, onDone }: { storeId: number; asOwner: boolean; employee: StoreEmployee | null; onDone: () => void }) {
   const isNew = employee === null;
   const [name, setName] = useState(employee?.fullName ?? '');
   const [phone, setPhone] = useState(employee?.phoneNumber ?? '');
@@ -124,7 +125,7 @@ function EmployeeForm({ storeId, employee, onDone }: { storeId: number; employee
     setBusy(true);
     const input = { fullName: name.trim(), phoneNumber: phone.trim() || null, password, email: email.trim() };
     const ok = await runAction(
-      () => (isNew ? storeEmployeesApi.create(storeId, input) : storeEmployeesApi.update(storeId, employee.id, input)),
+      () => (isNew ? storeEmployeesApi.create(storeId, input, asOwner) : storeEmployeesApi.update(storeId, employee.id, input, asOwner)),
       isNew ? t('حساب الكاشير اتعمل') : t('البيانات اتحفظت'),
     );
     setBusy(false);

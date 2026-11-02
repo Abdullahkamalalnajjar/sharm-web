@@ -172,7 +172,7 @@ export function OrderTimeline({ order }: { order: Order }) {
 }
 
 /** The item's options in the visitor's language (the others fall back to English, then Arabic). */
-function optionsTextOf(item: OrderItem): string | null {
+export function optionsTextOf(item: OrderItem): string | null {
   const language = currentLanguage();
   if (language === 'ar') return item.optionsText;
   const own = { en: null, ru: item.optionsTextRu, tr: item.optionsTextTr, it: item.optionsTextIt }[language];

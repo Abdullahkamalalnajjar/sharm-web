@@ -272,6 +272,7 @@ export const tr: Record<string, string> = {
   'العرض ظاهر': 'Fırsat görünüyor',
   'العرض اتخفى': 'Fırsat gizlendi',
   'العروض': 'Fırsatlar',
+  'الموظفين': 'Çalışanlar',
   'عرض عام': 'Genel fırsat',
   'admin|المحلات': 'Mağazalar',
   'admin|مسح': 'Temizle',

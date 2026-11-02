@@ -441,25 +441,26 @@ export const walletsApi = {
 
 // ---------- Store employees (cashiers) ----------
 
-const adminEmployees = (storeId: number) => `/api/admin/stores/${storeId}/employees`;
+/** The admin's endpoints, or the store owner's own (`asOwner`). */
+const employeesPath = (storeId: number, asOwner = false) =>
+  asOwner ? `/api/stores/${storeId}/employees` : `/api/admin/stores/${storeId}/employees`;
 
 export const storeEmployeesApi = {
-  /** Admin only. */
-  list: (storeId: number) => api.get<StoreEmployee[]>(adminEmployees(storeId)),
-  create: (storeId: number, input: StoreEmployeeInput) =>
-    api.post<StoreEmployee>(adminEmployees(storeId), {
+  list: (storeId: number, asOwner = false) => api.get<StoreEmployee[]>(employeesPath(storeId, asOwner)),
+  create: (storeId: number, input: StoreEmployeeInput, asOwner = false) =>
+    api.post<StoreEmployee>(employeesPath(storeId, asOwner), {
       email: input.email,
       password: input.password,
       fullName: input.fullName,
       phoneNumber: input.phoneNumber,
     }),
-  update: (storeId: number, id: number, input: StoreEmployeeInput) =>
-    api.put<StoreEmployee>(`${adminEmployees(storeId)}/${id}`, {
+  update: (storeId: number, id: number, input: StoreEmployeeInput, asOwner = false) =>
+    api.put<StoreEmployee>(`${employeesPath(storeId, asOwner)}/${id}`, {
       fullName: input.fullName,
       phoneNumber: input.phoneNumber,
       newPassword: input.password || null,
     }),
-  remove: (storeId: number, id: number) => api.delete<void>(`${adminEmployees(storeId)}/${id}`),
+  remove: (storeId: number, id: number, asOwner = false) => api.delete<void>(`${employeesPath(storeId, asOwner)}/${id}`),
   /** The signed-in cashier's store. */
   myStore: () => api.get<MyEmployeeStore>('/api/store-employee/me'),
 };

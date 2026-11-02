@@ -272,6 +272,7 @@ export const it: Record<string, string> = {
   'العرض ظاهر': 'Offerta visibile',
   'العرض اتخفى': 'Offerta nascosta',
   'العروض': 'Offerte',
+  'الموظفين': 'Dipendenti',
   'عرض عام': 'Offerta generale',
   'admin|المحلات': 'Negozi',
   'admin|مسح': 'Cancella',

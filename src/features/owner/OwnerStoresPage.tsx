@@ -1,4 +1,4 @@
-import { BellRing, BookOpen, CalendarDays, ChevronLeft, CircleCheck, Clock, Gift, Pencil, Percent, Receipt, Store, Wallet, type LucideIcon } from 'lucide-react';
+import { BellRing, BookOpen, IdCard, CalendarDays, ChevronLeft, CircleCheck, Clock, Gift, Pencil, Percent, Receipt, Store, Wallet, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
@@ -7,6 +7,8 @@ import { storesApi } from '@/api';
 import { keys, useMyStores, useStoreOrders } from '@/api/queries';
 import { EmptyView, ErrorView, IconWell, Loading, Price, SectionHeader, SoftCard, StatusChip, Switch } from '@/components/ui';
 import { StoreAvatar } from '@/features/customer/StoreBits';
+import { t } from '@/lib/i18n';
+import { localized } from '@/lib/localized';
 import { formatPrice, formatStoreHours } from '@/lib/format';
 import { storeStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
@@ -176,7 +178,7 @@ export function OwnerStoreCard({ store }: { store: StoreModel }) {
       <div className="flex items-center gap-3">
         <StoreAvatar category={store} logoUrl={store.logoUrl} size={52} />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[17px] font-extrabold text-ink">{store.name}</p>
+          <p className="truncate text-[17px] font-extrabold text-ink">{localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt)}</p>
           <p className="text-[13px] text-ink-2">{store.categoryName}</p>
         </div>
       </div>
@@ -199,6 +201,7 @@ export function OwnerStoreCard({ store }: { store: StoreModel }) {
         <ActionTile icon={BookOpen} label="المنيو" onClick={() => go('menu')} />
         <ActionTile icon={Gift} label="العروض" onClick={() => go('offers')} />
         <ActionTile icon={Wallet} label="المحفظة" onClick={() => go('wallet')} />
+        <ActionTile icon={IdCard} label="الموظفين" onClick={() => go('employees')} />
         <ActionTile icon={Clock} label="المواعيد" onClick={() => setHoursOpen(true)} />
         <ActionTile icon={Pencil} label="تعديل" onClick={() => go('edit')} />
       </div>
@@ -211,7 +214,7 @@ function ActionTile({ icon: Icon, label, onClick }: { icon: LucideIcon; label: s
   return (
     <button type="button" onClick={onClick} className="flex flex-col items-center gap-1.5 rounded-2xl bg-surface-alt px-0.5 py-3 transition-colors hover:bg-surface-high">
       <Icon className="size-[22px] text-brand-ink" />
-      <span className="max-w-full truncate text-[11.5px] font-bold text-ink">{label}</span>
+      <span className="max-w-full truncate text-[11.5px] font-bold text-ink">{t(label)}</span>
     </button>
   );
 }
