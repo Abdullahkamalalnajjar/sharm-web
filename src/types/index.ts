@@ -661,8 +661,11 @@ export interface NotificationsPage {
 export interface LiveNotification {
   type: string;
   event: string;
+  /** Arabic; `titles`/`bodies` hold every language ({ ar, en, ru, tr, it }). */
   title: string;
   body: string;
+  titles?: Record<string, string>;
+  bodies?: Record<string, string>;
   data: Record<string, string>;
   actorUserId: string | null;
 }

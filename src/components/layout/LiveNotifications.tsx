@@ -11,7 +11,7 @@ import { useUnreadNotifications } from '@/api/queries';
 import { alertSound, notificationLook, notificationTarget } from '@/lib/notifications';
 import { useAuth } from '@/store/auth';
 import type { LiveNotification } from '@/types';
-import { t } from '@/lib/i18n';
+import { currentLanguage, t } from '@/lib/i18n';
 
 // ---------- Banner state ----------
 
@@ -96,7 +96,10 @@ export function useLiveNotifications() {
       qc.invalidateQueries({ queryKey: ['wallets'] });
     };
 
-    hub.on('notification', (n: LiveNotification) => {
+    hub.on('notification', (raw: LiveNotification) => {
+      // The server sends every language: show the site's own.
+      const lang = currentLanguage();
+      const n = { ...raw, title: raw.titles?.[lang] || raw.title, body: raw.bodies?.[lang] || raw.body };
       refresh(n);
       if (n.actorUserId === userId) return;
 
