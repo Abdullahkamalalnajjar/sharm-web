@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#1c0508" />
     <script>
-      // The saved language (or the browser's, on a first visit) sets lang/dir before the first paint,
+      // The saved language (English on a first visit) sets lang/dir before the first paint,
       // so an English or Russian page never flashes right-to-left. src/lib/i18n.ts keeps it in sync.
       (function () {
         var l = null;
@@ -13,10 +13,7 @@
           l = localStorage.getItem('sharm-language');
         } catch (e) {}
         var known = ['ar', 'en', 'ru', 'tr', 'it'];
-        if (known.indexOf(l) < 0) {
-          var b = (navigator.language || '').slice(0, 2).toLowerCase();
-          l = known.indexOf(b) >= 0 ? b : 'ar';
-        }
+        if (known.indexOf(l) < 0) l = 'en';
         document.documentElement.lang = l;
         document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
       })();

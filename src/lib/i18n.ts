@@ -2,8 +2,8 @@ import { create } from 'zustand';
 
 import { englishTexts, italianTexts, russianTexts, turkishTexts } from '@/i18n/all';
 
-// The site's languages, matching the Flutter app (sharm_app/lib/core/i18n/i18n.dart). Arabic is the
-// default and the source text; the Arabic text is the translation key, so a missing translation shows
+// The site's languages, matching the Flutter app (sharm_app/lib/core/i18n/i18n.dart). English is the
+// default and Arabic the source text; the Arabic text is the translation key, so a missing translation shows
 // the English (Russian, Turkish, Italian) or the Arabic. index.html sets <html lang dir> from the saved choice before the first paint.
 
 export type Language = 'ar' | 'en' | 'ru' | 'tr' | 'it';
@@ -28,7 +28,7 @@ const TEXTS: Record<Exclude<Language, 'ar'>, Record<string, string>> = {
 
 const STORAGE_KEY = 'sharm-language';
 
-/** The saved choice; on a first visit, the browser's language when the site has it. */
+/** The saved choice; English on a first visit (like the apps). */
 function savedLanguage(): Language {
   try {
     const v = localStorage.getItem(STORAGE_KEY);
@@ -36,8 +36,7 @@ function savedLanguage(): Language {
   } catch {
     // Private mode.
   }
-  const browser = (navigator.language || '').slice(0, 2).toLowerCase();
-  return isLanguage(browser) ? browser : 'ar';
+  return 'en';
 }
 
 let current: Language = savedLanguage();
