@@ -1,10 +1,10 @@
 import clsx from 'clsx';
-import { Star } from 'lucide-react';
+import { Flag, Star } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router';
 
-import { ordersApi } from '@/api';
+import { ordersApi, storesApi } from '@/api';
 import { keys, useStore, useStoreRatings } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, EmptyView, ErrorView, Loading, Sheet, SoftCard, TextArea } from '@/components/ui';
@@ -13,7 +13,9 @@ import { t } from '@/lib/i18n';
 import { localized } from '@/lib/localized';
 import { parseUtc } from '@/lib/notifications';
 import { runAction } from '@/lib/run-action';
-import type { Order, OrderStoreGroup } from '@/types';
+import { useAuth } from '@/store/auth';
+import { confirm, useLoginPrompt } from '@/store/ui';
+import type { Order, OrderStoreGroup, StoreRating } from '@/types';
 
 const STAR = '#F5A623';
 // Arabic source texts; shown with t(...).
@@ -131,6 +133,18 @@ export function StoreRatingsPage() {
   const ratings = useStoreRatings(id);
   const first = ratings.data?.pages[0];
   const items = ratings.data?.pages.flatMap((p) => p.items) ?? [];
+  const session = useAuth((s) => s.session);
+  const openLogin = useLoginPrompt((s) => s.open);
+  const qc = useQueryClient();
+
+  /** Reporting needs an account; the comment disappears at once. */
+  async function report(r: StoreRating) {
+    if (!session) return openLogin(t('عشان تبلّغ عن تعليق.'));
+    if (!(await confirm(t('تبلّغ عن التعليق ده؟ هيختفي لحد ما الإدارة تراجعه.'), t('إبلاغ')))) return;
+    if (await runAction(() => storesApi.reportRating(id, r.id), t('شكراً، الإدارة هتراجعه'))) {
+      qc.invalidateQueries({ queryKey: keys.storeRatings(id) });
+    }
+  }
 
   return (
     <div className="mx-auto max-w-2xl pb-8">
@@ -161,7 +175,21 @@ export function StoreRatingsPage() {
                       {parseUtc(r.createdUtc).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' })}
                     </span>
                   </div>
-                  {r.comment && <p className="mt-2 leading-relaxed text-ink">{r.comment}</p>}
+                  {r.comment && (
+                    <>
+                      <p className="mt-2 leading-relaxed text-ink">{r.comment}</p>
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => report(r)}
+                          className="-mb-1 mt-1 inline-flex min-h-9 items-center gap-1 rounded-full px-2.5 text-xs font-bold text-ink-3 hover:bg-surface-alt hover:text-ink-2"
+                        >
+                          <Flag className="size-3.5" />
+                          {t('إبلاغ')}
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </SoftCard>
               ))
             )}

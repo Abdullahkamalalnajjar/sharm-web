@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { Inbox, Plus, Search, SearchX, PlusSquare, X } from 'lucide-react';
+import { Flag, Inbox, Plus, Search, SearchX, PlusSquare, X } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
@@ -50,7 +50,7 @@ export function AdminStoresPage() {
             </p>
           )}
         </div>
-        <span className="size-10" />
+        <RoundIconButton icon={Flag} size={40} title={t('تقييمات مبلّغ عنها')} onClick={() => navigate('/admin/ratings/reported')} />
       </div>
 
       <div className="sticky top-0 md:top-16 z-20 bg-bg px-4 pt-2 pb-2.5">

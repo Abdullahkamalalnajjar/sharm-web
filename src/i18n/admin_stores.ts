@@ -1,6 +1,19 @@
 // Translations for the admin store pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  // Reported reviews.
+  'إبلاغ': 'Report',
+  'عشان تبلّغ عن تعليق.': 'To report a comment.',
+  'تبلّغ عن التعليق ده؟ هيختفي لحد ما الإدارة تراجعه.': 'Report this comment? It will be hidden until our team reviews it.',
+  'شكراً، الإدارة هتراجعه': 'Thanks, we\'ll review it',
+  'تقييمات مبلّغ عنها': 'Reported reviews',
+  'مفيش بلاغات': 'No reports',
+  'تمسح التقييم ده؟ متوسط تقييم المحل هيتحسب من غيره.': 'Delete this review? The store\'s rating will be recalculated without it.',
+  'التقييم اتمسح': 'Review deleted',
+  'التعليق رجع يظهر': 'The comment is visible again',
+  '{n} بلاغ • التعليق مخفي دلوقتي': '{n} reports • comment hidden for now',
+  'سيبه يظهر': 'Keep it',
+  'امسح التقييم': 'Delete review',
   "صاحب المحل": "Store owner",
   "storeOwner|حساب جديد": "New account",
   "عنده حساب": "Has an account",
@@ -151,6 +164,19 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  // Reported reviews.
+  'إبلاغ': 'Пожаловаться',
+  'عشان تبلّغ عن تعليق.': 'Чтобы пожаловаться на отзыв.',
+  'تبلّغ عن التعليق ده؟ هيختفي لحد ما الإدارة تراجعه.': 'Пожаловаться на этот отзыв? Он будет скрыт до проверки.',
+  'شكراً، الإدارة هتراجعه': 'Спасибо, мы проверим',
+  'تقييمات مبلّغ عنها': 'Жалобы на отзывы',
+  'مفيش بلاغات': 'Жалоб нет',
+  'تمسح التقييم ده؟ متوسط تقييم المحل هيتحسب من غيره.': 'Удалить отзыв? Рейтинг заведения пересчитается без него.',
+  'التقييم اتمسح': 'Отзыв удалён',
+  'التعليق رجع يظهر': 'Отзыв снова виден',
+  '{n} بلاغ • التعليق مخفي دلوقتي': 'Жалоб: {n} • отзыв скрыт',
+  'سيبه يظهر': 'Оставить',
+  'امسح التقييم': 'Удалить отзыв',
   "صاحب المحل": "Владелец магазина",
   "storeOwner|حساب جديد": "Новый аккаунт",
   "عنده حساب": "Есть аккаунт",

@@ -41,6 +41,7 @@ import type {
   StoreStatus,
   StoreCategory,
   StoreRatingsPage,
+  ReportedRating,
   Tokens,
   YearlyReport,
   MyEmployeeStore,
@@ -90,6 +91,8 @@ export const storesApi = {
   byId: (storeId: number) => api.get<Store>(`/api/stores/${storeId}`),
   /** Newest first; `beforeId` (the last id you have) loads older ones. */
   ratings: (storeId: number, beforeId?: number) => api.get<StoreRatingsPage>(`/api/stores/${storeId}/ratings`, { beforeId }),
+  /** Report a review's comment as abusive or fake: it is hidden until the admin reviews it. Needs an account. */
+  reportRating: (storeId: number, ratingId: number) => api.post<void>(`/api/stores/${storeId}/ratings/${ratingId}/report`),
 
   mine: () => api.get<Store[]>('/api/stores/mine'),
   create: (input: StoreInput) => api.post<Store>('/api/stores', input),
@@ -346,6 +349,16 @@ export const driversApi = {
 
 const reports = '/api/admin/reports';
 const two = (v: number) => String(v).padStart(2, '0');
+
+// ---------- Reported reviews (admin) ----------
+
+export const ratingModerationApi = {
+  reported: () => api.get<ReportedRating[]>('/api/admin/ratings/reported'),
+  /** The comment is fine: show it again. */
+  restore: (ratingId: number) => api.post<void>(`/api/admin/ratings/${ratingId}/restore`),
+  /** Deletes the whole review; the store's average is recalculated. */
+  remove: (ratingId: number) => api.delete<void>(`/api/admin/ratings/${ratingId}`),
+};
 
 export const reportsApi = {
   daily: (d: Date) => api.get<DailyReport>(`${reports}/daily`, { date: `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}` }),

@@ -702,6 +702,17 @@ export interface StoreRating {
   createdUtc: string;
 }
 
+/** A review a customer reported; its comment is hidden until the admin keeps or deletes it. */
+export interface ReportedRating {
+  id: number;
+  storeId: number;
+  storeName: string;
+  stars: number;
+  comment: string | null;
+  reportsCount: number;
+  createdUtc: string;
+}
+
 /** A page of a store's ratings, newest first. */
 export interface StoreRatingsPage {
   average: number;

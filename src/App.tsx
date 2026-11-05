@@ -12,6 +12,7 @@ import { AdminOrderPage } from '@/features/admin/AdminOrderPage';
 import { AdminOffersPage } from '@/features/admin/AdminOffersPage';
 import { AdminOrdersPage } from '@/features/admin/AdminOrdersPage';
 import { AdminStoresPage } from '@/features/admin/AdminStoresPage';
+import { ReportedRatingsPage } from '@/features/admin/ReportedRatingsPage';
 import { StoreEmployeesPage } from '@/features/admin/StoreEmployeesPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { SignupPage } from '@/features/auth/SignupPage';
@@ -89,6 +90,7 @@ export function App() {
           <Route path="admin/orders" element={<AdminOrdersPage />} />
           <Route path="admin/orders/:id" element={<AdminOrderPage />} />
           <Route path="admin/stores" element={<AdminStoresPage />} />
+          <Route path="admin/ratings/reported" element={<ReportedRatingsPage />} />
           <Route path="admin/drivers" element={<AdminDriversPage />} />
           <Route path="admin/reports" element={<AdminReportsPage />} />
           <Route path="admin/categories" element={<AdminCategoriesPage />} />

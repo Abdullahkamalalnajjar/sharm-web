@@ -1,6 +1,19 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  // Reported reviews.
+  'إبلاغ': 'Segnala',
+  'عشان تبلّغ عن تعليق.': 'Per segnalare un commento.',
+  'تبلّغ عن التعليق ده؟ هيختفي لحد ما الإدارة تراجعه.': 'Segnalare questo commento? Resterà nascosto finché il nostro team non lo controlla.',
+  'شكراً، الإدارة هتراجعه': 'Grazie, lo controlleremo',
+  'تقييمات مبلّغ عنها': 'Recensioni segnalate',
+  'مفيش بلاغات': 'Nessuna segnalazione',
+  'تمسح التقييم ده؟ متوسط تقييم المحل هيتحسب من غيره.': 'Eliminare questa recensione? La valutazione del negozio verrà ricalcolata senza di essa.',
+  'التقييم اتمسح': 'Recensione eliminata',
+  'التعليق رجع يظهر': 'Il commento è di nuovo visibile',
+  '{n} بلاغ • التعليق مخفي دلوقتي': '{n} segnalazioni • commento nascosto per ora',
+  'سيبه يظهر': 'Mantieni',
+  'امسح التقييم': 'Elimina recensione',
   "قبلت الأوردر ده، مينفعش ترجّعه. كلّم الإدارة": "Hai accettato questo ordine, non puoi restituirlo. Chiama l'amministrazione",
   "تغيير حالة الأوردر": "Cambia stato dell'ordine",
   "اختار الحالة اللي الأوردر فيها فعلاً. تقدر ترجع لورا أو تقدّم لقدام. الأوردر المتأكد مينفعش يتلغي.": "Scegli la fase in cui si trova davvero l'ordine. Puoi tornare indietro o andare avanti. Un ordine confermato non può essere annullato.",

@@ -1,6 +1,19 @@
 // Turkish translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const tr: Record<string, string> = {
+  // Reported reviews.
+  'إبلاغ': 'Şikayet et',
+  'عشان تبلّغ عن تعليق.': 'Bir yorumu şikayet etmek için.',
+  'تبلّغ عن التعليق ده؟ هيختفي لحد ما الإدارة تراجعه.': 'Bu yorumu şikayet etmek istiyor musun? Ekibimiz inceleyene kadar gizlenecek.',
+  'شكراً، الإدارة هتراجعه': 'Teşekkürler, inceleyeceğiz',
+  'تقييمات مبلّغ عنها': 'Şikayet edilen değerlendirmeler',
+  'مفيش بلاغات': 'Şikayet yok',
+  'تمسح التقييم ده؟ متوسط تقييم المحل هيتحسب من غيره.': 'Bu değerlendirmeyi silmek istiyor musun? İşletmenin puanı bu değerlendirme olmadan yeniden hesaplanacak.',
+  'التقييم اتمسح': 'Değerlendirme silindi',
+  'التعليق رجع يظهر': 'Yorum tekrar görünür',
+  '{n} بلاغ • التعليق مخفي دلوقتي': '{n} şikayet • yorum şimdilik gizli',
+  'سيبه يظهر': 'Kalsın',
+  'امسح التقييم': 'Değerlendirmeyi sil',
   "قبلت الأوردر ده، مينفعش ترجّعه. كلّم الإدارة": "Bu siparişi kabul ettin, geri veremezsin. Yönetimi ara",
   "تغيير حالة الأوردر": "Sipariş durumunu değiştir",
   "اختار الحالة اللي الأوردر فيها فعلاً. تقدر ترجع لورا أو تقدّم لقدام. الأوردر المتأكد مينفعش يتلغي.": "Siparişin gerçekte hangi aşamada olduğunu seç. Geri veya ileri alabilirsin. Onaylanmış sipariş iptal edilemez.",
