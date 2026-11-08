@@ -811,6 +811,7 @@ export const it: Record<string, string> = {
   '{n} منتج جديد': '{n} nuovi prodotti',
   '{n} منتج اتحدّث': '{n} prodotti aggiornati',
   '{n} قسم جديد': '{n} nuove categorie',
+  '{n} صورة منتج اترفعت': '{n} foto prodotti caricate',
   '{n} إضافة جديدة': '{n} nuovi extra',
   '{n} إضافة اتحدّثت': '{n} extra aggiornati',
   'محدش اتحفظ. صلّح الصفوف دي وارفع الملف تاني:': 'Non è stato salvato nulla. Correggi queste righe e carica di nuovo il file:',

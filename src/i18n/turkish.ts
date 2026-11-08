@@ -811,6 +811,7 @@ export const tr: Record<string, string> = {
   '{n} منتج جديد': '{n} yeni ürün',
   '{n} منتج اتحدّث': '{n} ürün güncellendi',
   '{n} قسم جديد': '{n} yeni kategori',
+  '{n} صورة منتج اترفعت': '{n} ürün fotoğrafı yüklendi',
   '{n} إضافة جديدة': '{n} yeni ekstra',
   '{n} إضافة اتحدّثت': '{n} ekstra güncellendi',
   'محدش اتحفظ. صلّح الصفوف دي وارفع الملف تاني:': 'Hiçbir şey kaydedilmedi. Bu satırları düzelt ve dosyayı tekrar yükle:',

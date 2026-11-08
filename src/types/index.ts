@@ -215,6 +215,8 @@ export interface MenuImportResult {
   /** Add-on choices added / updated from the add-ons sheet. */
   optionsCreated: number;
   optionsUpdated: number;
+  /** Product photos taken from the file's image column. */
+  imagesSet?: number;
   /** `sheet`: "المنتجات" or "الإضافات". */
   errors: { rowNumber: number; message: string; sheet: string }[];
 }

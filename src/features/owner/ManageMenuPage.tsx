@@ -349,6 +349,7 @@ export function ManageMenuPage() {
                       {t('{n} إضافة جديدة', { n: importResult.optionsCreated })} • {t('{n} إضافة اتحدّثت', { n: importResult.optionsUpdated })}
                     </p>
                   )}
+                  {(importResult.imagesSet ?? 0) > 0 && <p>{t('{n} صورة منتج اترفعت', { n: importResult.imagesSet ?? 0 })}</p>}
                 </div>
               </div>
             ) : (
