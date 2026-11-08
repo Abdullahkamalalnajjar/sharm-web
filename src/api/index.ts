@@ -153,6 +153,9 @@ const store = (storeId: number) => `/api/stores/${storeId}`;
 const group = (storeId: number, productId: number, groupId: number) =>
   `${store(storeId)}/products/${productId}/option-groups/${groupId}`;
 
+/** Where a product picture comes from: Google Images or the AI. */
+export type ImageSource = 'search' | 'ai';
+
 export const catalogApi = {
   menu: (storeId: number) => api.get<Menu>(`${store(storeId)}/menu`),
   managedMenu: (storeId: number) => api.get<Menu>(`${store(storeId)}/manage/menu`),
@@ -185,9 +188,12 @@ export const catalogApi = {
     api.patch<void>(`${store(storeId)}/products/${productId}/availability`, { isAvailable }),
   uploadProductImage: (storeId: number, productId: number, file: File) =>
     api.upload<Product>(`${store(storeId)}/products/${productId}/image`, file),
-  /** Draws the product's picture with AI on the server and sets it (~10 seconds to 2 minutes). */
-  generateProductImage: (storeId: number, productId: number) =>
-    api.post<Product>(`${store(storeId)}/products/${productId}/image/generate`, undefined, { timeout: 240_000 }),
+  /**
+   * Gets the product's picture on the server and sets it: `search` = a Google Images photo (a few seconds),
+   * `ai` = drawn / picked by the AI (~10 seconds to 2 minutes).
+   */
+  generateProductImage: (storeId: number, productId: number, source: ImageSource) =>
+    api.post<Product>(`${store(storeId)}/products/${productId}/image/generate?source=${source}`, undefined, { timeout: 240_000 }),
   removeProductImage: (storeId: number, productId: number) =>
     api.delete<Product>(`${store(storeId)}/products/${productId}/image`),
   deleteProduct: (storeId: number, productId: number) => api.delete<void>(`${store(storeId)}/products/${productId}`),

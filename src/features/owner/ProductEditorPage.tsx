@@ -1,9 +1,9 @@
-import { MoreVertical, Plus, Sandwich, Sparkles, Trash2, X } from 'lucide-react';
+import { MoreVertical, Plus, Sandwich, Search, Sparkles, Trash2, X } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 
-import { catalogApi } from '@/api';
+import { catalogApi, type ImageSource } from '@/api';
 import { errorMessage } from '@/api/client';
 import { keys, useManagedMenu } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
@@ -49,7 +49,7 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
   const [translations, setTranslations] = useState(() => translationValues(initial ?? undefined));
   const [image, setImage] = useState<ImageEdit>(noImageEdit);
   const [saving, setSaving] = useState(false);
-  const [generating, setGenerating] = useState(false);
+  const [generating, setGenerating] = useState<ImageSource | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [groupDialog, setGroupDialog] = useState<{ group: ProductOptionGroup | null } | null>(null);
@@ -94,18 +94,18 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
     }
   }
 
-  /** Has the server draw the saved product's picture with AI (from its saved name and description). */
-  async function generateImage() {
+  /** Has the server get the saved product's picture from Google or draw it with AI (from its saved name and description). */
+  async function generateImage(source: ImageSource) {
     if (!product) return;
-    if (product.imageUrl && !(await confirm(t('تبدّل صورة المنتج الحالية بصورة جديدة؟'), t('ارسم')))) return;
-    setGenerating(true);
+    if (product.imageUrl && !(await confirm(t('تبدّل صورة المنتج الحالية بصورة جديدة؟'), t('بدّل')))) return;
+    setGenerating(source);
     await runAction(async () => {
-      const updated = await catalogApi.generateProductImage(storeId, product.id);
+      const updated = await catalogApi.generateProductImage(storeId, product.id, source);
       setImage(noImageEdit);
       setProduct(updated);
       invalidate();
     }, t('الصورة اتعملت'));
-    setGenerating(false);
+    setGenerating(null);
   }
 
   /** Runs an option-group / option call that returns the updated product. */
@@ -163,19 +163,33 @@ function Editor({ storeId, categories, initial }: { storeId: number; categories:
           <ImagePickerField label={t('صورة المنتج')} currentUrl={product?.imageUrl} edit={image} onChange={setImage} placeholderIcon={Sandwich} />
           {product && (
             <div>
-              <Button
-                type="button"
-                variant="outline"
-                size="md"
-                block
-                loading={generating}
-                disabled={generating || saving}
-                icon={<Sparkles className="size-4" />}
-                onClick={generateImage}
-              >
-                {generating ? t('بيجهّز الصورة... ممكن ياخد لحد دقيقتين') : t('ارسم صورة بالذكاء الاصطناعي')}
-              </Button>
-              <p className="mt-1 text-xs text-ink-3">{t('احفظ التعديلات الأول، الصورة بتترسم من الاسم والوصف المحفوظين')}</p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  block
+                  loading={generating === 'search'}
+                  disabled={generating !== null || saving}
+                  icon={<Search className="size-4" />}
+                  onClick={() => generateImage('search')}
+                >
+                  {generating === 'search' ? t('بيدوّر على صورة...') : t('صورة من جوجل')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  block
+                  loading={generating === 'ai'}
+                  disabled={generating !== null || saving}
+                  icon={<Sparkles className="size-4" />}
+                  onClick={() => generateImage('ai')}
+                >
+                  {generating === 'ai' ? t('بيجهّز الصورة... ممكن ياخد لحد دقيقتين') : t('ارسم صورة بالذكاء الاصطناعي')}
+                </Button>
+              </div>
+              <p className="mt-1 text-xs text-ink-3">{t('احفظ التعديلات الأول، الصورة بتتجاب من الاسم والوصف المحفوظين')}</p>
             </div>
           )}
           <label className="block">

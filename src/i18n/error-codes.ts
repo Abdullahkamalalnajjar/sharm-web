@@ -53,6 +53,8 @@ export const errorTexts: Record<string, string> = {
   "Offer.NotFound": "العرض ده خلص أو مبقاش متاح",
   "Offer.HiddenByAdmin": "الإدارة موقّفة العرض ده، كلّمها عشان ترجّعه",
   "Image.GenerationUnavailable": "رسم الصور مش متاح دلوقتي، كلّم إدارة التطبيق.",
+  "Image.SearchPhotoNotFound": "ملقيناش صورة للمنتج ده على جوجل. جرّب الرسم بالذكاء الاصطناعي أو ارفع صورة.",
+  "Image.SearchUnavailable": "البحث عن الصور مش متاح دلوقتي، جرّب الرسم بالذكاء الاصطناعي.",
   "Image.GenerationRejected": "معرفناش نرسم صورة للمنتج ده، ارفع صورة بنفسك.",
   "Image.GenerationFailed": "رسم الصورة فشل، جرّب تاني.",
 };

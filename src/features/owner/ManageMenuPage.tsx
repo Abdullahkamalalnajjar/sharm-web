@@ -1,9 +1,9 @@
-import { BookOpen, CircleCheck, CircleX, FileDown, FileSpreadsheet, FileText, FileUp, FolderPlus, ImagePlus, Loader2, MoreVertical, Plus, Sandwich, Sparkles, type LucideIcon } from 'lucide-react';
+import { BookOpen, CircleCheck, CircleX, FileDown, FileSpreadsheet, FileText, FileUp, FolderPlus, ImagePlus, Loader2, MoreVertical, Plus, Sandwich, Search, Sparkles, type LucideIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router';
 
-import { catalogApi } from '@/api';
+import { catalogApi, type ImageSource } from '@/api';
 import { ApiError, errorMessage } from '@/api/client';
 import { keys, useManagedMenu, useStore } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
@@ -34,7 +34,7 @@ export function ManageMenuPage() {
   // Products whose photo is being drawn; several can run at once.
   const [generating, setGenerating] = useState<ReadonlySet<number>>(new Set());
   // Drawing the whole menu: how many of how many are done.
-  const [bulk, setBulk] = useState<{ done: number; total: number } | null>(null);
+  const [bulk, setBulk] = useState<{ done: number; total: number; source: ImageSource } | null>(null);
   const [excelBusy, setExcelBusy] = useState(false);
   const [excelMenu, setExcelMenu] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -45,38 +45,42 @@ export function ManageMenuPage() {
   };
 
   /**
-   * Draws photos for the whole menu: the products without one, or all of them when every product has
-   * one. Two at a time, since each takes up to two minutes on the server.
+   * Photos for the whole menu, from Google or drawn by the AI: the products without one, or all of them when
+   * every product has one. Two at a time, since an AI one takes up to two minutes on the server.
    */
-  async function generateMenuImages() {
+  async function generateMenuImages(source: ImageSource) {
     const products = (menu.data?.categories ?? []).flatMap((c) => c.products);
     if (products.length === 0) return;
     const missing = products.filter((p) => !p.imageUrl);
     const targets = missing.length > 0 ? missing : products;
     const question =
-      missing.length > 0
-        ? t('ترسم صور بالذكاء الاصطناعي لـ {n} منتج من غير صورة؟', { n: missing.length })
-        : t('كل المنتجات عندها صور. ترسم صور جديدة لكل المنتجات ({n})؟', { n: products.length });
-    if (!(await confirm(question, t('ارسم')))) return;
+      source === 'search'
+        ? missing.length > 0
+          ? t('تجيب صور من جوجل لـ {n} منتج من غير صورة؟', { n: missing.length })
+          : t('كل المنتجات عندها صور. تجيب صور جديدة من جوجل لكل المنتجات ({n})؟', { n: products.length })
+        : missing.length > 0
+          ? t('ترسم صور بالذكاء الاصطناعي لـ {n} منتج من غير صورة؟', { n: missing.length })
+          : t('كل المنتجات عندها صور. ترسم صور جديدة لكل المنتجات ({n})؟', { n: products.length });
+    if (!(await confirm(question, source === 'search' ? t('هات الصور') : t('ارسم')))) return;
 
     let done = 0;
     let failed = 0;
     let stopped: string | null = null;
     const queue = [...targets];
-    setBulk({ done: 0, total: targets.length });
+    setBulk({ done: 0, total: targets.length, source });
     const worker = async () => {
       for (let p = queue.shift(); p && !stopped; p = queue.shift()) {
         const id = p.id;
         setGenerating((s) => new Set(s).add(id));
         try {
-          await catalogApi.generateProductImage(storeId, id);
+          await catalogApi.generateProductImage(storeId, id, source);
         } catch (e) {
           failed++;
           // The service is off: no point trying the rest.
-          if (e instanceof ApiError && e.errors.some((x) => x.code === 'Image.GenerationUnavailable')) stopped = errorMessage(e);
+          if (e instanceof ApiError && e.errors.some((x) => x.code === 'Image.GenerationUnavailable' || x.code === 'Image.SearchUnavailable')) stopped = errorMessage(e);
         }
         done++;
-        setBulk({ done, total: targets.length });
+        setBulk({ done, total: targets.length, source });
         setGenerating((s) => {
           const next = new Set(s);
           next.delete(id);
@@ -88,15 +92,15 @@ export function ManageMenuPage() {
     await Promise.all([worker(), worker()]);
     setBulk(null);
     if (stopped) showMessage(stopped, true);
-    else if (failed > 0) showMessage(t('اترسمت {ok} صورة، و{failed} فشلوا', { ok: done - failed, failed }), true);
-    else showMessage(t('اترسمت {n} صورة', { n: done }));
+    else if (failed > 0) showMessage(t('اتعملت {ok} صورة، و{failed} فشلوا', { ok: done - failed, failed }), true);
+    else showMessage(t('اتعملت {n} صورة', { n: done }));
   }
 
-  /** Has the server draw the product's picture with AI (from its saved name and description). */
-  async function generateImage(p: Product) {
-    if (p.imageUrl && !(await confirm(t('تبدّل صورة المنتج الحالية بصورة جديدة؟'), t('ارسم')))) return;
+  /** Has the server get the product's picture from Google or draw it with AI (from its saved name and description). */
+  async function generateImage(p: Product, source: ImageSource) {
+    if (p.imageUrl && !(await confirm(t('تبدّل صورة المنتج الحالية بصورة جديدة؟'), t('بدّل')))) return;
     setGenerating((s) => new Set(s).add(p.id));
-    if (await runAction(() => catalogApi.generateProductImage(storeId, p.id), t('الصورة اتعملت'))) reload();
+    if (await runAction(() => catalogApi.generateProductImage(storeId, p.id, source), t('الصورة اتعملت'))) reload();
     setGenerating((s) => {
       const next = new Set(s);
       next.delete(p.id);
@@ -195,16 +199,26 @@ export function ManageMenuPage() {
         }}
       />
       {menu.data?.categories.some((c) => c.products.length > 0) && (
-        <div className="mb-3 flex justify-end px-4">
+        <div className="mb-3 flex flex-wrap justify-end gap-2 px-4">
           <Button
             size="sm"
             variant="outline"
-            icon={bulk ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+            icon={bulk?.source === 'search' ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
+            disabled={bulk !== null}
+            title={t('صور من جوجل للمنيو كله')}
+            onClick={() => generateMenuImages('search')}
+          >
+            {bulk?.source === 'search' ? t('بيجيب {done}/{total}', bulk) : t('صور من جوجل للمنيو كله')}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            icon={bulk?.source === 'ai' ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
             disabled={bulk !== null}
             title={t('ارسم صور المنيو كله بالذكاء الاصطناعي')}
-            onClick={generateMenuImages}
+            onClick={() => generateMenuImages('ai')}
           >
-            {bulk ? t('بيرسم {done}/{total}', bulk) : t('ارسم صور المنيو كله بالذكاء الاصطناعي')}
+            {bulk?.source === 'ai' ? t('بيرسم {done}/{total}', bulk) : t('ارسم صور المنيو كله بالذكاء الاصطناعي')}
           </Button>
         </div>
       )}
@@ -251,16 +265,32 @@ export function ManageMenuPage() {
                           .join(' • ')}
                       </p>
                     </button>
-                    <button
-                      type="button"
-                      title={generating.has(p.id) ? t('بيجهّز الصورة... ممكن ياخد لحد دقيقتين') : t('ارسم صورة بالذكاء الاصطناعي')}
-                      aria-label={t('ارسم صورة بالذكاء الاصطناعي')}
-                      disabled={generating.has(p.id)}
-                      onClick={() => generateImage(p)}
-                      className="grid size-10 shrink-0 place-items-center rounded-full text-brand hover:bg-brand/10 disabled:opacity-60"
-                    >
-                      {generating.has(p.id) ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
-                    </button>
+                    {generating.has(p.id) ? (
+                      <span title={t('بيجهّز الصورة...')} className="grid size-10 shrink-0 place-items-center text-brand">
+                        <Loader2 className="size-5 animate-spin" />
+                      </span>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          title={t('صورة من جوجل')}
+                          aria-label={t('صورة من جوجل')}
+                          onClick={() => generateImage(p, 'search')}
+                          className="grid size-10 shrink-0 place-items-center rounded-full text-ink-2 hover:bg-surface-alt"
+                        >
+                          <Search className="size-5" />
+                        </button>
+                        <button
+                          type="button"
+                          title={t('ارسم صورة بالذكاء الاصطناعي')}
+                          aria-label={t('ارسم صورة بالذكاء الاصطناعي')}
+                          onClick={() => generateImage(p, 'ai')}
+                          className="grid size-10 shrink-0 place-items-center rounded-full text-brand hover:bg-brand/10"
+                        >
+                          <Sparkles className="size-5" />
+                        </button>
+                      </>
+                    )}
                     <Switch
                       checked={p.isAvailable}
                       label={t('متاح')}
