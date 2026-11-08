@@ -1,4 +1,4 @@
-import { BookOpen, CircleCheck, CircleX, FileDown, FileSpreadsheet, FileText, FileUp, FolderPlus, Loader2, MoreVertical, Plus, Sandwich, Sparkles, type LucideIcon } from 'lucide-react';
+import { BookOpen, CircleCheck, CircleX, FileDown, FileSpreadsheet, FileText, FileUp, FolderPlus, ImagePlus, Loader2, MoreVertical, Plus, Sandwich, Sparkles, type LucideIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router';
@@ -17,6 +17,9 @@ import { confirm, showMessage } from '@/store/ui';
 import type { MenuCategory, MenuImportResult, Product } from '@/types';
 
 import { CategoryDialog, type CategoryValues } from './Dialogs';
+
+/** The biggest menu file the server takes (the Excel with its product photos). */
+const MAX_MENU_FILE_MB = 50;
 
 export function ManageMenuPage() {
   const storeId = Number(useParams().id);
@@ -133,6 +136,11 @@ export function ManageMenuPage() {
   }
 
   async function importExcel(file: File) {
+    // The server takes up to 50 MB (the file with its product photos).
+    if (file.size > MAX_MENU_FILE_MB * 1024 * 1024) {
+      showMessage(t('الملف أكبر من {n} ميجا. قسّم المنتجات على كذا ملف.', { n: MAX_MENU_FILE_MB }), true);
+      return;
+    }
     setExcelBusy(true);
     let result: MenuImportResult | null = null;
     await runAction(async () => {
@@ -293,12 +301,21 @@ export function ManageMenuPage() {
           <ExcelAction
             icon={FileUp}
             title={t('ارفع ملف Excel')}
-            subtitle={t('يضيف ويحدّث المنتجات مرة واحدة')}
+            subtitle={t('يضيف ويحدّث المنتجات وصورها مرة واحدة')}
             onClick={() => {
               setExcelMenu(false);
               fileInput.current?.click();
             }}
           />
+          <div className="mt-2 flex gap-3 rounded-2xl bg-surface-alt p-3.5">
+            <ImagePlus className="mt-0.5 size-5 shrink-0 text-brand" />
+            <div className="text-[13px] text-ink-2">
+              <p className="font-bold text-ink">{t('صور المنتجات من الإكسل')}</p>
+              <p className="mt-1">
+                {t('حط صورة كل منتج في عمود «صورة المنتج» في نفس صفه: Insert ← Pictures ← Place in Cell. الصورة لحد 5 ميجا، والملف كله لحد {n} ميجا. الخانة الفاضية بتسيب الصورة القديمة.', { n: MAX_MENU_FILE_MB })}
+              </p>
+            </div>
+          </div>
         </div>
       </Sheet>
 
