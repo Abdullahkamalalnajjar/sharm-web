@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { Banknote, CalendarClock, Circle, CircleDot, Clock, Info, MapPinPlus, Store, Wallet } from 'lucide-react';
+import { Banknote, CalendarClock, Circle, CircleDot, Clock, Info, MapPinPlus, Store, Tag, Wallet, X } from 'lucide-react';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -15,7 +15,7 @@ import { addressDetails, dateLocale, formatPercent, formatPrice } from '@/lib/fo
 import { t } from '@/lib/i18n';
 import { formatScheduledTime } from '@/lib/localized';
 import { showMessage } from '@/store/ui';
-import { EMPTY_CART, type Address } from '@/types';
+import { EMPTY_CART, type Address, type CouponPreview } from '@/types';
 
 /** Choose the delivery address and time, add a note, and place the order (cash on delivery). */
 /** Ready tip amounts for the driver (EGP); 0 = no tip. */
@@ -48,17 +48,36 @@ export function CheckoutPage() {
   const taxAmount = cart.taxAmount ?? 0;
   const [tip, setTip] = useState(0);
   const [customTip, setCustomTip] = useState(false);
-  const total = cart.subtotal + taxAmount + (quote.data?.deliveryFee ?? 0) + tip;
+  // The coupon takes off the products only, never more than they come to.
+  const [coupon, setCoupon] = useState<CouponPreview | null>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [checkingCoupon, setCheckingCoupon] = useState(false);
+  const discount = coupon ? Math.min(coupon.discount, cart.subtotal) : 0;
+  const total = cart.subtotal - discount + taxAmount + (quote.data?.deliveryFee ?? 0) + tip;
   const walletBalance = useMyWallet().data?.balance ?? 0;
   const [useWallet, setUseWallet] = useState(true);
   const fromWallet = useWallet ? Math.min(walletBalance, total) : 0;
   const toPay = total - fromWallet;
 
+  async function applyCoupon() {
+    const code = couponCode.trim();
+    if (!code || checkingCoupon) return;
+    setCheckingCoupon(true);
+    try {
+      setCoupon(await ordersApi.previewCoupon(code));
+      setCouponCode('');
+    } catch (e) {
+      showMessage(errorMessage(e), true);
+    } finally {
+      setCheckingCoupon(false);
+    }
+  }
+
   async function place() {
     if (!selected) return;
     setPlacing(true);
     try {
-      const order = await ordersApi.place(selected.id, note.trim() || null, scheduledFor, useWallet && walletBalance > 0, tip);
+      const order = await ordersApi.place(selected.id, note.trim() || null, scheduledFor, useWallet && walletBalance > 0, tip, coupon?.code);
       qc.invalidateQueries({ queryKey: keys.cart });
       qc.invalidateQueries({ queryKey: keys.myWallet });
       qc.invalidateQueries({ queryKey: keys.myOrders });
@@ -109,6 +128,44 @@ export function CheckoutPage() {
           </>
         )}
 
+        <SectionHeader title={t('كود الخصم')} />
+        <SoftCard className="p-3">
+          {coupon ? (
+            <div className="flex items-center gap-2.5">
+              <Tag className="size-5 text-success" />
+              <span className="flex-1 font-extrabold text-ink">
+                {coupon.code} <span className="text-success">−{formatPrice(discount)}</span>
+              </span>
+              <button type="button" title={t('شيل الكوبون')} onClick={() => setCoupon(null)} className="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-surface-alt">
+                <X className="size-5" />
+              </button>
+            </div>
+          ) : (
+            <form
+              className="flex items-center gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                applyCoupon();
+              }}
+            >
+              <TextField
+                className="flex-1"
+                name="coupon"
+                ltr
+                maxLength={30}
+                autoCapitalize="characters"
+                placeholder={t('اكتب كود الخصم')}
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                disabled={checkingCoupon}
+              />
+              <Button type="submit" disabled={checkingCoupon || !couponCode.trim()}>
+                {t('تطبيق')}
+              </Button>
+            </form>
+          )}
+        </SoftCard>
+
         <SectionHeader title={t('ملخص الطلب')} />
         <SoftCard className="p-4">
           {cart.stores.map((s) => (
@@ -122,6 +179,7 @@ export function CheckoutPage() {
           ))}
           <div className="my-2.5 border-t border-line" />
           <Row label={t('المنتجات')} value={formatPrice(cart.subtotal)} />
+          {discount > 0 && <Row label={t('خصم الكوبون ({code})', { code: coupon?.code ?? '' })} value={<span className="text-success">−{formatPrice(discount)}</span>} />}
           {taxAmount > 0 && (
             <Row
               label={t('ضريبة المحل ({p})', { p: formatPercent(cart.taxPercent ?? cart.stores[0]?.taxPercent ?? 0) })}

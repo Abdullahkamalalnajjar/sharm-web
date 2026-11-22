@@ -119,3 +119,9 @@ export function formatPercent(value: number): string {
 export function discountLabel(percent: number): string {
   return `\u2066-${formatPercent(percent)}\u2069`;
 }
+
+/** Egyptian mobile: 01[0125] + 8 digits, optionally with +20 / 0020 / 20 in front. */
+export function isValidEgyptPhone(input: string): boolean {
+  const digits = input.replace(/[\s\-()]/g, '');
+  return /^(\+?20|0020)?0?1[0125]\d{8}$/.test(digits);
+}

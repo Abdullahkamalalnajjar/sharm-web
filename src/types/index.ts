@@ -420,6 +420,9 @@ export interface Order {
   cashToCollect?: number;
   /** The customer's tip for the driver (part of the total). */
   tip?: number;
+  /** What the coupon `couponCode` took off the products (the total already has it removed). */
+  discount?: number;
+  couponCode?: string | null;
   itemsCount: number;
   canCustomerCancel: boolean;
   stores: OrderStoreGroup[];
@@ -1035,4 +1038,43 @@ export interface OfferSaveInput {
   displayOrder?: number | null;
   productIds: number[];
   storeIds?: number[];
+}
+
+/** A coupon checked against the customer's cart: `discount` is what it takes off the products. */
+export interface CouponPreview {
+  code: string;
+  discount: number;
+  subtotal: number;
+  kind: 'Percent' | 'Fixed';
+  value: number;
+}
+
+/** A coupon as the admin sees it. */
+export interface Coupon {
+  id: number;
+  code: string;
+  kind: 'Percent' | 'Fixed';
+  value: number;
+  maxDiscount: number | null;
+  minOrder: number | null;
+  startsAtUtc: string | null;
+  endsAtUtc: string | null;
+  usageLimit: number | null;
+  perCustomerLimit: number | null;
+  isActive: boolean;
+  timesUsed: number;
+  createdUtc: string;
+}
+
+export interface CouponInput {
+  code: string;
+  kind: 'Percent' | 'Fixed';
+  value: number;
+  maxDiscount: number | null;
+  minOrder: number | null;
+  startsAtUtc: string | null;
+  endsAtUtc: string | null;
+  usageLimit: number | null;
+  perCustomerLimit: number | null;
+  isActive: boolean;
 }

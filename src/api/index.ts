@@ -1,5 +1,8 @@
 import { api, tokenStorage } from './client';
 import type {
+  Coupon,
+  CouponInput,
+  CouponPreview,
   CustomerWallet,
   OrderRefunds,
   RefundParty,
@@ -60,6 +63,11 @@ async function authenticate(path: string, body: Record<string, unknown>): Promis
   tokenStorage.save(tokens);
   return tokens;
 }
+
+export const profileApi = {
+  get: () => api.get<{ userId: string; email: string; userName: string | null; phoneNumber: string | null; city: string | null }>('/api/profile'),
+  update: (input: { userName: string; phoneNumber: string; city?: string | null }) => api.put<unknown>('/api/profile', input),
+};
 
 export const authApi = {
   login: (email: string, password: string) =>
@@ -265,6 +273,15 @@ export const cartApi = {
   clear: () => api.delete<Cart>('/api/cart'),
 };
 
+// ---------- Coupons ----------
+
+export const couponsApi = {
+  all: () => api.get<Coupon[]>('/api/admin/coupons'),
+  create: (input: CouponInput) => api.post<Coupon>('/api/admin/coupons', input),
+  update: (id: number, input: CouponInput) => api.put<Coupon>(`/api/admin/coupons/${id}`, input),
+  setActive: (id: number, isActive: boolean) => api.put<Coupon>(`/api/admin/coupons/${id}/active`, { isActive }),
+};
+
 // ---------- Orders ----------
 
 const adminOrders = '/api/admin/orders';
@@ -273,8 +290,11 @@ export const ordersApi = {
   /** `scheduledFor`: one of the store's schedule slots (UTC ISO); null = as soon as possible. */
   /** `useWallet`: pay what the wallet holds (up to the total); the driver collects the rest. */
   /** `tip`: the customer's tip for the driver (0 to 1000 EGP). */
-  place: (addressId: number, note?: string | null, scheduledFor?: string | null, useWallet = false, tip = 0) =>
-    api.post<Order>('/api/orders', { addressId, note: note ?? null, scheduledFor: scheduledFor ?? null, useWallet, tip }),
+  /** `couponCode`: a coupon whose discount comes off the products (checked again by the server). */
+  place: (addressId: number, note?: string | null, scheduledFor?: string | null, useWallet = false, tip = 0, couponCode?: string | null) =>
+    api.post<Order>('/api/orders', { addressId, note: note ?? null, scheduledFor: scheduledFor ?? null, useWallet, tip, couponCode: couponCode ?? null }),
+  /** What the coupon would take off the current cart; rejects with the server's reason when it can't be used. */
+  previewCoupon: (code: string) => api.post<CouponPreview>('/api/coupons/preview', { code }),
   placeCustom: (addressId: number, requestDetails: string, paymentMethod?: string) =>
     api.post<number>('/api/orders/custom', { addressId, requestDetails, paymentMethod: paymentMethod ?? 'Cash' }),
   mine: () => api.get<OrderSummary[]>('/api/orders/mine'),
@@ -341,7 +361,6 @@ export const driversApi = {
   /** Take the order; fails with 409 if another driver was faster. */
   accept: (id: number) => api.post<Order>(`${me}/orders/${id}/accept`),
   /** Turn down an offer, or give back an order before pickup. */
-  reject: (id: number) => api.post<null>(`${me}/orders/${id}/reject`),
   /** Active orders by default; `history` for delivered and cancelled ones. */
   myOrders: (history: boolean) => api.get<Order[]>(`${me}/orders`, { history }),
   myOrder: (id: number) => api.get<Order>(`${me}/orders/${id}`),

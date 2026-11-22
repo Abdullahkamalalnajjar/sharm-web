@@ -12,7 +12,6 @@ import { formatOrderDate, formatPrice } from '@/lib/format';
 import { orderStatus, vehicleLabel } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { useAuth } from '@/store/auth';
-import { confirm } from '@/store/ui';
 import type { Driver, DriverOffer, Order } from '@/types';
 
 type Tab = 'offers' | 'now' | 'history';
@@ -24,7 +23,7 @@ const TABS: { value: Tab; label: string; Icon: LucideIcon }[] = [
 ];
 
 /**
- * Driver home: orders waiting for a driver (accept or reject), the driver's own orders to pick up
+ * Driver home: orders waiting for a driver (accept), the driver's own orders to pick up
  * and deliver, and their history.
  */
 export function DriverHomePage() {
@@ -180,17 +179,13 @@ function OfferCard({ offer: o, onTaken }: { offer: DriverOffer; onTaken: (orderI
   const [label, color] = o.isReady ? ['جاهز للاستلام', 'var(--color-success)'] : [meta.label, meta.color];
   const pickup = o.isCustomOrder ? 'طلب خاص — اشتري المطلوب' : (o.storeName ?? '');
 
-  async function respond(accept: boolean) {
-    if (!accept && !(await confirm(`مش عايز أوردر #${o.number}؟ مش هيظهرلك تاني.`, 'ارفض'))) return;
+  async function accept() {
     setBusy(true);
-    const ok = await runAction(
-      () => (accept ? driversApi.accept(o.orderId) : driversApi.reject(o.orderId)),
-      accept ? 'الأوردر بقى معاك 🛵' : undefined,
-    );
+    const ok = await runAction(() => driversApi.accept(o.orderId), 'الأوردر بقى معاك 🛵');
     setBusy(false);
     // Taken or not (another driver may have been faster), the list changed.
     qc.invalidateQueries({ queryKey: keys.driverOffers });
-    if (ok && accept) {
+    if (ok) {
       refreshDriver();
       onTaken(o.orderId);
     }
@@ -229,11 +224,8 @@ function OfferCard({ offer: o, onTaken }: { offer: DriverOffer; onTaken: (orderI
         <span className="text-ink-2 me-1">حصّل</span>
         <Price value={o.cashToCollect ?? o.total} className="text-[17px]" />
       </div>
-      <div className="mt-3 flex gap-2.5">
-        <Button variant="outline" className="border-danger/50 text-danger hover:bg-danger/10" disabled={busy} onClick={() => respond(false)}>
-          ارفض
-        </Button>
-        <Button className="flex-1" loading={busy} icon={<Check className="size-5" />} onClick={() => respond(true)}>
+      <div className="mt-3">
+        <Button block loading={busy} icon={<Check className="size-5" />} onClick={accept}>
           اقبل الأوردر
         </Button>
       </div>

@@ -296,6 +296,9 @@ export function OrderTotalsCard({ order }: { order: Order }) {
         label={order.deliveryDistanceKm != null ? t('التوصيل ({km} كم)', { km: order.deliveryDistanceKm.toFixed(1) }) : t('التوصيل')}
         value={order.deliveryFee == null ? <span className="text-[13px] text-warning">{t('هيتحدد من الإدارة')}</span> : <span className="text-ink">{formatPrice(order.deliveryFee)}</span>}
       />
+      {(order.discount ?? 0) > 0 && (
+        <Row label={t('خصم الكوبون ({code})', { code: order.couponCode ?? '' })} value={<span className="text-success">−{formatPrice(order.discount ?? 0)}</span>} />
+      )}
       {order.taxPercent > 0 && (
         <Row label={t('الضريبة ({p}%)', { p: order.taxPercent })} value={<span className="text-ink">{formatPrice(order.taxAmount)}</span>} />
       )}

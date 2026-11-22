@@ -9,6 +9,7 @@ import { AdminDashboardPage } from '@/features/admin/AdminDashboardPage';
 import { AdminDriversPage } from '@/features/admin/AdminDriversPage';
 import { AdminReportsPage } from '@/features/admin/AdminReportsPage';
 import { AdminOrderPage } from '@/features/admin/AdminOrderPage';
+import { AdminCouponsPage } from '@/features/admin/AdminCouponsPage';
 import { AdminOffersPage } from '@/features/admin/AdminOffersPage';
 import { AdminOrdersPage } from '@/features/admin/AdminOrdersPage';
 import { AdminStoresPage } from '@/features/admin/AdminStoresPage';
@@ -95,6 +96,7 @@ export function App() {
           <Route path="admin/reports" element={<AdminReportsPage />} />
           <Route path="admin/categories" element={<AdminCategoriesPage />} />
           <Route path="admin/offers" element={<AdminOffersPage />} />
+          <Route path="admin/coupons" element={<AdminCouponsPage />} />
           <Route path="admin/finance" element={<AdminFinancePage />} />
           <Route path="admin/stores/:id/wallet" element={<StoreWalletPage isAdmin />} />
           <Route path="admin/drivers/:id/wallet" element={<DriverWalletPage />} />

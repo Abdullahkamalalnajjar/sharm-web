@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { addressesApi, adminApi, customerWalletApi, cartApi, catalogApi, driversApi, loyaltyApi, notificationsApi, offersApi, ordersApi, reportsApi, storeCategoriesApi, storeOrdersApi, storesApi, walletsApi } from '@/api';
+import { profileApi, addressesApi, adminApi, customerWalletApi, cartApi, catalogApi, couponsApi, driversApi, loyaltyApi, notificationsApi, offersApi, ordersApi, reportsApi, storeCategoriesApi, storeOrdersApi, storesApi, walletsApi } from '@/api';
 import { SHARM_AREAS } from '@/lib/meta';
 import { useAuth } from '@/store/auth';
 import { useBrowse } from '@/store/ui';
@@ -12,6 +12,7 @@ export const keys = {
   storeOrders: (filter: StoreOrdersFilter) => ['store-orders', 'list', filter] as const,
   storeOrder: (id: number) => ['store-orders', 'one', id] as const,
   storeRatings: (storeId: number) => ['stores', 'ratings', storeId] as const,
+  myProfile: ['profile', 'me'] as const,
   myPoints: ['points', 'me'] as const,
   myWallet: ['wallet', 'me'] as const,
   deliveryQuote: (addressId: number, storeId: number | undefined) => ['cart', 'delivery-quote', addressId, storeId] as const,
@@ -22,6 +23,7 @@ export const keys = {
     ['stores', 'browse', lat, lng, categoryId] as const,
   storeCategories: ['store-categories'] as const,
   adminStoreCategories: ['admin', 'store-categories'] as const,
+  adminCoupons: ['admin', 'coupons'] as const,
   store: (id: number) => ['stores', id] as const,
   menu: (id: number) => ['menu', id] as const,
   managedMenu: (id: number) => ['menu', 'manage', id] as const,
@@ -126,6 +128,9 @@ export const useStoreCategories = () =>
 /** Every category, hidden ones included (admin). */
 export const useAdminStoreCategories = () =>
   useQuery({ queryKey: keys.adminStoreCategories, queryFn: storeCategoriesApi.all });
+
+/** Every coupon (admin). */
+export const useAdminCoupons = () => useQuery({ queryKey: keys.adminCoupons, queryFn: couponsApi.all });
 
 export const useStore = (id: number) => useQuery({ queryKey: keys.store(id), queryFn: () => storesApi.byId(id) });
 export const useMenu = (id: number) => useQuery({ queryKey: keys.menu(id), queryFn: () => catalogApi.menu(id) });
@@ -397,3 +402,7 @@ export function useRefreshOffers() {
     qc.invalidateQueries({ queryKey: keys.adminOffers });
   };
 }
+
+/** The signed-in customer's profile (the phone number is needed to order). */
+export const useMyProfile = (enabled = true) =>
+  useQuery({ queryKey: keys.myProfile, queryFn: profileApi.get, enabled });

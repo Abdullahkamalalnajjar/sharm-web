@@ -1,6 +1,11 @@
 // Translations for the customer pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  'كمّل بياناتك': "Complete your details",
+  'محتاجين رقم موبايلك عشان المندوب والمحل يتواصلوا معاك في الطلب.': "We need your mobile number so the driver and store can reach you about your order.",
+  'الاسم مطلوب': "Name is required",
+  'اكتب رقم موبايل صحيح': "Enter a valid mobile number",
+  'حفظ ومتابعة': "Save and continue",
   'العروض اليومية': 'Daily offers',
   'منتجات العرض': 'Offer products',
   'العرض ده خلص أو مبقاش متاح': 'This offer has ended or is no longer available',
@@ -272,6 +277,11 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  'كمّل بياناتك': "Дополните данные",
+  'محتاجين رقم موبايلك عشان المندوب والمحل يتواصلوا معاك في الطلب.': "Нужен ваш номер телефона, чтобы курьер и магазин могли связаться с вами по заказу.",
+  'الاسم مطلوب': "Укажите имя",
+  'اكتب رقم موبايل صحيح': "Введите корректный номер телефона",
+  'حفظ ومتابعة': "Сохранить и продолжить",
   'العروض اليومية': 'Предложения дня',
   'منتجات العرض': 'Товары акции',
   'العرض ده خلص أو مبقاش متاح': 'Эта акция закончилась или больше недоступна',

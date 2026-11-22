@@ -82,15 +82,20 @@ export function AdminOrderPage() {
       <PageHeader
         title={o ? t('أوردر #{n}', { n: o.number }) : t('الأوردر')}
         actions={
-          // Only before the store or the admin accepts it: after that nobody can cancel it (the server refuses too).
-          o?.status === 'Pending' ? (
-            <button type="button" title={t('إلغاء الأوردر')} disabled={busy} onClick={() => setReasonOpen(true)} className="grid size-10 place-items-center rounded-full text-danger hover:bg-danger/10 disabled:opacity-50">
-              <XCircle className="size-5" />
-            </button>
-          ) : o && active ? (
-            <button type="button" title={t('تغيير حالة الأوردر')} disabled={busy} onClick={() => setStatusOpen(true)} className="grid size-10 place-items-center rounded-full text-ink hover:bg-surface-alt disabled:opacity-50">
-              <ListChecks className="size-5" />
-            </button>
+          // The admin can cancel at any step before delivery (a delivered order is refunded instead).
+          o ? (
+            <>
+              {o.status !== 'Cancelled' && o.status !== 'Delivered' && (
+                <button type="button" title={t('إلغاء الأوردر')} disabled={busy} onClick={() => setReasonOpen(true)} className="grid size-10 place-items-center rounded-full text-danger hover:bg-danger/10 disabled:opacity-50">
+                  <XCircle className="size-5" />
+                </button>
+              )}
+              {active && o.status !== 'Pending' && (
+                <button type="button" title={t('تغيير حالة الأوردر')} disabled={busy} onClick={() => setStatusOpen(true)} className="grid size-10 place-items-center rounded-full text-ink hover:bg-surface-alt disabled:opacity-50">
+                  <ListChecks className="size-5" />
+                </button>
+              )}
+            </>
           ) : null
         }
       />
