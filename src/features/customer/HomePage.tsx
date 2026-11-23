@@ -5,10 +5,11 @@ import { useDeliveryLocation, useStores, useStoreCategories } from '@/api/querie
 import { Button, EmptyView, ErrorView, Loading, CountPill } from '@/components/ui';
 import { HOME_OFFERS } from '@/lib/home-content';
 import { t, tIn } from '@/lib/i18n';
+import { categoryIdsFor, flattenCategories } from '@/lib/categories';
 import { localized } from '@/lib/localized';
 import { useBrowse } from '@/store/ui';
 
-import { AreaGrid, CategoryArc, DailyOffersRow, HomeHeader, NearestPanel, OffersCarousel, OpenNowCarousel, SectionHead } from './HomeSections';
+import { AreaGrid, CategoryArc, DailyOffersRow, SubCategoryChips, HomeHeader, NearestPanel, OffersCarousel, OpenNowCarousel, SectionHead } from './HomeSections';
 import { SHOWCASE_GRID } from './Showcase';
 import { StoreCard } from './StoreBits';
 
@@ -22,15 +23,18 @@ export function HomePage() {
 
   const query = search.trim().toLowerCase();
   const all = stores.data ?? [];
+  // A main category covers its sub-categories' stores too.
+  const ids = categoryId === null ? null : categoryIdsFor(categories, categoryId);
+  const inIds = (s: { categoryId: number }) => ids === null || ids.has(s.categoryId);
   let list = all;
-  if (categoryId !== null) list = list.filter((s) => s.categoryId === categoryId);
+  if (ids !== null) list = list.filter(inIds);
   if (openOnly) list = list.filter((s) => s.isOpen);
   if (query) list = list.filter((s) => [s.name, s.nameEn, s.nameRu].some((n) => n?.toLowerCase().includes(query)));
 
   const filtering = query !== '' || openOnly || categoryId !== null;
   // Picking a category on the arc keeps the promos and the open-now row (of that category); search and "open only" hide them.
   const browsing = query === '' && !openOnly;
-  const inCategory = categoryId === null ? all : all.filter((s) => s.categoryId === categoryId);
+  const inCategory = all.filter(inIds);
   const nearest = all
     .filter((s) => s.distanceKm !== null)
     .sort((a, b) => a.distanceKm! - b.distanceKm!)
@@ -38,7 +42,7 @@ export function HomePage() {
   const typeLabel =
     categoryId === null
       ? undefined
-      : ((c) => (c ? localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt) : undefined))(categories.find((c) => c.id === categoryId)) ??
+      : ((c) => (c ? localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt) : undefined))(flattenCategories(categories).find((c) => c.id === categoryId)) ??
         ((s) => (s ? localized(s.categoryName, s.categoryNameEn, s.categoryNameRu, s.categoryNameTr, s.categoryNameIt) : undefined))(all.find((s) => s.categoryId === categoryId));
 
   const listTitle = query
@@ -58,6 +62,7 @@ export function HomePage() {
       <h1 className="sr-only">MARID Egypt - {location ? t(location.title) : ''}</h1>
       <HomeHeader categories={categories} />
       <CategoryArc categories={categories} />
+      <SubCategoryChips categories={categories} />
 
       {browsing && <OffersCarousel offers={HOME_OFFERS} categories={categories} />}
       {browsing && <DailyOffersRow />}

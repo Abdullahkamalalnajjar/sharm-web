@@ -143,7 +143,10 @@ export const storeCategoriesApi = {
   visible: () => api.get<StoreCategory[]>('/api/store-categories'),
 
   all: () => api.get<StoreCategory[]>(adminCategories),
-  create: (name: string, icon: string, names?: StoreCategoryNames) => api.post<StoreCategory>(adminCategories, { name, icon, ...names }),
+  create: (name: string, icon: string, names?: StoreCategoryNames, parentId?: number | null) =>
+    api.post<StoreCategory>(adminCategories, { name, icon, ...names, parentId: parentId ?? null }),
+  /** Into the main category `parentId`, or out to a main category (null). */
+  move: (id: number, parentId: number | null) => api.put<StoreCategory>(`${adminCategories}/${id}/parent`, { parentId }),
   update: (id: number, name: string, icon: string, names?: StoreCategoryNames) =>
     api.put<StoreCategory>(`${adminCategories}/${id}`, { name, icon, ...names }),
   setVisible: (id: number, visible: boolean) =>

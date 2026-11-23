@@ -27,6 +27,7 @@ import { AppImage, Button, Chip, CountPill, Sheet, Switch } from '@/components/u
 import { localized } from '@/lib/localized';
 import { SHARM_AREAS, categoryLook, categoryOf } from '@/lib/meta';
 import { useBrowse } from '@/store/ui';
+import { flattenCategories, mainCategoryOf } from '@/lib/categories';
 import type { NearbyStore, StoreCategory } from '@/types';
 
 import { ArcPicker, isRtl, useOpenCustomOrder, type ArcPickerItem } from './Showcase';
@@ -144,12 +145,14 @@ function FilterSheet({ open, onClose, categories }: { open: boolean; onClose: ()
         <Chip selected={categoryId === null} onClick={() => setCategoryId(null)}>
           {t('الكل')}
         </Chip>
-        {categories.map((c) => {
+        {flattenCategories(categories).map((c) => {
           const look = categoryLook(c.icon);
           const on = categoryId === c.id;
+          const parent = c.parentId ? categories.find((m) => m.id === c.parentId) : undefined;
+          const name = localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt);
           return (
             <Chip key={c.id} selected={on} onClick={() => setCategoryId(c.id)} icon={<look.Icon className="size-4" style={{ color: on ? '#fff' : look.color }} />}>
-              {localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt)}
+              {parent ? `${localized(parent.name, parent.nameEn, parent.nameRu, parent.nameTr, parent.nameIt)} › ${name}` : name}
             </Chip>
           );
         })}
@@ -176,7 +179,9 @@ export function CategoryArc({ categories }: { categories: StoreCategory[] }) {
       return { key: `category-${c.id}`, label: localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt), icon: look.Icon, imageUrl: c.imageUrl, color: look.color };
     }),
   ];
-  const index = categoryId === null ? 0 : categories.findIndex((c) => c.id === categoryId) + 1;
+  // A chosen sub-category keeps its main category centered on the arc.
+  const main = mainCategoryOf(categories, categoryId);
+  const index = main ? categories.findIndex((c) => c.id === main.id) + 1 : 0;
   return (
     <section className="container-site mt-3">
       {/* Rebuilt when the categories arrive so the loop has the right length. */}
@@ -187,6 +192,37 @@ export function CategoryArc({ categories }: { categories: StoreCategory[] }) {
         selectedIndex={Math.max(index, 0)}
         onSelect={(i) => setCategoryId(i === 0 ? null : categories[i - 1].id)}
       />
+    </section>
+  );
+}
+
+/**
+ * The chosen main category's sub-categories (مطاعم ← بيتزا، شرقي، غربي) as chips under the arc: "الكل" for the
+ * whole main category, or one of them. Nothing when the main category has none.
+ */
+export function SubCategoryChips({ categories }: { categories: StoreCategory[] }) {
+  const categoryId = useBrowse((s) => s.categoryId);
+  const setCategoryId = useBrowse((s) => s.setCategoryId);
+  const main = mainCategoryOf(categories, categoryId);
+  const subs = main?.subCategories ?? [];
+  if (!main || subs.length === 0) return null;
+  const mainLook = categoryLook(main.icon);
+  return (
+    <section className="container-site mt-3">
+      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+        <Chip selected={categoryId === main.id} onClick={() => setCategoryId(main.id)} icon={<mainLook.Icon className="size-4" style={{ color: categoryId === main.id ? '#fff' : mainLook.color }} />}>
+          {t('الكل')}
+        </Chip>
+        {subs.map((s) => {
+          const look = categoryLook(s.icon);
+          const on = categoryId === s.id;
+          return (
+            <Chip key={s.id} selected={on} onClick={() => setCategoryId(on ? main.id : s.id)} icon={<look.Icon className="size-4" style={{ color: on ? '#fff' : look.color }} />}>
+              {localized(s.name, s.nameEn, s.nameRu, s.nameTr, s.nameIt)}
+            </Chip>
+          );
+        })}
+      </div>
     </section>
   );
 }

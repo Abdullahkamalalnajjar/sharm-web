@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { ArrowDown, ArrowUp, LayoutGrid, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, CornerDownLeft, LayoutGrid, Plus, Trash2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -17,11 +17,20 @@ import { runAction } from '@/lib/run-action';
 import { confirm, showMessage } from '@/store/ui';
 import type { StoreCategory } from '@/types';
 
-/** The admin's store categories: add, edit (name, icon, picture), reorder, show / hide, delete. */
+/**
+ * The admin's store categories: add, edit (name, icon, picture), reorder, show / hide, delete. A main category can
+ * hold sub-categories (مطاعم ← بيتزا، شرقي، غربي), listed under it.
+ */
 export function AdminCategoriesPage() {
   const categories = useAdminStoreCategories();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<StoreCategory | null | undefined>(undefined); // undefined = closed, null = new
+  /** A new category goes inside this main category (set by "قسم فرعي"). */
+  const [newParentId, setNewParentId] = useState<number | null>(null);
+  const openNew = (parentId: number | null = null) => {
+    setNewParentId(parentId);
+    setEditing(null);
+  };
   /** Order shown while a move is being saved, so the list does not jump back. */
   const [pending, setPending] = useState<StoreCategory[] | null>(null);
 
@@ -59,7 +68,7 @@ export function AdminCategoriesPage() {
       <PageHeader
         title={t('الأقسام')}
         actions={
-          <Button size="sm" className="hidden md:inline-flex" icon={<Plus className="size-4" />} onClick={() => setEditing(null)}>
+          <Button size="sm" className="hidden md:inline-flex" icon={<Plus className="size-4" />} onClick={() => openNew()}>
             {t('قسم جديد')}
           </Button>
         }
@@ -78,17 +87,31 @@ export function AdminCategoriesPage() {
             </p>
             <div className="flex flex-col gap-2.5">
               {list.map((c, i) => (
-                <CategoryRow
-                  key={c.id}
-                  category={c}
-                  first={i === 0}
-                  last={i === list.length - 1}
-                  busy={pending !== null}
-                  onUp={() => move(i, -1)}
-                  onDown={() => move(i, 1)}
-                  onEdit={() => setEditing(c)}
-                  onToggle={() => toggle(c)}
-                />
+                <div key={c.id} className="flex flex-col gap-1.5">
+                  <CategoryRow
+                    category={c}
+                    first={i === 0}
+                    last={i === list.length - 1}
+                    busy={pending !== null}
+                    onUp={() => move(i, -1)}
+                    onDown={() => move(i, 1)}
+                    onEdit={() => setEditing(c)}
+                    onToggle={() => toggle(c)}
+                  />
+                  {(c.subCategories ?? []).map((s) => (
+                    <div key={s.id} className="ms-10">
+                      <CategoryRow category={s} sub onEdit={() => setEditing(s)} onToggle={() => toggle(s)} />
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => openNew(c.id)}
+                    className="ms-9 flex items-center gap-1.5 self-start rounded-lg px-2 py-1 text-sm font-bold text-brand hover:bg-surface-alt"
+                  >
+                    <CornerDownLeft className="size-4 rtl:-scale-x-100" />
+                    {t('قسم فرعي جوه {name}', { name: localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt) })}
+                  </button>
+                </div>
               ))}
             </div>
           </>
@@ -97,7 +120,7 @@ export function AdminCategoriesPage() {
 
       <div className="fixed inset-x-0 bottom-24 z-30 px-4 md:hidden pointer-events-none">
         <div className="mx-auto max-w-3xl flex justify-end">
-          <Button className="pointer-events-auto" icon={<Plus className="size-5" />} onClick={() => setEditing(null)}>
+          <Button className="pointer-events-auto" icon={<Plus className="size-5" />} onClick={() => openNew()}>
             {t('قسم جديد')}
           </Button>
         </div>
@@ -107,6 +130,8 @@ export function AdminCategoriesPage() {
         key={editing === undefined ? 'closed' : (editing?.id ?? 'new')}
         open={editing !== undefined}
         category={editing ?? null}
+        parentId={newParentId}
+        mains={categories.data ?? []}
         onClose={() => setEditing(undefined)}
         onSaved={refresh}
       />
@@ -130,26 +155,30 @@ export function CategoryThumb({ category, size = 48 }: { category: Pick<StoreCat
 
 function CategoryRow({
   category: c,
-  first,
-  last,
-  busy,
+  sub = false,
+  first = true,
+  last = true,
+  busy = false,
   onUp,
   onDown,
   onEdit,
   onToggle,
 }: {
   category: StoreCategory;
-  first: boolean;
-  last: boolean;
-  busy: boolean;
-  onUp: () => void;
-  onDown: () => void;
+  /** A sub-category: smaller, without the order arrows. */
+  sub?: boolean;
+  first?: boolean;
+  last?: boolean;
+  busy?: boolean;
+  onUp?: () => void;
+  onDown?: () => void;
   onEdit: () => void;
   onToggle: () => void;
 }) {
   const arrow = 'grid size-8 place-items-center rounded-lg text-ink-2 hover:bg-surface-alt hover:text-ink disabled:opacity-30 disabled:hover:bg-transparent';
   return (
     <SoftCard className={clsx('flex items-center gap-3 p-2.5', !c.isVisible && 'opacity-60')}>
+      {!sub && (
       <div className="flex flex-col">
         <button type="button" aria-label={t('لفوق')} disabled={first || busy} onClick={onUp} className={arrow}>
           <ArrowUp className="size-4" />
@@ -158,8 +187,9 @@ function CategoryRow({
           <ArrowDown className="size-4" />
         </button>
       </div>
+      )}
       <button type="button" onClick={onEdit} className="flex min-w-0 flex-1 items-center gap-3 text-start">
-        <CategoryThumb category={c} size={52} />
+        <CategoryThumb category={c} size={sub ? 40 : 52} />
         <span className="min-w-0 flex-1">
           <span className="block truncate font-extrabold text-ink">{localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt)}</span>
           <span className="text-xs text-ink-3">
@@ -177,17 +207,26 @@ function CategoryRow({
 function CategoryFormSheet({
   open,
   category,
+  parentId: newParentId,
+  mains,
   onClose,
   onSaved,
 }: {
   open: boolean;
   category: StoreCategory | null;
+  /** Where a new category goes: inside this main category, or null for a main category. */
+  parentId: number | null;
+  /** The main categories, to choose where the category goes. */
+  mains: StoreCategory[];
   onClose: () => void;
   onSaved: () => void;
 }) {
   const isNew = category === null;
   const [name, setName] = useState(category?.name ?? '');
   const [icon, setIcon] = useState(category?.icon ?? 'other');
+  const [parentId, setParentId] = useState<number | null>(category ? (category.parentId ?? null) : newParentId);
+  // A main category that has sub-categories stays a main category.
+  const canMove = (category?.subCategories ?? []).length === 0;
   const [translations, setTranslations] = useState(() => translationValues(category ?? undefined));
   const [image, setImage] = useState<ImageEdit>(noImageEdit);
   const [busy, setBusy] = useState(false);
@@ -202,8 +241,9 @@ function CategoryFormSheet({
       const { nameEn, nameRu, nameTr, nameIt } = translationInput(translations);
       const names = { nameEn, nameRu, nameTr, nameIt };
       const saved = isNew
-        ? await storeCategoriesApi.create(name.trim(), icon, names)
+        ? await storeCategoriesApi.create(name.trim(), icon, names, parentId)
         : await storeCategoriesApi.update(category.id, name.trim(), icon, names);
+      if (!isNew && parentId !== (category.parentId ?? null)) await storeCategoriesApi.move(saved.id, parentId);
       // Saved first, so a failed upload never loses the name and icon.
       if (image.kind === 'picked') await storeCategoriesApi.uploadImage(saved.id, image.file);
       else if (image.kind === 'removed' && category?.imageUrl) await storeCategoriesApi.removeImage(saved.id);
@@ -234,6 +274,26 @@ function CategoryFormSheet({
       <form onSubmit={submit} className="flex flex-col gap-3">
         <TextField name="name" label={t('اسم القسم')} placeholder={t('مثلاً: مخبوزات')} maxLength={50} value={name} onChange={(e) => setName(e.target.value)} />
         <TranslationFields value={translations} onChange={setTranslations} withDescription={false} nameMaxLength={50} />
+
+        {canMove && (
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-bold text-ink-2">{t('مكان القسم')}</span>
+            <select
+              value={parentId ?? ''}
+              onChange={(e) => setParentId(e.target.value === '' ? null : Number(e.target.value))}
+              className="h-12 rounded-xl border border-line bg-surface px-3 text-ink"
+            >
+              <option value="">{t('قسم رئيسي')}</option>
+              {mains
+                .filter((m) => m.id !== category?.id)
+                .map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {t('جوه {name}', { name: localized(m.name, m.nameEn, m.nameRu, m.nameTr, m.nameIt) })}
+                  </option>
+                ))}
+            </select>
+          </label>
+        )}
 
         <p className="text-sm font-bold text-ink-2">{t('الأيقونة (بتظهر لو مفيش صورة)')}</p>
         <div className="flex flex-wrap gap-2">
@@ -274,7 +334,7 @@ function CategoryFormSheet({
               {t('امسح القسم')}
             </Button>
             <p className="text-center text-xs text-ink-3">
-              {t('المسح بس للقسم اللي مفيهوش محلات. لو فيه، انقل المحلات لقسم تاني أو خبّي القسم.')}
+              {t('المسح بس للقسم اللي مفيهوش محلات ولا أقسام فرعية. لو فيه، انقلهم لقسم تاني أو خبّي القسم.')}
             </p>
           </>
         )}

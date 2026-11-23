@@ -15,6 +15,10 @@ export interface StoreCategory {
   nameRu?: string | null;
   nameTr?: string | null;
   nameIt?: string | null;
+  /** The main category this one is inside; null for a main category. */
+  parentId?: number | null;
+  /** A main category's sub-categories (مطاعم ← بيتزا، شرقي...). */
+  subCategories?: StoreCategory[] | null;
 }
 
 /** The category fields embedded in stores and cart groups. */

@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/layout/AppShell';
 import { Button, Chip, InlineError, Loading, TextArea, TextField } from '@/components/ui';
 import { t, tIn } from '@/lib/i18n';
 import { localized } from '@/lib/localized';
+import { flattenCategories } from '@/lib/categories';
 import { SHARM_AREAS, categoryLook } from '@/lib/meta';
 import { showMessage } from '@/store/ui';
 import type { Store as StoreModel, StoreInput } from '@/types';
@@ -132,9 +133,14 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
         ) : (
           <div className="flex flex-wrap gap-2">
             {[
-              ...(categories.data ?? []).map((c) => ({ id: c.id, name: localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt), icon: c.icon })),
+              // Main categories and their sub-categories ("مطاعم › بيتزا"): a store can be in either.
+              ...flattenCategories(categories.data ?? []).map((c) => {
+                const parent = c.parentId ? (categories.data ?? []).find((m) => m.id === c.parentId) : undefined;
+                const name = localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt);
+                return { id: c.id, name: parent ? `${localized(parent.name, parent.nameEn, parent.nameRu, parent.nameTr, parent.nameIt)} › ${name}` : name, icon: c.icon };
+              }),
               // The store's current category stays selectable even if the admin hid it.
-              ...(store && !(categories.data ?? []).some((c) => c.id === store.categoryId)
+              ...(store && !flattenCategories(categories.data ?? []).some((c) => c.id === store.categoryId)
                 ? [{ id: store.categoryId, name: localized(store.categoryName, store.categoryNameEn, store.categoryNameRu, store.categoryNameTr, store.categoryNameIt), icon: store.categoryIcon }]
                 : []),
             ].map((c) => {
