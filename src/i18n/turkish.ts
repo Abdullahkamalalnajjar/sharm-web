@@ -1,6 +1,15 @@
 // Turkish translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const tr: Record<string, string> = {
+  'كل الأقسام': 'Tüm kategoriler',
+  'ظاهرة للزبون': 'Müşterilere görünen',
+  'مخفية': 'Gizli',
+  'دور باسم القسم': 'Kategori adıyla ara',
+  'الترتيب بالأسهم بيشتغل لما تعرض كل الأقسام من غير بحث.': 'Oklarla sıralama, arama yapmadan tüm kategoriler gösterilirken çalışır.',
+  'مفيش أقسام هنا': 'Burada kategori yok',
+  '{n} قسم رئيسي • {m} قسم فرعي': '{n} ana • {m} alt kategori',
+  '{n} قسم فرعي': '{n} alt kategori',
+  'قسم فرعي': 'Alt kategori',
   '{n} مندوب': '{n} kurye',
   'المركبة': 'Araç',
   'دور بالاسم أو الموبايل أو الإيميل': 'İsim, telefon veya e-posta ile ara',

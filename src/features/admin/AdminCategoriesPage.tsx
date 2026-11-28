@@ -1,12 +1,11 @@
 import clsx from 'clsx';
-import { ArrowDown, ArrowUp, CornerDownLeft, LayoutGrid, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Eye, EyeOff, ImageOff, LayoutGrid, Pencil, Plus, Search, SearchX, Trash2, X, type LucideIcon } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { storeCategoriesApi } from '@/api';
 import { errorMessage } from '@/api/client';
 import { keys, useAdminStoreCategories } from '@/api/queries';
-import { PageHeader } from '@/components/layout/AppShell';
 import { AppImage, Button, EmptyView, ErrorView, InlineError, Loading, Sheet, SoftCard, StatusChip, Switch, TextField } from '@/components/ui';
 import { ImagePickerField, noImageEdit, type ImageEdit } from '@/features/owner/ImagePicker';
 import { TranslationFields, translationInput, translationValues } from '@/features/owner/TranslationFields';
@@ -17,9 +16,20 @@ import { runAction } from '@/lib/run-action';
 import { confirm, showMessage } from '@/store/ui';
 import type { StoreCategory } from '@/types';
 
+type CategoryFilter = 'all' | 'shown' | 'hidden' | 'noImage';
+
+const nameOf = (c: StoreCategory) => localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt);
+
+function passesFilter(c: StoreCategory, f: CategoryFilter): boolean {
+  if (f === 'shown') return c.isVisible;
+  if (f === 'hidden') return !c.isVisible;
+  if (f === 'noImage') return !c.imageUrl;
+  return true;
+}
+
 /**
  * The admin's store categories: add, edit (name, icon, picture), reorder, show / hide, delete. A main category can
- * hold sub-categories (مطاعم ← بيتزا، شرقي، غربي), listed under it.
+ * hold sub-categories (مطاعم ← بيتزا، شرقي، غربي), listed inside its card.
  */
 export function AdminCategoriesPage() {
   const categories = useAdminStoreCategories();
@@ -33,6 +43,8 @@ export function AdminCategoriesPage() {
   };
   /** Order shown while a move is being saved, so the list does not jump back. */
   const [pending, setPending] = useState<StoreCategory[] | null>(null);
+  const [filter, setFilter] = useState<CategoryFilter>('all');
+  const [query, setQuery] = useState('');
 
   // The customer tiles, filters and dashboard all read categories.
   const refresh = () => {
@@ -58,22 +70,51 @@ export function AdminCategoriesPage() {
   async function toggle(c: StoreCategory) {
     const ok = await runAction(
       () => storeCategoriesApi.setVisible(c.id, !c.isVisible),
-      c.isVisible ? t('{name} اتخفى من الرئيسية', { name: localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt) }) : t('{name} ظاهر في الرئيسية', { name: localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt) }),
+      c.isVisible ? t('{name} اتخفى من الرئيسية', { name: nameOf(c) }) : t('{name} ظاهر في الرئيسية', { name: nameOf(c) }),
     );
     if (ok) refresh();
   }
 
+  const everyCategory = list.flatMap((c) => [c, ...(c.subCategories ?? [])]);
+  const subCount = everyCategory.length - list.length;
+  const countOf = (f: CategoryFilter) => everyCategory.filter((c) => passesFilter(c, f)).length;
+
+  const q = query.trim().toLowerCase();
+  const nameHas = (c: StoreCategory) =>
+    !q || [c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt].some((n) => (n ?? '').toLowerCase().includes(q));
+  /** Reordering only makes sense on the full list. */
+  const narrowed = filter !== 'all' || q !== '';
+  // A main category shows when it matches, or when one of its sub-categories does (then only those show).
+  const shown = list
+    .map((c, index) => {
+      const subs = (c.subCategories ?? []).filter((s) => passesFilter(s, filter) && (nameHas(s) || nameHas(c)));
+      const self = passesFilter(c, filter) && nameHas(c);
+      return { c, index, subs: self && !narrowed ? (c.subCategories ?? []) : subs, visible: self || subs.length > 0 };
+    })
+    .filter((x) => x.visible);
+
+  const stats: { key: CategoryFilter; label: string; color: string; icon: LucideIcon }[] = [
+    { key: 'all', label: t('كل الأقسام'), color: 'var(--color-brand)', icon: LayoutGrid },
+    { key: 'shown', label: t('ظاهرة للزبون'), color: 'var(--color-success)', icon: Eye },
+    { key: 'hidden', label: t('مخفية'), color: 'var(--color-ink-3)', icon: EyeOff },
+    { key: 'noImage', label: t('من غير صورة'), color: 'var(--color-warning)', icon: ImageOff },
+  ];
+
   return (
-    <div className="mx-auto max-w-5xl pb-28">
-      <PageHeader
-        title={t('الأقسام')}
-        actions={
-          <Button size="sm" className="hidden md:inline-flex" icon={<Plus className="size-4" />} onClick={() => openNew()}>
-            {t('قسم جديد')}
-          </Button>
-        }
-      />
-      <div className="px-4">
+    <div className="pb-28 md:pb-8">
+      <div className="flex flex-wrap items-center gap-3 px-4 pt-[max(env(safe-area-inset-top),10px)] md:pt-6">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl font-extrabold text-ink md:text-2xl">{t('الأقسام')}</h1>
+          {categories.data && (
+            <p className="text-[13px] font-medium text-ink-3">{t('{n} قسم رئيسي • {m} قسم فرعي', { n: list.length, m: subCount })}</p>
+          )}
+        </div>
+        <Button size="md" icon={<Plus className="size-4" />} title={t('قسم جديد')} onClick={() => openNew()}>
+          <span className="hidden sm:inline">{t('قسم جديد')}</span>
+        </Button>
+      </div>
+
+      <div className="px-4 pt-4">
         {categories.isLoading ? (
           <Loading />
         ) : categories.isError ? (
@@ -81,49 +122,81 @@ export function AdminCategoriesPage() {
         ) : list.length === 0 ? (
           <EmptyView icon={LayoutGrid} message={t('مفيش أقسام لسه.\nضيف أول قسم.')} />
         ) : (
-          <>
-            <p className="mb-3 text-sm leading-relaxed text-ink-2">
-              {t('رتّب الأقسام بالأسهم زي ما تظهر للزبون. القسم المخفي محلاته بتفضل ظاهرة تحت "كل المحلات".')}
-            </p>
-            <div className="flex flex-col gap-2.5">
-              {list.map((c, i) => (
-                <div key={c.id} className="flex flex-col gap-1.5">
-                  <CategoryRow
-                    category={c}
-                    first={i === 0}
-                    last={i === list.length - 1}
-                    busy={pending !== null}
-                    onUp={() => move(i, -1)}
-                    onDown={() => move(i, 1)}
-                    onEdit={() => setEditing(c)}
-                    onToggle={() => toggle(c)}
-                  />
-                  {(c.subCategories ?? []).map((s) => (
-                    <div key={s.id} className="ms-10">
-                      <CategoryRow category={s} sub onEdit={() => setEditing(s)} onToggle={() => toggle(s)} />
-                    </div>
-                  ))}
+          <div className="flex flex-col gap-4">
+            {/* The counts double as filters. */}
+            <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
+              {stats.map((s) => {
+                const selected = filter === s.key;
+                return (
                   <button
+                    key={s.key}
                     type="button"
-                    onClick={() => openNew(c.id)}
-                    className="ms-9 flex items-center gap-1.5 self-start rounded-lg px-2 py-1 text-sm font-bold text-brand-ink hover:bg-surface-alt"
+                    onClick={() => setFilter(s.key)}
+                    aria-pressed={selected}
+                    className={clsx(
+                      'flex items-center gap-3 rounded-card border bg-surface p-3.5 text-start shadow-card transition-colors',
+                      selected ? 'border-brand ring-1 ring-brand' : 'border-transparent hover:bg-surface-alt',
+                    )}
                   >
-                    <CornerDownLeft className="size-4 rtl:-scale-x-100" />
-                    {t('قسم فرعي جوه {name}', { name: localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt) })}
+                    <span className="grid size-10 shrink-0 place-items-center rounded-xl" style={{ background: `color-mix(in srgb, ${s.color} 15%, transparent)`, color: s.color }}>
+                      <s.icon className="size-5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[22px] font-extrabold leading-tight text-ink tabular-nums">{countOf(s.key)}</span>
+                      <span className="block truncate text-xs font-semibold text-ink-2">{s.label}</span>
+                    </span>
                   </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
-          </>
-        )}
-      </div>
 
-      <div className="fixed inset-x-0 bottom-24 z-30 px-4 md:hidden pointer-events-none">
-        <div className="mx-auto max-w-3xl flex justify-end">
-          <Button className="pointer-events-auto" icon={<Plus className="size-5" />} onClick={() => openNew()}>
-            {t('قسم جديد')}
-          </Button>
-        </div>
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <label className="flex h-11 items-center gap-2 rounded-full border border-line bg-surface px-4 focus-within:border-brand md:w-[380px]">
+                <Search className="size-5 text-ink-2" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t('دور باسم القسم')}
+                  className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:font-medium placeholder:text-ink-3"
+                />
+                {query && (
+                  <button type="button" aria-label={tIn('admin', 'مسح')} onClick={() => setQuery('')} className="text-ink-2 hover:text-ink">
+                    <X className="size-5" />
+                  </button>
+                )}
+              </label>
+              <p className="text-xs leading-relaxed text-ink-3 md:max-w-md md:text-end">
+                {narrowed
+                  ? t('الترتيب بالأسهم بيشتغل لما تعرض كل الأقسام من غير بحث.')
+                  : t('رتّب الأقسام بالأسهم زي ما تظهر للزبون. القسم المخفي محلاته بتفضل ظاهرة تحت "كل المحلات".')}
+              </p>
+            </div>
+
+            {shown.length === 0 ? (
+              <EmptyView icon={q ? SearchX : LayoutGrid} message={q ? t('مفيش نتايج لـ "{q}"', { q: query.trim() }) : t('مفيش أقسام هنا')} />
+            ) : (
+              <div className="grid items-start gap-3 md:grid-cols-2 2xl:grid-cols-3">
+                {shown.map(({ c, index, subs }) => (
+                  <MainCategoryCard
+                    key={c.id}
+                    category={c}
+                    position={index + 1}
+                    subs={subs}
+                    canMove={!narrowed}
+                    first={index === 0}
+                    last={index === list.length - 1}
+                    busy={pending !== null}
+                    onUp={() => move(index, -1)}
+                    onDown={() => move(index, 1)}
+                    onEdit={setEditing}
+                    onToggle={toggle}
+                    onAddSub={() => openNew(c.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <CategoryFormSheet
@@ -153,52 +226,121 @@ export function CategoryThumb({ category, size = 48 }: { category: Pick<StoreCat
   );
 }
 
-function CategoryRow({
+/** "12 محل • من غير صورة" under a category's name. */
+function CategoryMeta({ category: c }: { category: StoreCategory }) {
+  return (
+    <span className="flex flex-wrap items-center gap-x-1.5 text-xs text-ink-3">
+      <span>{t('{n} محل', { n: c.storesCount })}</span>
+      {!c.imageUrl && (
+        <>
+          <span>•</span>
+          <span className="inline-flex items-center gap-1 text-warning">
+            <ImageOff className="size-3" />
+            {t('من غير صورة')}
+          </span>
+        </>
+      )}
+    </span>
+  );
+}
+
+/** A main category as a card: its order, picture, name, switch, and its sub-categories inside. */
+function MainCategoryCard({
   category: c,
-  sub = false,
-  first = true,
-  last = true,
-  busy = false,
+  position,
+  subs,
+  canMove,
+  first,
+  last,
+  busy,
   onUp,
   onDown,
   onEdit,
   onToggle,
+  onAddSub,
 }: {
   category: StoreCategory;
-  /** A sub-category: smaller, without the order arrows. */
-  sub?: boolean;
-  first?: boolean;
-  last?: boolean;
-  busy?: boolean;
-  onUp?: () => void;
-  onDown?: () => void;
-  onEdit: () => void;
-  onToggle: () => void;
+  position: number;
+  /** The sub-categories to list (all of them, or the ones matching the search). */
+  subs: StoreCategory[];
+  canMove: boolean;
+  first: boolean;
+  last: boolean;
+  busy: boolean;
+  onUp: () => void;
+  onDown: () => void;
+  onEdit: (c: StoreCategory) => void;
+  onToggle: (c: StoreCategory) => void;
+  onAddSub: () => void;
 }) {
   const arrow = 'grid size-8 place-items-center rounded-lg text-ink-2 hover:bg-surface-alt hover:text-ink disabled:opacity-30 disabled:hover:bg-transparent';
+  const total = (c.subCategories ?? []).length;
   return (
-    <SoftCard className={clsx('flex items-center gap-3 p-2.5', !c.isVisible && 'opacity-60')}>
-      {!sub && (
-      <div className="flex flex-col">
-        <button type="button" aria-label={t('لفوق')} disabled={first || busy} onClick={onUp} className={arrow}>
-          <ArrowUp className="size-4" />
+    <SoftCard className="flex flex-col overflow-hidden">
+      <div className={clsx('flex items-center gap-3 p-3', !c.isVisible && 'opacity-60')}>
+        <button type="button" onClick={() => onEdit(c)} className="flex min-w-0 flex-1 items-center gap-3 text-start">
+          <span className="relative">
+            <CategoryThumb category={c} size={56} />
+            <span className="absolute -top-1.5 -start-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[11px] font-extrabold text-white ring-2 ring-surface tabular-nums">
+              {position}
+            </span>
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2">
+              <span className="truncate text-[15px] font-extrabold text-ink">{nameOf(c)}</span>
+              {!c.isVisible && <StatusChip label={t('مخفي')} color="var(--color-ink-3)" />}
+            </span>
+            <CategoryMeta category={c} />
+            {total > 0 && <span className="block text-xs text-ink-3">{t('{n} قسم فرعي', { n: total })}</span>}
+          </span>
         </button>
-        <button type="button" aria-label={t('لتحت')} disabled={last || busy} onClick={onDown} className={arrow}>
-          <ArrowDown className="size-4" />
+        <Switch checked={c.isVisible} onChange={() => onToggle(c)} label={c.isVisible ? tIn('admin', 'إخفاء') : t('إظهار')} />
+      </div>
+
+      {subs.length > 0 && (
+        <div className="flex flex-col border-t border-line">
+          {subs.map((s) => (
+            <div key={s.id} className={clsx('flex items-center gap-2.5 px-3 py-2 hover:bg-surface-alt/60', !s.isVisible && 'opacity-60')}>
+              <button type="button" onClick={() => onEdit(s)} className="flex min-w-0 flex-1 items-center gap-2.5 text-start">
+                <CategoryThumb category={s} size={34} />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2">
+                    <span className="truncate text-sm font-bold text-ink">{nameOf(s)}</span>
+                    {!s.isVisible && <StatusChip label={t('مخفي')} color="var(--color-ink-3)" />}
+                  </span>
+                  <CategoryMeta category={s} />
+                </span>
+              </button>
+              <Switch checked={s.isVisible} onChange={() => onToggle(s)} label={s.isVisible ? tIn('admin', 'إخفاء') : t('إظهار')} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-auto flex items-center gap-1 border-t border-line bg-surface-alt/40 px-2 py-1.5">
+        {canMove && (
+          <>
+            <button type="button" aria-label={t('لفوق')} title={t('لفوق')} disabled={first || busy} onClick={onUp} className={arrow}>
+              <ArrowUp className="size-4" />
+            </button>
+            <button type="button" aria-label={t('لتحت')} title={t('لتحت')} disabled={last || busy} onClick={onDown} className={arrow}>
+              <ArrowDown className="size-4" />
+            </button>
+          </>
+        )}
+        <button
+          type="button"
+          onClick={onAddSub}
+          className="ms-auto flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-bold text-brand-ink hover:bg-surface-alt"
+        >
+          <Plus className="size-4" />
+          {t('قسم فرعي')}
+        </button>
+        <button type="button" onClick={() => onEdit(c)} className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-bold text-ink-2 hover:bg-surface-alt hover:text-ink">
+          <Pencil className="size-4" />
+          {t('تعديل')}
         </button>
       </div>
-      )}
-      <button type="button" onClick={onEdit} className="flex min-w-0 flex-1 items-center gap-3 text-start">
-        <CategoryThumb category={c} size={sub ? 40 : 52} />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate font-extrabold text-ink">{localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt)}</span>
-          <span className="text-xs text-ink-3">
-            {c.imageUrl ? t('{n} محل', { n: c.storesCount }) : t('{n} محل • من غير صورة', { n: c.storesCount })}
-          </span>
-        </span>
-      </button>
-      {!c.isVisible && <StatusChip label={t('مخفي')} color="var(--color-ink-3)" />}
-      <Switch checked={c.isVisible} onChange={onToggle} label={c.isVisible ? tIn('admin', 'إخفاء') : t('إظهار')} />
     </SoftCard>
   );
 }

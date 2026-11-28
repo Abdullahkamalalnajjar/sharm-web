@@ -1,6 +1,15 @@
 // Translations for the admin pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  'كل الأقسام': 'All categories',
+  'ظاهرة للزبون': 'Shown to customers',
+  'مخفية': 'Hidden',
+  'دور باسم القسم': 'Search by category name',
+  'الترتيب بالأسهم بيشتغل لما تعرض كل الأقسام من غير بحث.': 'Reordering with the arrows works when all categories show, without a search.',
+  'مفيش أقسام هنا': 'No categories here',
+  '{n} قسم رئيسي • {m} قسم فرعي': '{n} main • {m} sub-categories',
+  '{n} قسم فرعي': '{n} sub-categories',
+  'قسم فرعي': 'Sub-category',
   '{n} مندوب': '{n} drivers',
   'المركبة': 'Vehicle',
   'دور بالاسم أو الموبايل أو الإيميل': 'Search by name, phone or email',
@@ -220,6 +229,15 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  'كل الأقسام': 'Все разделы',
+  'ظاهرة للزبون': 'Видны клиентам',
+  'مخفية': 'Скрытые',
+  'دور باسم القسم': 'Поиск по названию раздела',
+  'الترتيب بالأسهم بيشتغل لما تعرض كل الأقسام من غير بحث.': 'Порядок стрелками меняется, когда показаны все разделы без поиска.',
+  'مفيش أقسام هنا': 'Здесь нет разделов',
+  '{n} قسم رئيسي • {m} قسم فرعي': 'Основных: {n} • подразделов: {m}',
+  '{n} قسم فرعي': 'Подразделов: {n}',
+  'قسم فرعي': 'Подраздел',
   '{n} مندوب': 'Курьеров: {n}',
   'المركبة': 'Транспорт',
   'دور بالاسم أو الموبايل أو الإيميل': 'Поиск по имени, телефону или email',

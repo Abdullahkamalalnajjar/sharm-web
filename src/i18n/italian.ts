@@ -1,6 +1,15 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  'كل الأقسام': 'Tutte le categorie',
+  'ظاهرة للزبون': 'Visibili ai clienti',
+  'مخفية': 'Nascoste',
+  'دور باسم القسم': 'Cerca per nome della categoria',
+  'الترتيب بالأسهم بيشتغل لما تعرض كل الأقسام من غير بحث.': 'Il riordino con le frecce funziona quando mostri tutte le categorie, senza ricerca.',
+  'مفيش أقسام هنا': 'Nessuna categoria qui',
+  '{n} قسم رئيسي • {m} قسم فرعي': '{n} principali • {m} sottocategorie',
+  '{n} قسم فرعي': '{n} sottocategorie',
+  'قسم فرعي': 'Sottocategoria',
   '{n} مندوب': '{n} fattorini',
   'المركبة': 'Veicolo',
   'دور بالاسم أو الموبايل أو الإيميل': 'Cerca per nome, telefono o email',
