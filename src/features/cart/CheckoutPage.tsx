@@ -297,12 +297,12 @@ export function CheckoutPage() {
 function TimeOption({ selected, onClick, title, subtitle }: { selected: boolean; onClick: () => void; title: string; subtitle?: string }) {
   return (
     <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-2xl p-3 text-start hover:bg-surface-alt">
-      {selected ? <CircleDot className="size-6 text-brand" /> : <Circle className="size-6 text-ink-3" />}
+      {selected ? <CircleDot className="size-6 text-brand-ink" /> : <Circle className="size-6 text-ink-3" />}
       <span className="flex-1">
         <span className="block font-bold text-ink">{title}</span>
         {subtitle && <span className="block text-xs text-ink-2">{subtitle}</span>}
       </span>
-      {subtitle !== undefined && <Clock className="size-5 text-brand" />}
+      {subtitle !== undefined && <Clock className="size-5 text-brand-ink" />}
     </button>
   );
 }
@@ -383,7 +383,7 @@ function AddressOption({ address, selected, onSelect }: { address: Address; sele
         <span className="block font-extrabold text-ink">{address.label}</span>
         <span className="line-clamp-2 text-[13px] text-ink-2">{[address.addressLine, details].filter(Boolean).join(' • ')}</span>
       </span>
-      {selected ? <CircleDot className="size-6 text-brand" /> : <Circle className="size-6 text-ink-3" />}
+      {selected ? <CircleDot className="size-6 text-brand-ink" /> : <Circle className="size-6 text-ink-3" />}
     </button>
   );
 }

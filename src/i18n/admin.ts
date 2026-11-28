@@ -1,6 +1,9 @@
 // Translations for the admin pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  'الزبون والعنوان': 'Customer & address',
+  'رقم الأوردر، المحل، الزبون، المندوب': 'Order no., store, customer, driver',
+  'من خارج المنيو': 'Not from the menu',
   // Admin dashboard.
   'آخر الأوردرات': 'Latest orders',
   'أوردر جديد مستني مراجعة': 'New orders to review',
@@ -210,6 +213,9 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  'الزبون والعنوان': 'Клиент и адрес',
+  'رقم الأوردر، المحل، الزبون، المندوب': '№ заказа, заведение, клиент, курьер',
+  'من خارج المنيو': 'Не из меню',
   // Admin dashboard.
   'آخر الأوردرات': 'Последние заказы',
   'أوردر جديد مستني مراجعة': 'Новые заказы ждут проверки',

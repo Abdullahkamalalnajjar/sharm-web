@@ -1,6 +1,9 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  'الزبون والعنوان': 'Cliente e indirizzo',
+  'رقم الأوردر، المحل، الزبون، المندوب': 'N. ordine, negozio, cliente, fattorino',
+  'من خارج المنيو': 'Fuori menu',
   // Admin dashboard.
   'آخر الأوردرات': 'Ultimi ordini',
   'أوردر جديد مستني مراجعة': 'Nuovi ordini da controllare',

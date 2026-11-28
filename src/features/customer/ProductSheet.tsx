@@ -150,7 +150,7 @@ function ProductSheetBody({ product, store, onClose }: { product: Product; store
                   onClick={() => toggle(group, option.id)}
                   className={clsx('flex w-full items-center gap-3 py-2.5 text-start', !option.isAvailable && 'opacity-40')}
                 >
-                  <Icon className={clsx('size-6', on ? 'text-brand' : 'text-ink-3')} />
+                  <Icon className={clsx('size-6', on ? 'text-brand-ink' : 'text-ink-3')} />
                   <span className={clsx('flex-1', on ? 'font-bold' : 'font-medium')}>
                     {option.isAvailable
                       ? localized(option.name, option.nameEn, option.nameRu, option.nameTr, option.nameIt)

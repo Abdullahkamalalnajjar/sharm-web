@@ -1,6 +1,9 @@
 // Turkish translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const tr: Record<string, string> = {
+  'الزبون والعنوان': 'Müşteri ve adres',
+  'رقم الأوردر، المحل، الزبون، المندوب': 'Sipariş no, mağaza, müşteri, kurye',
+  'من خارج المنيو': 'Menü dışından',
   // Admin dashboard.
   'آخر الأوردرات': 'Son siparişler',
   'أوردر جديد مستني مراجعة': 'İncelenecek yeni sipariş',

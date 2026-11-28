@@ -69,7 +69,7 @@ function OfferBody({ offer }: { offer: OfferDetails }) {
         </div>
         <div className="relative grid place-items-center px-4 py-5 md:py-7">
           <span className="block size-[180px] overflow-hidden rounded-[30px] border border-white/70 bg-surface shadow-[0_6px_20px_rgb(0_0_0/0.25)] md:size-[220px]">
-            <AppImage url={offer.imageUrl} alt={title} fallback={<Gift className="m-auto size-16 text-brand" />} />
+            <AppImage url={offer.imageUrl} alt={title} fallback={<Gift className="m-auto size-16 text-brand-ink" />} />
           </span>
         </div>
       </div>
@@ -130,7 +130,7 @@ function OfferProductCard({ item }: { item: OfferProduct }) {
       dimmed={!product.isAvailable}
       image={
         <div className="relative grid size-full place-items-center bg-brand/10">
-          <Sandwich className="size-11 text-brand opacity-70" />
+          <Sandwich className="size-11 text-brand-ink opacity-70" />
           <AppImage url={product.imageUrl} alt={product.name} fallback={null} className="absolute inset-0" />
         </div>
       }

@@ -106,7 +106,7 @@ export function AdminCategoriesPage() {
                   <button
                     type="button"
                     onClick={() => openNew(c.id)}
-                    className="ms-9 flex items-center gap-1.5 self-start rounded-lg px-2 py-1 text-sm font-bold text-brand hover:bg-surface-alt"
+                    className="ms-9 flex items-center gap-1.5 self-start rounded-lg px-2 py-1 text-sm font-bold text-brand-ink hover:bg-surface-alt"
                   >
                     <CornerDownLeft className="size-4 rtl:-scale-x-100" />
                     {t('قسم فرعي جوه {name}', { name: localized(c.name, c.nameEn, c.nameRu, c.nameTr, c.nameIt) })}

@@ -57,7 +57,7 @@ export function DeliveryPicker({ open, onClose }: { open: boolean; onClose: () =
           <span className="block font-bold text-ink truncate">{title}</span>
           {subtitle && <span className="block text-[13px] text-ink-2 truncate">{subtitle}</span>}
         </span>
-        {selected && <CheckCircle2 className="size-5 text-brand" />}
+        {selected && <CheckCircle2 className="size-5 text-brand-ink" />}
       </button>
     );
   }

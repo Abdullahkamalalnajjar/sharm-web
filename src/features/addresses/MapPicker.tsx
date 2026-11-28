@@ -238,7 +238,7 @@ function PlaceSearch({ onPick }: { onPick: (lat: number, lng: number) => void })
                 }}
                 className="flex w-full items-start gap-2.5 border-b border-line px-4 py-2.5 text-start last:border-0 hover:bg-surface-alt"
               >
-                <MapPin className="mt-0.5 size-4 shrink-0 text-brand" />
+                <MapPin className="mt-0.5 size-4 shrink-0 text-brand-ink" />
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-bold text-ink">{r.name || r.display_name.split(',')[0]}</span>
                   <span className="block truncate text-xs text-ink-3">{r.display_name}</span>

@@ -149,7 +149,7 @@ export function CustomOrderPage() {
                 key={s.label}
                 type="button"
                 onClick={() => applySuggestion(t(s.prompt))}
-                className="pill bg-surface border border-line hover:border-brand hover:text-brand transition-colors text-xs font-bold text-ink"
+                className="pill bg-surface border border-line hover:border-brand hover:text-brand-ink transition-colors text-xs font-bold text-ink"
               >
                 {t(s.label)}
               </button>
@@ -212,12 +212,12 @@ export function CustomOrderPage() {
         {/* How it works info */}
         <SoftCard className="p-4 bg-surface-alt/70">
           <div className="flex items-center gap-2 mb-3 text-ink font-extrabold text-[14px]">
-            <HelpCircle className="size-4 text-brand" />
+            <HelpCircle className="size-4 text-brand-ink" />
             <span>{t('إزاي بيشتغل الطلب الخاص؟')}</span>
           </div>
           <div className="grid gap-3 text-xs sm:grid-cols-3">
             <div className="flex items-start gap-2">
-              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand/15 text-brand font-black text-xs">
+              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand/15 text-brand-ink font-black text-xs">
                 1
               </span>
               <div>
@@ -226,7 +226,7 @@ export function CustomOrderPage() {
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand/15 text-brand font-black text-xs">
+              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand/15 text-brand-ink font-black text-xs">
                 2
               </span>
               <div>
@@ -235,7 +235,7 @@ export function CustomOrderPage() {
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand/15 text-brand font-black text-xs">
+              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand/15 text-brand-ink font-black text-xs">
                 3
               </span>
               <div>
@@ -297,7 +297,7 @@ function AddressOption({ address, selected, onSelect }: { address: Address; sele
         <span className="block font-extrabold text-ink">{t(address.label)}</span>
         <span className="line-clamp-2 text-[13px] text-ink-2">{[address.addressLine, details].filter(Boolean).join(' • ')}</span>
       </span>
-      {selected ? <CircleDot className="size-6 text-brand shrink-0" /> : <Circle className="size-6 text-ink-3 shrink-0" />}
+      {selected ? <CircleDot className="size-6 text-brand-ink shrink-0" /> : <Circle className="size-6 text-ink-3 shrink-0" />}
     </button>
   );
 }

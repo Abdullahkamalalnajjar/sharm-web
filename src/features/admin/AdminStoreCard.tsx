@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 
 import { storesApi } from '@/api';
 import { useRefreshAdmin } from '@/api/queries';
-import { Button, IconWell, Sheet, SoftCard, StatusChip, Switch } from '@/components/ui';
+import { AppImage, Button, IconWell, Sheet, SoftCard, StatusChip, Switch } from '@/components/ui';
 import { StoreAvatar } from '@/features/customer/StoreBits';
 import { formatPrice, formatStoreHours } from '@/lib/format';
 import { t } from '@/lib/i18n';
@@ -64,15 +64,29 @@ export function AdminStoreCard({ store }: { store: Store }) {
   return (
     <>
       <SoftCard className="flex h-full flex-col overflow-hidden">
-        <button type="button" onClick={() => setDetailsOpen(true)} className="flex w-full flex-1 items-start gap-3 px-3.5 pt-3.5 pb-3 text-start hover:bg-surface-alt/30">
-          <StoreAvatar category={store} logoUrl={store.logoUrl} size={52} />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="flex-1 truncate font-extrabold text-ink">{localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt)}</span>
-              <StatusDot store={store} />
+        <button type="button" onClick={() => setDetailsOpen(true)} className="group flex w-full flex-1 flex-col text-start">
+          {/* Cover photo (the logo when there is none, else the category's color and icon). */}
+          <div className="relative h-32 w-full overflow-hidden" style={{ background: `color-mix(in srgb, ${meta.color} 16%, var(--color-surface-alt))` }}>
+            <div className="absolute inset-0 grid place-items-center" style={{ color: meta.color }}>
+              <meta.Icon className="size-10 opacity-60" />
             </div>
-            <p className="truncate text-[13px] text-ink-2">{store.address}</p>
-            <div className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1">
+            <AppImage url={store.coverUrl ?? store.logoUrl} fallback={null} className="absolute inset-0 transition-transform duration-300 group-hover:scale-[1.03]" />
+            <span className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/45 to-transparent" />
+            <span className="absolute top-2.5 start-2.5 rounded-full bg-surface/90 backdrop-blur-sm">
+              <StatusDot store={store} />
+            </span>
+          </div>
+          <div className="flex flex-1 flex-col px-3.5 pb-3">
+            <div className="-mt-7 flex items-end gap-3">
+              <span className="relative rounded-[19px] bg-surface p-[3px] shadow-card">
+                <StoreAvatar category={store} logoUrl={store.logoUrl} size={56} />
+              </span>
+              <span className="min-w-0 flex-1 pb-0.5">
+                <span className="block truncate font-extrabold text-ink">{localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt)}</span>
+                <span className="block truncate text-[13px] text-ink-2">{store.address}</span>
+              </span>
+            </div>
+            <div className="mt-2.5 flex flex-wrap gap-x-3.5 gap-y-1">
               <Meta icon={meta.Icon} text={meta.label} />
               <Meta icon={Phone} text={store.phone} ltr />
               {store.minOrderAmount > 0 && <Meta icon={ShoppingBag} text={t('أقل طلب {p}', { p: formatPrice(store.minOrderAmount) })} />}

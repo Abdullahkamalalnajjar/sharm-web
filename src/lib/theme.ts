@@ -17,8 +17,8 @@ export interface PalettePreview {
 }
 
 export const PALETTES: Record<Palette, PalettePreview> = {
-  dark: { bg: '#1c0508', surface: '#2b0a0f', brand: '#c21f35', accent: '#e6b450', border: 'rgb(230 180 80 / 0.25)' },
-  light: { bg: '#f8f3f1', surface: '#ffffff', brand: '#c21f35', accent: '#9a6510', border: 'rgb(142 18 36 / 0.2)' },
+  dark: { bg: '#1c0508', surface: '#2b0a0f', brand: '#9b1b30', accent: '#e6b450', border: 'rgb(230 180 80 / 0.25)' },
+  light: { bg: '#f8f3f1', surface: '#ffffff', brand: '#9b1b30', accent: '#9a6510', border: 'rgb(100 13 28 / 0.2)' },
 };
 
 export const THEMES: { name: ThemeName; label: string }[] = [
@@ -48,7 +48,7 @@ export function resolvePalette(theme: ThemeName): Palette {
 function apply(theme: ThemeName) {
   const palette = resolvePalette(theme);
   document.documentElement.dataset.theme = palette;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', palette === 'dark' ? '#1c0508' : '#c21f35');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', palette === 'dark' ? '#1c0508' : '#9b1b30');
 }
 
 interface ThemeState {

@@ -334,7 +334,7 @@ export function Segmented<T extends string>({
 // ---------- States ----------
 
 export function Spinner({ className }: { className?: string }) {
-  return <Loader2 className={clsx('size-7 animate-spin text-brand', className)} />;
+  return <Loader2 className={clsx('size-7 animate-spin text-brand-ink', className)} />;
 }
 
 export function Loading({ className }: { className?: string }) {

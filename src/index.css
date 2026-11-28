@@ -6,9 +6,9 @@
 
 /*
  * The Flutter app's two palettes (sharm_app/lib/core/theme.dart, AppPalette.dark / .light).
- * The defaults below are the dark one ("genie lamp": maroon canvas and cards, crimson brand,
+ * The defaults below are the dark one ("genie lamp": maroon canvas and cards, burgundy brand,
  * gold prices and hairlines). [data-theme='light'] further down swaps the same variables for
- * the light one (same crimson on warm off-white, white cards, maroon ink, deeper gold).
+ * the light one (same burgundy on warm off-white, white cards, maroon ink, deeper gold).
  */
 @theme {
   --font-sans: 'Cairo', ui-sans-serif, system-ui, sans-serif;
@@ -18,17 +18,17 @@
   --color-surface-alt: #3a1016;
   --color-surface-high: #4a161d;
 
-  --color-brand: #c21f35;
-  --color-brand-light: #e04358;
-  --color-brand-dark: #8e1224;
+  --color-brand: #9b1b30;
+  --color-brand-light: #bf3550;
+  --color-brand-dark: #640d1c;
   --color-accent: #e6b450;
   --color-accent-dark: #c99a3a;
   /* Chips and numbers on the brand color and on photos (app: accentOnPrimary). */
   --color-highlight: #ffdf94;
   /* "طلب خاص" (custom order) purple, light enough to read on maroon in dark. */
   --color-custom: #c084fc;
-  /* Brand-colored text and links on surfaces: a lighter crimson so it passes AA on maroon (6:1). */
-  --color-brand-ink: #f06a7c;
+  /* Brand-colored text and links on surfaces: a lighter burgundy so it passes AA on maroon. */
+  --color-brand-ink: #e8798a;
   /* Toast background (app: inverseSurface = surfaceAlt on dark). Toast text is white. */
   --color-toast: #3a1016;
 
@@ -55,7 +55,7 @@
   --shadow-brand: 0 4px 14px color-mix(in srgb, var(--color-brand) 40%, transparent);
 }
 
-/* Light: warm off-white canvas, white cards, crimson brand (white text 5.9:1), maroon ink. */
+/* Light: warm off-white canvas, white cards, burgundy brand (white text 8.5:1), maroon ink. */
 :root[data-theme='light'] {
   color-scheme: light;
 
@@ -64,11 +64,11 @@
   --color-surface-alt: #f3eae7;
   --color-surface-high: #ebdfdb;
 
-  --color-brand: #c21f35;
-  --color-brand-light: #e04358;
-  --color-brand-dark: #8e1224;
-  /* Crimson reads on white (5.9:1). */
-  --color-brand-ink: #c21f35;
+  --color-brand: #9b1b30;
+  --color-brand-light: #bf3550;
+  --color-brand-dark: #640d1c;
+  /* Burgundy reads on white (8.5:1). */
+  --color-brand-ink: #9b1b30;
   /* Gold ink for prices (4.9:1 on white). */
   --color-accent: #9a6510;
   --color-accent-dark: #7d520c;
@@ -90,7 +90,7 @@
   --color-series-3: #2f7fe0;
 
   /* Maroon hairline. */
-  --color-line: rgb(142 18 36 / 0.14);
+  --color-line: rgb(100 13 28 / 0.14);
 
   --shadow-card: 0 2px 10px rgb(58 10 16 / 0.12);
   --shadow-card-hover: 0 12px 28px rgb(58 10 16 / 0.2);

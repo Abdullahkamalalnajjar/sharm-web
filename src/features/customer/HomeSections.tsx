@@ -89,7 +89,7 @@ export function HomeHeader({ categories }: { categories: StoreCategory[] }) {
       >
         <span className="text-[12.5px] text-ink-3">{t('التوصيل لـ')}</span>
         <span className="mt-0.5 flex min-w-0 max-w-full items-center gap-1">
-          <MapPin className="size-[18px] shrink-0 text-brand" />
+          <MapPin className="size-[18px] shrink-0 text-brand-ink" />
           <span className="truncate text-base font-extrabold text-ink">{place}</span>
           <ChevronDown className="size-5 shrink-0 text-ink-2" />
         </span>

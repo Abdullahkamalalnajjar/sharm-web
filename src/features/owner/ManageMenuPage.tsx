@@ -266,7 +266,7 @@ export function ManageMenuPage() {
                       </p>
                     </button>
                     {generating.has(p.id) ? (
-                      <span title={t('بيجهّز الصورة...')} className="grid size-10 shrink-0 place-items-center text-brand">
+                      <span title={t('بيجهّز الصورة...')} className="grid size-10 shrink-0 place-items-center text-brand-ink">
                         <Loader2 className="size-5 animate-spin" />
                       </span>
                     ) : (
@@ -285,7 +285,7 @@ export function ManageMenuPage() {
                           title={t('ارسم صورة بالذكاء الاصطناعي')}
                           aria-label={t('ارسم صورة بالذكاء الاصطناعي')}
                           onClick={() => generateImage(p, 'ai')}
-                          className="grid size-10 shrink-0 place-items-center rounded-full text-brand hover:bg-brand/10"
+                          className="grid size-10 shrink-0 place-items-center rounded-full text-brand-ink hover:bg-brand/10"
                         >
                           <Sparkles className="size-5" />
                         </button>
@@ -338,7 +338,7 @@ export function ManageMenuPage() {
             }}
           />
           <div className="mt-2 flex gap-3 rounded-2xl bg-surface-alt p-3.5">
-            <ImagePlus className="mt-0.5 size-5 shrink-0 text-brand" />
+            <ImagePlus className="mt-0.5 size-5 shrink-0 text-brand-ink" />
             <div className="text-[13px] text-ink-2">
               <p className="font-bold text-ink">{t('صور المنتجات من الإكسل')}</p>
               <p className="mt-1">

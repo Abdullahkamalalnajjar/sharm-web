@@ -70,7 +70,7 @@ export function TranslationFields({
   return (
     <div className="rounded-2xl border border-line">
       <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 p-3 text-start">
-        <Languages className="size-5 text-brand" />
+        <Languages className="size-5 text-brand-ink" />
         <span className="flex-1">
           <span className="block text-sm font-extrabold text-ink">{t('الترجمة للسياح')}</span>
           <span className="block text-xs text-ink-3">{t('English • Русский • Türkçe • Italiano — اختياري، لو فاضي هيظهر العربي')}</span>

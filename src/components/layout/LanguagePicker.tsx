@@ -37,7 +37,7 @@ export function LanguageButton() {
               )}
             >
               <span>{l.nativeName}</span>
-              {l.code === language && <Check className="size-5 text-brand" />}
+              {l.code === language && <Check className="size-5 text-brand-ink" />}
             </button>
           ))}
         </div>
