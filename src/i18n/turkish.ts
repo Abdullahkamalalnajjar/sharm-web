@@ -1,6 +1,17 @@
 // Turkish translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const tr: Record<string, string> = {
+  'coupons|شغالة': 'Aktif',
+  'كل الكوبونات': 'Tüm kuponlar',
+  'لسه مبدأتش': 'Henüz başlamadı',
+  'خلصت': 'Bitti',
+  '{n} كوبون شغال دلوقتي': 'Şu an {n} kupon aktif',
+  'دور بالكود': 'Koda göre ara',
+  'مفيش كوبونات هنا': 'Burada kupon yok',
+  'ج.م خصم': 'EGP indirim',
+  'خصم': 'indirim',
+  'يبدأ': 'Başlangıç',
+  'من {n}': '/ {n}',
   'كل العروض': 'Tüm teklifler',
   'منتهية': 'Süresi dolan',
   '{n} عرض ظاهر للزبون دلوقتي': 'Şu an müşterilere görünen {n} teklif',

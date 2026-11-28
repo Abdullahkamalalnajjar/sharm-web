@@ -1,6 +1,17 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  'coupons|شغالة': 'Attivi',
+  'كل الكوبونات': 'Tutti i coupon',
+  'لسه مبدأتش': 'Non ancora iniziati',
+  'خلصت': 'Terminati',
+  '{n} كوبون شغال دلوقتي': '{n} coupon attivi ora',
+  'دور بالكود': 'Cerca per codice',
+  'مفيش كوبونات هنا': 'Nessun coupon qui',
+  'ج.م خصم': 'EGP di sconto',
+  'خصم': 'sconto',
+  'يبدأ': 'Inizia',
+  'من {n}': 'su {n}',
   'كل العروض': 'Tutte le offerte',
   'منتهية': 'Scadute',
   '{n} عرض ظاهر للزبون دلوقتي': '{n} offerte visibili ai clienti ora',

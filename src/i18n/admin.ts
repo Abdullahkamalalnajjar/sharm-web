@@ -1,6 +1,17 @@
 // Translations for the admin pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  'coupons|شغالة': 'Active',
+  'كل الكوبونات': 'All coupons',
+  'لسه مبدأتش': 'Not started yet',
+  'خلصت': 'Ended',
+  '{n} كوبون شغال دلوقتي': '{n} coupons active now',
+  'دور بالكود': 'Search by code',
+  'مفيش كوبونات هنا': 'No coupons here',
+  'ج.م خصم': 'EGP off',
+  'خصم': 'off',
+  'يبدأ': 'Starts',
+  'من {n}': 'of {n}',
   'كل العروض': 'All offers',
   'منتهية': 'Expired',
   '{n} عرض ظاهر للزبون دلوقتي': '{n} offers live for customers now',
@@ -248,6 +259,17 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  'coupons|شغالة': 'Действуют',
+  'كل الكوبونات': 'Все купоны',
+  'لسه مبدأتش': 'Ещё не начались',
+  'خلصت': 'Закончились',
+  '{n} كوبون شغال دلوقتي': 'Сейчас действуют: {n}',
+  'دور بالكود': 'Поиск по коду',
+  'مفيش كوبونات هنا': 'Здесь нет купонов',
+  'ج.م خصم': 'EGP скидка',
+  'خصم': 'скидка',
+  'يبدأ': 'Начало',
+  'من {n}': 'из {n}',
   'كل العروض': 'Все акции',
   'منتهية': 'Истёкшие',
   '{n} عرض ظاهر للزبون دلوقتي': 'Сейчас видно клиентам: {n}',
