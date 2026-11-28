@@ -30,7 +30,7 @@ export function AdminOrdersPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="mx-auto max-w-3xl pb-8">
+    <div className="mx-auto max-w-none pb-8">
       <TabHeader title={t('الأوردرات')} />
       <div className="sticky top-0 md:top-16 z-20 bg-bg -mx-0 px-4 pb-2.5">
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 no-scrollbar">
@@ -65,7 +65,7 @@ export function AdminOrdersPage() {
         ) : orders.data!.length === 0 ? (
           <EmptyView icon={ReceiptText} message={filter === 'Pending' ? t('مفيش أوردرات جديدة دلوقتي 👌') : t('مفيش أوردرات هنا')} />
         ) : (
-          <div className="grid gap-2.5 md:grid-cols-2">
+          <div className="grid gap-2.5 md:grid-cols-2 2xl:grid-cols-3">
             {orders.data!.map((o) => (
               <OrderSummaryCard key={o.id} order={o} showCustomer onClick={() => navigate(`/admin/orders/${o.id}`)} />
             ))}

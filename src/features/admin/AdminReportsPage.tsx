@@ -23,7 +23,7 @@ export function AdminReportsPage() {
   const report = useReport(key);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-8">
+    <div className="mx-auto max-w-5xl px-4 pb-8">
       <TabHeader title={t('الإحصائيات')} />
       <Segmented<ReportPeriod>
         value={key.period}

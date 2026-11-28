@@ -227,7 +227,7 @@ export function AppShell() {
         <div className="flex flex-1">
           <AdminSidebar />
           <main className={clsx('min-w-0 flex-1', showBar && 'pb-28 md:pb-10')}>
-            <div className="mx-auto w-full max-w-6xl">
+            <div className="mx-auto w-full max-w-[1440px] lg:px-4">
               <Outlet />
             </div>
           </main>

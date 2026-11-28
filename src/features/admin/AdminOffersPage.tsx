@@ -37,7 +37,7 @@ export function AdminOffersPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl pb-28">
+    <div className="mx-auto max-w-5xl pb-28">
       <PageHeader
         title={t('العروض')}
         subtitle={t('العروض اليومية في رئيسية الزبون')}
@@ -70,7 +70,7 @@ export function AdminOffersPage() {
             <p className="mb-3 text-sm leading-relaxed text-ink-2">
               {t('عروض المحلات بتظهر على طول من غير موافقة؛ تقدر تخفي أي عرض بالزرار. الترتيب: الأصغر الأول، وبعدين الأحدث.')}
             </p>
-            <div className="flex flex-col gap-2.5">
+            <div className="grid items-start gap-2.5 md:grid-cols-2">
               {list.map((o) => (
                 <OfferRow
                   key={o.id}

@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 
 import { useAdminStores } from '@/api/queries';
 import { TabHeader } from '@/components/layout/AppShell';
-import { Button, EmptyView, ErrorView, Loading, RoundIconButton } from '@/components/ui';
+import { Button, EmptyView, ErrorView, Loading } from '@/components/ui';
 import { t, tIn } from '@/lib/i18n';
 import { STORE_STATUSES, storeStatus } from '@/lib/meta';
 import type { Store, StoreStatus } from '@/types';
@@ -39,31 +39,35 @@ export function AdminStoresPage() {
     filter === null ? GROUP_ORDER.map((s) => [s, list.filter((x) => x.status === s)]) : [[filter, list]];
 
   return (
-    <div className="mx-auto max-w-3xl pb-8">
-      <div className="flex items-center px-4 pt-[max(env(safe-area-inset-top),8px)] md:pt-4">
-        <RoundIconButton icon={Plus} filled size={40} title={t('محل جديد')} onClick={() => navigate('/admin/stores/new')} />
-        <div className="flex-1 text-center">
-          <h1 className="text-xl font-extrabold text-ink">{tIn('admin', 'المحلات')}</h1>
+    <div className="mx-auto max-w-none pb-8">
+      <div className="flex items-center gap-3 px-4 pt-[max(env(safe-area-inset-top),10px)] md:pt-6">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl font-extrabold text-ink md:text-2xl">{tIn('admin', 'المحلات')}</h1>
           {stores.data && (
-            <p className="text-xs font-medium text-ink-3">
+            <p className="text-[13px] font-medium text-ink-3">
               {t('{n} محل • {open} مفتوح دلوقتي', { n: all.length, open: openCount })}
             </p>
           )}
         </div>
-        <RoundIconButton icon={Flag} size={40} title={t('تقييمات مبلّغ عنها')} onClick={() => navigate('/admin/ratings/reported')} />
+        <Button size="md" variant="outline" icon={<Flag className="size-4" />} title={t('تقييمات مبلّغ عنها')} onClick={() => navigate('/admin/ratings/reported')}>
+          <span className="hidden sm:inline">{t('تقييمات مبلّغ عنها')}</span>
+        </Button>
+        <Button size="md" icon={<Plus className="size-4" />} title={t('محل جديد')} onClick={() => navigate('/admin/stores/new')}>
+          <span className="hidden sm:inline">{t('محل جديد')}</span>
+        </Button>
       </div>
 
-      <div className="sticky top-0 md:top-16 z-20 bg-bg px-4 pt-2 pb-2.5">
-        <label className="flex h-12 items-center gap-2 rounded-full border border-line bg-surface px-4 focus-within:border-brand">
+      <div className="sticky top-0 z-20 bg-bg/95 px-4 pt-3 pb-3 backdrop-blur md:top-[60px] lg:flex lg:items-center lg:gap-3">
+        <label className="flex h-11 items-center gap-2 rounded-full border border-line bg-surface px-4 focus-within:border-brand lg:w-[380px] lg:shrink-0">
           <Search className="size-5 text-ink-2" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('دور باسم المحل أو العنوان أو الرقم')} className="flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-ink-3 placeholder:font-medium" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('دور باسم المحل أو العنوان أو الرقم')} className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-ink-3 placeholder:font-medium" />
           {query && (
             <button type="button" aria-label={tIn('admin', 'مسح')} onClick={() => setQuery('')} className="text-ink-2 hover:text-ink">
               <X className="size-5" />
             </button>
           )}
         </label>
-        <div className="mt-2.5 -mx-4 flex gap-2 overflow-x-auto px-4 no-scrollbar">
+        <div className="mt-2.5 -mx-4 flex gap-2 overflow-x-auto px-4 no-scrollbar lg:mx-0 lg:mt-0 lg:px-0">
           {([[t('الكل'), null], ...STORE_STATUSES.map((s) => [s.value === 'Active' ? t('مفعّلة') : s.value === 'Suspended' ? t('موقوفة') : t('مستنية موافقة'), s.value] as const)] as [string, StoreStatus | null][]).map(([label, status]) => {
             const selected = filter === status;
             const meta = status ? storeStatus(status) : null;
@@ -108,7 +112,7 @@ export function AdminStoresPage() {
             items.length === 0 ? null : (
               <section key={status}>
                 {filter === null && <GroupHeader status={status} count={items.length} />}
-                <div className="grid gap-2.5 pb-3 md:grid-cols-2">
+                <div className="grid gap-3 pb-3 md:grid-cols-2 2xl:grid-cols-3">
                   {items.map((s) => (
                     <AdminStoreCard key={s.id} store={s} />
                   ))}
@@ -125,7 +129,7 @@ export function AdminStoresPage() {
 function GroupHeader({ status, count }: { status: StoreStatus; count: number }) {
   const meta = storeStatus(status);
   return (
-    <div className="flex items-center gap-1.5 px-1 pt-4 pb-1.5">
+    <div className="flex items-center gap-1.5 px-1 pt-3 pb-2">
       <meta.Icon className="size-4" style={{ color: meta.color }} />
       <span className="text-sm font-extrabold text-ink">{meta.label}</span>
       <span className="text-[13px] text-ink-3">{count}</span>

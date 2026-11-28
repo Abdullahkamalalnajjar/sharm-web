@@ -29,7 +29,7 @@ export function AdminCouponsPage() {
   const list = coupons.data ?? [];
 
   return (
-    <div className="mx-auto max-w-3xl pb-28">
+    <div className="mx-auto max-w-5xl pb-28">
       <PageHeader
         title={t('الكوبونات')}
         actions={
@@ -46,7 +46,7 @@ export function AdminCouponsPage() {
         ) : list.length === 0 ? (
           <EmptyView icon={Ticket} message={t('مفيش كوبونات لسه.\nضيف أول كوبون.')} />
         ) : (
-          <div className="flex flex-col gap-2.5">
+          <div className="grid items-start gap-2.5 md:grid-cols-2">
             {list.map((c) => (
               <CouponRow key={c.id} coupon={c} onEdit={() => setEditing(c)} onToggle={() => toggle(c)} />
             ))}

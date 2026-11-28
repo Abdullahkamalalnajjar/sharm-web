@@ -63,8 +63,8 @@ export function AdminStoreCard({ store }: { store: Store }) {
 
   return (
     <>
-      <SoftCard className="overflow-hidden">
-        <button type="button" onClick={() => setDetailsOpen(true)} className="flex w-full items-start gap-3 px-3.5 pt-3.5 pb-3 text-start">
+      <SoftCard className="flex h-full flex-col overflow-hidden">
+        <button type="button" onClick={() => setDetailsOpen(true)} className="flex w-full flex-1 items-start gap-3 px-3.5 pt-3.5 pb-3 text-start hover:bg-surface-alt/30">
           <StoreAvatar category={store} logoUrl={store.logoUrl} size={52} />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">

@@ -98,7 +98,7 @@ export function AdminSidebar() {
                     end={link.end}
                     className={({ isActive }) =>
                       clsx(
-                        'flex h-10 items-center gap-2.5 rounded-xl px-3 text-[14px] font-bold transition-colors',
+                        'flex h-10 items-center gap-2.5 rounded-xl px-3 text-[14px] font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand/40',
                         isActive ? 'bg-brand/12 text-brand-ink' : 'text-ink-2 hover:bg-surface-alt hover:text-ink',
                       )
                     }

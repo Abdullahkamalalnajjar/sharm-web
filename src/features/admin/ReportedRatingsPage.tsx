@@ -32,7 +32,7 @@ export function ReportedRatingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl pb-8">
+    <div className="mx-auto max-w-5xl pb-8">
       <PageHeader title={t('تقييمات مبلّغ عنها')} />
       <div className="flex flex-col gap-2.5 px-4">
         {list.isLoading ? (
@@ -42,7 +42,8 @@ export function ReportedRatingsPage() {
         ) : !list.data?.length ? (
           <EmptyView icon={Flag} message={t('مفيش بلاغات')} />
         ) : (
-          list.data.map((r) => (
+          <div className="grid items-start gap-2.5 md:grid-cols-2">
+          {list.data.map((r) => (
             <SoftCard key={r.id} className="flex flex-col gap-2 p-4">
               <div className="flex items-center gap-2">
                 <span className="min-w-0 flex-1 truncate font-extrabold text-ink">{r.storeName}</span>
@@ -62,7 +63,8 @@ export function ReportedRatingsPage() {
                 </Button>
               </div>
             </SoftCard>
-          ))
+          ))}
+          </div>
         )}
       </div>
     </div>

@@ -48,7 +48,7 @@ export function AdminDriversPage() {
   const busy = list.filter((d) => d.isActive && d.activeOrders > 0).length;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-28">
+    <div className="mx-auto max-w-none px-4 pb-28">
       <TabHeader
         title={t('المندوبين')}
         actions={
@@ -68,7 +68,7 @@ export function AdminDriversPage() {
           {waiting.length > 0 && (
             <>
               <p className="mb-2 px-1 font-extrabold text-ink-2">{t('مستنيين المراجعة ({n})', { n: waiting.length })}</p>
-              <div className="mb-5 grid gap-3 md:grid-cols-2">
+              <div className="mb-5 grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
                 {waiting.map((d) => (
                   <WaitingDriverCard key={d.id} driver={d} onViewId={() => setIdOf(d)} onApprove={() => toggle(d)} />
                 ))}
@@ -80,7 +80,7 @@ export function AdminDriversPage() {
             <Stat label={t('معاهم أوردرات')} value={busy} color="var(--color-series-1)" />
             <Stat label={t('فاضيين')} value={active - busy} color="var(--color-series-3)" />
           </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <div className="mt-4 grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
             {list.map((d) => (
               <DriverCard key={d.id} driver={d} onEdit={() => setEditing(d)} onToggle={() => toggle(d)} />
             ))}

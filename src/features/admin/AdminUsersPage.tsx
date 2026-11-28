@@ -57,7 +57,7 @@ export function AdminUsersPage() {
   }, [users.data, role, q]);
 
   return (
-    <div className="mx-auto max-w-3xl pb-28">
+    <div className="mx-auto max-w-5xl pb-28">
       <PageHeader title={t('المستخدمين')} />
       <div className="flex flex-col gap-3 px-4">
         <TextField start={<Search className="size-4" />} placeholder={t('دوّر بالاسم أو الموبايل أو الإيميل أو المحل')} value={q} onChange={(e) => setQ(e.target.value)} />

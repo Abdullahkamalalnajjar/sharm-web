@@ -64,7 +64,7 @@ export function AdminCategoriesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl pb-28">
+    <div className="mx-auto max-w-5xl pb-28">
       <PageHeader
         title={t('الأقسام')}
         actions={
