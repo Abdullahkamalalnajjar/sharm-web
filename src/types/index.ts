@@ -40,6 +40,8 @@ export interface Store {
   name: string;
   description: string | null;
   categoryId: number;
+  /** All the store's categories, the main one (categoryId) first. */
+  categoryIds?: number[];
   categoryName: string;
   categoryIcon: string;
   categoryNameEn?: string | null;
@@ -92,6 +94,8 @@ export interface NearbyStore {
   id: number;
   name: string;
   categoryId: number;
+  /** All the store's categories, the main one (categoryId) first. */
+  categoryIds?: number[];
   categoryName: string;
   categoryIcon: string;
   categoryNameEn?: string | null;
@@ -126,6 +130,8 @@ export interface StoreInput {
   name: string;
   description: string | null;
   categoryId: number;
+  /** All the store's categories, the main one (categoryId) first. */
+  categoryIds?: number[];
   phone: string;
   address: string;
   latitude: number;

@@ -36,7 +36,11 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
   const qc = useQueryClient();
   const navigate = useNavigate();
   const categories = useStoreCategories();
-  const [categoryId, setCategoryId] = useState<number | null>(store?.categoryId ?? null);
+  // Every category the store is in; the first one is the main one (its icon and name on the cards).
+  const [categoryIds, setCategoryIds] = useState<number[]>(store ? (store.categoryIds?.length ? store.categoryIds : [store.categoryId]) : []);
+  const categoryId = categoryIds[0] ?? null;
+  const toggleCategory = (id: number) =>
+    setCategoryIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : ids.length >= 10 ? ids : [...ids, id]));
   const [name, setName] = useState(store?.name ?? '');
   const [description, setDescription] = useState(store?.description ?? '');
   const [phone, setPhone] = useState(store?.phone ?? '');
@@ -82,6 +86,7 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
       name: name.trim(),
       description: description.trim() || null,
       categoryId,
+      categoryIds,
       phone: phone.trim(),
       address: address.trim(),
       latitude: latValue,
@@ -134,7 +139,8 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
           aspect="aspect-[2.4]"
         />
 
-        <p className="mt-1 text-sm font-extrabold text-ink">{t('القسم')}</p>
+        <p className="mt-1 text-sm font-extrabold text-ink">{t('الأقسام')}</p>
+        <p className="-mt-2 text-xs text-ink-3">{t('اختار قسم أو أكتر. أول قسم تختاره هو الأساسي.')}</p>
         {categories.isLoading ? (
           <Loading className="py-2" />
         ) : categories.isError ? (
@@ -151,19 +157,21 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
                 return { id: c.id, name: parent ? `${localized(parent.name, parent.nameEn, parent.nameRu, parent.nameTr, parent.nameIt)} › ${name}` : name, icon: c.icon };
               }),
               // The store's current category stays selectable even if the admin hid it.
-              ...(store && !flattenCategories(categories.data ?? []).some((c) => c.id === store.categoryId)
+              ...(store && !flattenCategories(categories.data ?? []).some((c) => c.id === store.categoryId) && categoryIds.includes(store.categoryId)
                 ? [{ id: store.categoryId, name: localized(store.categoryName, store.categoryNameEn, store.categoryNameRu, store.categoryNameTr, store.categoryNameIt), icon: store.categoryIcon }]
                 : []),
             ].map((c) => {
               const look = categoryLook(c.icon);
+              const selected = categoryIds.includes(c.id);
               return (
                 <Chip
                   key={c.id}
-                  selected={categoryId === c.id}
-                  onClick={() => setCategoryId(c.id)}
-                  icon={<look.Icon className="size-4" style={{ color: categoryId === c.id ? '#fff' : look.color }} />}
+                  selected={selected}
+                  onClick={() => toggleCategory(c.id)}
+                  icon={<look.Icon className="size-4" style={{ color: selected ? '#fff' : look.color }} />}
                 >
                   {c.name}
+                  {categoryIds.length > 1 && categoryId === c.id && <span className="ms-1.5 rounded-full bg-white/25 px-1.5 text-[10px]">{t('أساسي')}</span>}
                 </Chip>
               );
             })}

@@ -25,7 +25,8 @@ export function HomePage() {
   const all = stores.data ?? [];
   // A main category covers its sub-categories' stores too.
   const ids = categoryId === null ? null : categoryIdsFor(categories, categoryId);
-  const inIds = (s: { categoryId: number }) => ids === null || ids.has(s.categoryId);
+  // A store can be in more than one category (main + extra ones).
+  const inIds = (s: { categoryId: number; categoryIds?: number[] }) => ids === null || (s.categoryIds ?? [s.categoryId]).some((c) => ids.has(c));
   let list = all;
   if (ids !== null) list = list.filter(inIds);
   if (openOnly) list = list.filter((s) => s.isOpen);

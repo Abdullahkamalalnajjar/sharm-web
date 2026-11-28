@@ -1,6 +1,8 @@
 // Translations for the customer pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  "اختار قسم أو أكتر. أول قسم تختاره هو الأساسي.": "Pick one or more categories. The first one you pick is the main one.",
+  "أساسي": "Main",
   "هتمسح حسابك وبياناتك الشخصية (الإيميل، الاسم، الموبايل، العناوين) نهائياً، ومش هتقدر ترجّعه. طلباتك القديمة بتفضل محفوظة من غير بياناتك.": "This permanently deletes your account and personal data (email, name, phone, addresses). It can't be undone. Your past orders stay saved without your details.",
   "الفترة الأولى": "First period",
   "الفترة التانية": "Second period",
@@ -325,6 +327,8 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  "اختار قسم أو أكتر. أول قسم تختاره هو الأساسي.": "Выберите одну или несколько категорий. Первая выбранная — основная.",
+  "أساسي": "Основная",
   "هتمسح حسابك وبياناتك الشخصية (الإيميل، الاسم، الموبايل، العناوين) نهائياً، ومش هتقدر ترجّعه. طلباتك القديمة بتفضل محفوظة من غير بياناتك.": "Аккаунт и личные данные (почта, имя, телефон, адреса) будут удалены навсегда. Отменить нельзя. Прошлые заказы сохранятся без ваших данных.",
   "الفترة الأولى": "Первый период",
   "الفترة التانية": "Второй период",

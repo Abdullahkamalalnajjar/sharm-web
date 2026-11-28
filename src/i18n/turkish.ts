@@ -1,6 +1,8 @@
 // Turkish translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const tr: Record<string, string> = {
+  "اختار قسم أو أكتر. أول قسم تختاره هو الأساسي.": "Bir veya daha fazla kategori seçin. İlk seçtiğiniz ana kategoridir.",
+  "أساسي": "Ana",
   "هتمسح حسابك وبياناتك الشخصية (الإيميل، الاسم، الموبايل، العناوين) نهائياً، ومش هتقدر ترجّعه. طلباتك القديمة بتفضل محفوظة من غير بياناتك.": "Hesabınız ve kişisel verileriniz (e-posta, ad, telefon, adresler) kalıcı olarak silinir. Geri alınamaz. Eski siparişleriniz bilgileriniz olmadan saklanır.",
   "الفترة الأولى": "İlk dönem",
   "الفترة التانية": "İkinci dönem",

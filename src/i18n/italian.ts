@@ -1,6 +1,8 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  "اختار قسم أو أكتر. أول قسم تختاره هو الأساسي.": "Scegli una o più categorie. La prima che scegli è quella principale.",
+  "أساسي": "Principale",
   "هتمسح حسابك وبياناتك الشخصية (الإيميل، الاسم، الموبايل، العناوين) نهائياً، ومش هتقدر ترجّعه. طلباتك القديمة بتفضل محفوظة من غير بياناتك.": "Account e dati personali (email, nome, telefono, indirizzi) verranno eliminati per sempre. Non si può annullare. I vecchi ordini restano salvati senza i tuoi dati.",
   "الفترة الأولى": "Primo turno",
   "الفترة التانية": "Secondo turno",
