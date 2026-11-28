@@ -1,6 +1,17 @@
 // Turkish translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const tr: Record<string, string> = {
+  'announce|بيفتح': 'Açar',
+  'من غير لينك': 'Bağlantı yok',
+  'يفتح المنيو بتاعه': 'Menüsünü açar',
+  'يفتح العرض': 'Teklifi açar',
+  'بيرن على الموبايل وبيفضل في صفحة الإشعارات جوه الأبلكيشن': 'Telefonlarda çalar ve uygulamanın bildirimlerinde kalır',
+  'اختار بالاسم': 'İsimle seç',
+  'الرسالة': 'Mesaj',
+  'بيتبعت زي ما هو مكتوب، من غير ترجمة.': 'Yazıldığı gibi, çevrilmeden gönderilir.',
+  'شكل الإشعار على الموبايل': 'Telefonda nasıl görünür',
+  'لمين': 'Kime',
+  'لسه مختارتش': 'Henüz seçilmedi',
   'coupons|شغالة': 'Aktif',
   'كل الكوبونات': 'Tüm kuponlar',
   'لسه مبدأتش': 'Henüz başlamadı',

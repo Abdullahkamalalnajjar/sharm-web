@@ -1,6 +1,17 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  'announce|بيفتح': 'Apre',
+  'من غير لينك': 'Nessun link',
+  'يفتح المنيو بتاعه': 'Apre il suo menu',
+  'يفتح العرض': 'Apre l’offerta',
+  'بيرن على الموبايل وبيفضل في صفحة الإشعارات جوه الأبلكيشن': 'Suona sui telefoni e resta nelle notifiche dell’app',
+  'اختار بالاسم': 'Scegli per nome',
+  'الرسالة': 'Messaggio',
+  'بيتبعت زي ما هو مكتوب، من غير ترجمة.': 'Inviata così com’è scritta, senza traduzione.',
+  'شكل الإشعار على الموبايل': 'Come appare sul telefono',
+  'لمين': 'A chi',
+  'لسه مختارتش': 'Non ancora scelto',
   'coupons|شغالة': 'Attivi',
   'كل الكوبونات': 'Tutti i coupon',
   'لسه مبدأتش': 'Non ancora iniziati',

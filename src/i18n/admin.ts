@@ -1,6 +1,17 @@
 // Translations for the admin pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  'announce|بيفتح': 'Opens',
+  'من غير لينك': 'No link',
+  'يفتح المنيو بتاعه': 'Opens its menu',
+  'يفتح العرض': 'Opens the offer',
+  'بيرن على الموبايل وبيفضل في صفحة الإشعارات جوه الأبلكيشن': 'Rings on phones and stays in the app’s notifications',
+  'اختار بالاسم': 'Pick by name',
+  'الرسالة': 'Message',
+  'بيتبعت زي ما هو مكتوب، من غير ترجمة.': 'Sent exactly as written, without translation.',
+  'شكل الإشعار على الموبايل': 'How it looks on the phone',
+  'لمين': 'To',
+  'لسه مختارتش': 'Not picked yet',
   'coupons|شغالة': 'Active',
   'كل الكوبونات': 'All coupons',
   'لسه مبدأتش': 'Not started yet',
@@ -259,6 +270,17 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  'announce|بيفتح': 'Открывает',
+  'من غير لينك': 'Без ссылки',
+  'يفتح المنيو بتاعه': 'Откроет меню',
+  'يفتح العرض': 'Откроет акцию',
+  'بيرن على الموبايل وبيفضل في صفحة الإشعارات جوه الأبلكيشن': 'Приходит на телефон и остаётся в уведомлениях приложения',
+  'اختار بالاسم': 'Выбрать по имени',
+  'الرسالة': 'Сообщение',
+  'بيتبعت زي ما هو مكتوب، من غير ترجمة.': 'Отправляется как написано, без перевода.',
+  'شكل الإشعار على الموبايل': 'Как это выглядит на телефоне',
+  'لمين': 'Кому',
+  'لسه مختارتش': 'Ещё не выбрано',
   'coupons|شغالة': 'Действуют',
   'كل الكوبونات': 'Все купоны',
   'لسه مبدأتش': 'Ещё не начались',
