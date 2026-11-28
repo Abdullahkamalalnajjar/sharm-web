@@ -1,6 +1,13 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  '{n} مندوب': '{n} fattorini',
+  'المركبة': 'Veicolo',
+  'دور بالاسم أو الموبايل أو الإيميل': 'Cerca per nome, telefono o email',
+  'كل المندوبين': 'Tutti i fattorini',
+  'متوقفين': 'Disattivati',
+  'مش متاحين': 'Non disponibili',
+  'مفيش مندوبين هنا': 'Nessun fattorino qui',
   'الزبون والعنوان': 'Cliente e indirizzo',
   'رقم الأوردر، المحل، الزبون، المندوب': 'N. ordine, negozio, cliente, fattorino',
   'من خارج المنيو': 'Fuori menu',

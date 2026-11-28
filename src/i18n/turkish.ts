@@ -1,6 +1,13 @@
 // Turkish translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const tr: Record<string, string> = {
+  '{n} مندوب': '{n} kurye',
+  'المركبة': 'Araç',
+  'دور بالاسم أو الموبايل أو الإيميل': 'İsim, telefon veya e-posta ile ara',
+  'كل المندوبين': 'Tüm kuryeler',
+  'متوقفين': 'Kapalı',
+  'مش متاحين': 'Müsait değil',
+  'مفيش مندوبين هنا': 'Burada kurye yok',
   'الزبون والعنوان': 'Müşteri ve adres',
   'رقم الأوردر، المحل، الزبون، المندوب': 'Sipariş no, mağaza, müşteri, kurye',
   'من خارج المنيو': 'Menü dışından',

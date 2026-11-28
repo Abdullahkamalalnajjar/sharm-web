@@ -1,6 +1,13 @@
 // Translations for the admin pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  '{n} مندوب': '{n} drivers',
+  'المركبة': 'Vehicle',
+  'دور بالاسم أو الموبايل أو الإيميل': 'Search by name, phone or email',
+  'كل المندوبين': 'All drivers',
+  'متوقفين': 'Turned off',
+  'مش متاحين': 'Unavailable',
+  'مفيش مندوبين هنا': 'No drivers here',
   'الزبون والعنوان': 'Customer & address',
   'رقم الأوردر، المحل، الزبون، المندوب': 'Order no., store, customer, driver',
   'من خارج المنيو': 'Not from the menu',
@@ -213,6 +220,13 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  '{n} مندوب': 'Курьеров: {n}',
+  'المركبة': 'Транспорт',
+  'دور بالاسم أو الموبايل أو الإيميل': 'Поиск по имени, телефону или email',
+  'كل المندوبين': 'Все курьеры',
+  'متوقفين': 'Отключены',
+  'مش متاحين': 'Недоступны',
+  'مفيش مندوبين هنا': 'Здесь нет курьеров',
   'الزبون والعنوان': 'Клиент и адрес',
   'رقم الأوردر، المحل، الزبون، المندوب': '№ заказа, заведение, клиент, курьер',
   'من خارج المنيو': 'Не из меню',
