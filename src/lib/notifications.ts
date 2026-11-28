@@ -1,4 +1,4 @@
-import { Bike, Bell, CircleCheck, CheckCircle2, Gift, ReceiptText, XCircle, type LucideIcon } from 'lucide-react';
+import { Bike, Bell, CircleCheck, CheckCircle2, Gift, Megaphone, ReceiptText, Tag, XCircle, type LucideIcon } from 'lucide-react';
 
 import type { AppRole } from '@/types';
 import { t } from '@/lib/i18n';
@@ -25,6 +25,11 @@ export function notificationLook(event: string): { Icon: LucideIcon; color: stri
       return { Icon: XCircle, color: 'var(--color-danger)' };
     case 'earned':
       return { Icon: Gift, color: 'var(--color-accent)' };
+    // The admin's announcements, and the automatic "new offer" one.
+    case 'announcement':
+      return { Icon: Megaphone, color: 'var(--color-brand)' };
+    case 'offer':
+      return { Icon: Tag, color: 'var(--color-accent)' };
     case 'Preparing':
     case 'DriverTook':
     case 'DriversDue':
@@ -49,6 +54,14 @@ export function notificationTarget(
   role: AppRole,
   n: { type: string; event: string; title?: string; data: Record<string, string> },
 ): string | null {
+  // The admin's announcements and new offers: a store's menu or an offer when they link one, else nothing more.
+  if (n.type === 'announcement') {
+    const id = Number(n.data.id);
+    if (role !== 'customer' || !Number.isFinite(id)) return null;
+    if (n.data.link === 'store') return `/store/${id}`;
+    if (n.data.link === 'offer') return `/offers/${id}`;
+    return null;
+  }
   if (n.type === 'loyalty') return role === 'customer' ? '/points' : null;
   if (n.type === 'wallet') {
     if (role === 'admin') return n.data.driverId ? `/admin/drivers/${n.data.driverId}/wallet` : '/admin/finance';

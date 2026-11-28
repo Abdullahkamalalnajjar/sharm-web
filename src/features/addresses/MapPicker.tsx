@@ -3,7 +3,9 @@ import 'leaflet/dist/leaflet.css';
 import { Loader2, LocateFixed, MapPin, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
+import { api } from '@/api/client';
 import { TextField } from '@/components/ui';
+import { isSignedIn } from '@/store/auth';
 import { currentLanguage, t } from '@/lib/i18n';
 
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -145,6 +147,31 @@ function PlaceSearch({ onPick }: { onPick: (lat: number, lng: number) => void })
     setLoading(true);
     const timer = setTimeout(async () => {
       try {
+        // Google Places through our server first (much better coverage of Sharm); it returns nothing for guests
+        // or when the server has no key, and OpenStreetMap is the fallback.
+        if (isSignedIn()) {
+          try {
+            const google = await api.get<{ name: string; address: string; latitude: number; longitude: number }[]>(
+              '/api/places/search',
+              { q, lang: currentLanguage() },
+            );
+            if (controller.signal.aborted) return;
+            if (google.length > 0) {
+              setResults(
+                google.map((g, i) => ({
+                  place_id: -1 - i,
+                  lat: String(g.latitude),
+                  lon: String(g.longitude),
+                  name: g.name,
+                  display_name: g.address || g.name,
+                })),
+              );
+              return;
+            }
+          } catch {
+            // Server unreachable: fall back below.
+          }
+        }
         const params = new URLSearchParams({
           q,
           format: 'jsonv2',

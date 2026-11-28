@@ -16,11 +16,14 @@ import {
   Store,
   UserRound,
   Wallet,
+  Megaphone,
+  Users,
   type LucideIcon,
 } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 
-import { useCart, useDeliveryLocation } from '@/api/queries';
+import { useCart, useDeliveryLocation, useMyProfile } from '@/api/queries';
+import { displayName } from '@/lib/display-name';
 import { DeliveryPicker } from '@/features/customer/DeliveryPicker';
 import { SITE } from '@/lib/site';
 import { useAuth } from '@/store/auth';
@@ -71,6 +74,8 @@ const NAV: Record<AppRole, NavItem[]> = {
     { to: '/admin/drivers', label: 'المندوبين', icon: Bike },
     { to: '/admin/offers', label: 'العروض', icon: Gift, desktopOnly: true },
     { to: '/admin/coupons', label: 'الكوبونات', icon: Ticket, desktopOnly: true },
+    { to: '/admin/users', label: 'المستخدمين', icon: Users, desktopOnly: true },
+    { to: '/admin/announcements', label: 'إرسال إشعار', icon: Megaphone, desktopOnly: true },
     { to: '/admin/finance', label: 'المالية', icon: Wallet, desktopOnly: true },
     { to: '/admin/reports', label: 'الإحصائيات', icon: BarChart3, desktopOnly: true },
   ],
@@ -180,9 +185,7 @@ export function AppShell() {
             {session ? (
               <>
                 <NotificationBell />
-                <span className="hidden text-sm text-white/85 lg:inline" dir="ltr">
-                  {session.email}
-                </span>
+                <HeaderName email={session.email} />
                 <button
                   type="button"
                   onClick={() => {
@@ -303,6 +306,14 @@ export function PageHeader({ title, actions, subtitle }: { title: string; action
 }
 
 /** Simple centered title for top-level tabs (no back arrow). */
+/** The signed-in person's name in the header (their own name, else the email; never a phone sign-in's made-up email). */
+function HeaderName({ email }: { email: string }) {
+  const profile = useMyProfile();
+  const name = displayName(profile.data?.fullName, email);
+  if (!name) return null;
+  return <span className="hidden max-w-48 truncate text-sm text-white/85 lg:inline">{name}</span>;
+}
+
 export function TabHeader({ title, actions }: { title: string; actions?: React.ReactNode }) {
   return (
     <div className="px-4 pt-3.5 pb-2 md:pt-6 flex items-center min-h-12">

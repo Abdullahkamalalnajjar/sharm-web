@@ -51,6 +51,7 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
   const [translations, setTranslations] = useState(() => translationValues(store ?? undefined));
   const [logo, setLogo] = useState<ImageEdit>(noImageEdit);
   const [cover, setCover] = useState<ImageEdit>(noImageEdit);
+  const [banner, setBanner] = useState<ImageEdit>(noImageEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,6 +100,8 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
       else if (logo.kind === 'removed' && store?.logoUrl) await storesApi.removeLogo(saved.id);
       if (cover.kind === 'picked') await storesApi.uploadCover(saved.id, cover.file);
       else if (cover.kind === 'removed' && store?.coverUrl) await storesApi.removeCover(saved.id);
+      if (banner.kind === 'picked') await storesApi.uploadBanner(saved.id, banner.file);
+      else if (banner.kind === 'removed' && store?.bannerUrl) await storesApi.removeBanner(saved.id);
       qc.invalidateQueries({ queryKey: ['stores'] });
       qc.invalidateQueries({ queryKey: ['admin'] });
       showMessage(isEdit ? t('اتحفظت التعديلات') : t('المحل اتسجل واتفعّل'));
@@ -119,6 +122,14 @@ function StoreForm({ store, isAdmin }: { store: StoreModel | null; isAdmin: bool
           currentUrl={store?.coverUrl}
           edit={cover}
           onChange={setCover}
+          placeholderIcon={Image}
+          aspect="aspect-[2.4]"
+        />
+        <ImagePickerField
+          label={t('بانر إعلاني (بيظهر جوه صفحة المحل للعروض والإعلانات)')}
+          currentUrl={store?.bannerUrl}
+          edit={banner}
+          onChange={setBanner}
           placeholderIcon={Image}
           aspect="aspect-[2.4]"
         />

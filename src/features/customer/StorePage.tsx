@@ -3,7 +3,8 @@ import { BookOpen, Clock, LayoutGrid, Plus, Sandwich, Search, SearchX, ShoppingB
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 
-import { useCart, useMenu, useStore } from '@/api/queries';
+import { useCart, useMenu, useOffers, useStore } from '@/api/queries';
+import { AutoSwipeOffers } from './OfferCards';
 import { AppImage, EmptyView, ErrorView, Loading, SectionHeader } from '@/components/ui';
 import { discountLabel, formatPrice, formatStoreHours } from '@/lib/format';
 import { t, tIn } from '@/lib/i18n';
@@ -40,6 +41,8 @@ export function StorePage() {
             <TopBar store={store.data} />
             <SearchField value={query} onChange={setQuery} />
             <StoreInfo store={store.data} />
+            {store.data.bannerUrl && <StoreBanner url={store.data.bannerUrl} />}
+            <StoreOffers storeId={store.data.id} />
             {menu.isLoading ? (
               <Loading />
             ) : menu.isError ? (
@@ -194,8 +197,33 @@ function SearchField({ value, onChange }: { value: string; onChange: (v: string)
 }
 
 /** Description, then open state, hours, minimum order and rating as one row of chips. */
+/** This store's running offers (the same as the home's daily offers, only this store's); hidden when none. */
+function StoreOffers({ storeId }: { storeId: number }) {
+  const offers = (useOffers().data ?? []).filter((o) => o.storeId === storeId);
+  if (offers.length === 0) return null;
+  return (
+    <section className="mx-4 mt-5">
+      <div className="mb-2.5 flex items-center gap-2">
+        <h2 className="text-lg font-extrabold text-ink">{t('عروض المحل')}</h2>
+        <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">{offers.length}</span>
+      </div>
+      <AutoSwipeOffers offers={offers} />
+    </section>
+  );
+}
+
+/** The store's promotional banner (an ad or an offer), with a small "ad" tag. */
+function StoreBanner({ url }: { url: string }) {
+  return (
+    <div className="mx-4 mt-3.5 relative overflow-hidden rounded-[20px] shadow-[0_6px_14px_rgba(0,0,0,0.08)] aspect-[12/5]">
+      <AppImage url={url} fallback={<div className="size-full bg-surface-alt" />} className="size-full object-cover" />
+      <span className="absolute top-2 end-2 rounded-full bg-black/60 px-2 py-0.5 text-[10.5px] font-extrabold text-white">{t('إعلان')}</span>
+    </div>
+  );
+}
+
 function StoreInfo({ store }: { store: Store }) {
-  const hours = formatStoreHours(store.opensAt, store.closesAt);
+  const hours = formatStoreHours(store.opensAt, store.closesAt, store.secondOpensAt, store.secondClosesAt);
   return (
     <div className="pt-3.5">
       {store.description && (

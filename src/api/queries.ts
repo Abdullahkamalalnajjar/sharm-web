@@ -133,7 +133,8 @@ export const useAdminStoreCategories = () =>
 export const useAdminCoupons = () => useQuery({ queryKey: keys.adminCoupons, queryFn: couponsApi.all });
 
 export const useStore = (id: number) => useQuery({ queryKey: keys.store(id), queryFn: () => storesApi.byId(id) });
-export const useMenu = (id: number) => useQuery({ queryKey: keys.menu(id), queryFn: () => catalogApi.menu(id) });
+/** `id` 0 (or less) loads nothing. */
+export const useMenu = (id: number) => useQuery({ queryKey: keys.menu(id), queryFn: () => catalogApi.menu(id), enabled: id > 0 });
 export const useManagedMenu = (id: number) =>
   useQuery({ queryKey: keys.managedMenu(id), queryFn: () => catalogApi.managedMenu(id) });
 export const useMyStores = () => useQuery({ queryKey: keys.myStores, queryFn: storesApi.mine });

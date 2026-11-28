@@ -77,7 +77,7 @@ export function AdminStoreCard({ store }: { store: Store }) {
               <Meta icon={Phone} text={store.phone} ltr />
               {store.minOrderAmount > 0 && <Meta icon={ShoppingBag} text={t('أقل طلب {p}', { p: formatPrice(store.minOrderAmount) })} />}
               {(store.commissionPercent ?? 0) > 0 && <Meta icon={Percent} text={t('عمولة {n}%', { n: store.commissionPercent ?? 0 })} />}
-              {store.opensAt && store.closesAt && <Meta icon={Clock} text={formatStoreHours(store.opensAt, store.closesAt)!} />}
+              {store.opensAt && store.closesAt && <Meta icon={Clock} text={formatStoreHours(store.opensAt, store.closesAt, store.secondOpensAt, store.secondClosesAt)!} />}
             </div>
           </div>
         </button>
@@ -170,7 +170,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
           <InfoRow icon={ShoppingBag} label={t('أقل طلب')} value={store.minOrderAmount > 0 ? formatPrice(store.minOrderAmount) : t('مفيش حد أدنى')} />
           <InfoRow icon={Percent} label={t('العمولة')} value={`${store.commissionPercent ?? 0}%`} />
           <InfoRow icon={ReceiptText} label={t('الضريبة')} value={store.taxPercent ? `${store.taxPercent}%` : t('من غير ضريبة')} />
-          <InfoRow icon={Clock} label={t('المواعيد')} value={formatStoreHours(store.opensAt, store.closesAt) ?? t('مفيش (الزرار بس)')} />
+          <InfoRow icon={Clock} label={t('المواعيد')} value={formatStoreHours(store.opensAt, store.closesAt, store.secondOpensAt, store.secondClosesAt) ?? t('مفيش (الزرار بس)')} />
           <InfoRow icon={CalendarClock} label={t('المجدولة')} value={store.allowsScheduledOrders ? t('بياخد طلبات مجدولة') : t('مقفولة')} />
           <InfoRow icon={Crosshair} label={t('الإحداثيات')} value={`${store.latitude.toFixed(4)}, ${store.longitude.toFixed(4)}`} ltr />
         </div>
@@ -212,7 +212,7 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
             icon={Clock}
             color="var(--color-ink)"
             title={t('مواعيد الفتح والقفل')}
-            subtitle={formatStoreHours(store.opensAt, store.closesAt) ?? t('مفيش مواعيد، الزرار بس اللي بيتحكم')}
+            subtitle={formatStoreHours(store.opensAt, store.closesAt, store.secondOpensAt, store.secondClosesAt) ?? t('مفيش مواعيد، الزرار بس اللي بيتحكم')}
             onClick={() => {
               onClose();
               setHoursOpen(true);

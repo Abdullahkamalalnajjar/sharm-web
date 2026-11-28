@@ -229,7 +229,7 @@ export function OrderItemsCard({
           </div>
           {g.items.map((item) => (
             <div key={item.id} className="flex items-start gap-2.5 px-3.5 py-1.5">
-              <ProductThumb storeId={g.storeId} productId={item.productId} />
+              <ProductThumb storeId={g.storeId} productId={item.productId} imageUrl={item.imageUrl} />
               {onQuantityChange ? (
                 <QuantityStepper quantity={item.quantity} onChange={(q) => onQuantityChange(item, q)} />
               ) : (
@@ -261,12 +261,13 @@ export function OrderItemsCard({
 }
 
 /**
- * An order line's product photo. Order lines don't carry it, so it comes from the store's menu (one cached
- * request per store); a product no longer on the menu shows the placeholder.
+ * An order line's product photo: the one sent with the order, else (older servers) looked up in the store's menu.
+ * A product with neither shows the placeholder.
  */
-export function ProductThumb({ storeId, productId }: { storeId: number; productId: number }) {
-  const menu = useMenu(storeId);
-  const imageUrl = menu.data?.categories.flatMap((c) => c.products).find((p) => p.id === productId)?.imageUrl;
+export function ProductThumb({ storeId, productId, imageUrl: given }: { storeId: number; productId: number; imageUrl?: string | null }) {
+  // The menu is loaded only when the order did not bring the photo.
+  const menu = useMenu(given ? 0 : storeId);
+  const imageUrl = given ?? menu.data?.categories.flatMap((c) => c.products).find((p) => p.id === productId)?.imageUrl;
   return (
     <span className="size-11 shrink-0 overflow-hidden rounded-lg bg-surface-alt">
       <AppImage url={imageUrl} alt="" fallback={<Sandwich className="size-5 text-ink-3" />} />

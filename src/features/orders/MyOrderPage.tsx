@@ -1,4 +1,4 @@
-import { PartyPopper, X } from 'lucide-react';
+import { PartyPopper, X, RefreshCcw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useParams } from 'react-router';
 
@@ -6,7 +6,7 @@ import { ordersApi } from '@/api';
 import { keys, useMyOrder } from '@/api/queries';
 import { PageHeader } from '@/components/layout/AppShell';
 import { Button, ErrorView, Loading, SoftCard, StatusChip } from '@/components/ui';
-import { t } from '@/lib/i18n';
+import { t, useLanguage } from '@/lib/i18n';
 import { orderStatus } from '@/lib/meta';
 import { runAction } from '@/lib/run-action';
 import { RateOrderCard } from '@/features/ratings/Ratings';
@@ -77,9 +77,21 @@ export function MyOrderPage() {
                 <Button variant="outline" block className="text-danger border-danger/50 hover:bg-danger/10" icon={<X className="size-5" />} onClick={cancel}>
                   {t('إلغاء الأوردر')}
                 </Button>
-                <p className="text-xs text-ink-3">{t('تقدر تلغي الأوردر لحد ما الإدارة تأكده.')}</p>
+                <p className="text-xs text-ink-3">{t('تقدر تلغي الأوردر لحد ما المحل يقبله.')}</p>
               </div>
             )}
+            {/* When an order can be cancelled and how money comes back. */}
+            <div className="mt-2 flex justify-center">
+              <a
+                href={`https://maridegypt.com/refund${useLanguage.getState().language === 'ar' ? '#ar' : '#en'}`}
+                target="_blank"
+                rel="noopener"
+                className="inline-flex items-center gap-1.5 py-2 text-sm font-bold text-brand-ink hover:underline"
+              >
+                <RefreshCcw className="size-4" />
+                {order.data.status === 'Delivered' ? t('مشكلة في الطلب؟ سياسة الاسترداد') : t('سياسة الاسترداد والإلغاء')}
+              </a>
+            </div>
           </>
         )}
       </div>

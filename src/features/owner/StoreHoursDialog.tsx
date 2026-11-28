@@ -32,16 +32,39 @@ function HoursForm({ store, onClose }: { store: Store; onClose: () => void }) {
   const qc = useQueryClient();
   const [opensAt, setOpensAt] = useState(hhmm(store.opensAt, '10:00'));
   const [closesAt, setClosesAt] = useState(hhmm(store.closesAt, '23:00'));
+  // An optional second period in the day, like the apps.
+  const [hasSecond, setHasSecond] = useState(!!(store.secondOpensAt && store.secondClosesAt));
+  const [secondOpensAt, setSecondOpensAt] = useState(hhmm(store.secondOpensAt ?? null, '19:00'));
+  const [secondClosesAt, setSecondClosesAt] = useState(hhmm(store.secondClosesAt ?? null, '23:00'));
   const [busy, setBusy] = useState(false);
 
-  const missing = !opensAt || !closesAt;
-  const sameTime = !missing && minutes(opensAt) === minutes(closesAt);
+  const missing = !opensAt || !closesAt || (hasSecond && (!secondOpensAt || !secondClosesAt));
+  const sameTime =
+    !missing && (minutes(opensAt) === minutes(closesAt) || (hasSecond && minutes(secondOpensAt) === minutes(secondClosesAt)));
   const overnight = !missing && minutes(closesAt) < minutes(opensAt);
+  // The two periods must not overlap (each may run past midnight).
+  const span = (a: string, b: string): [number, number][] => {
+    const s = minutes(a);
+    const e = minutes(b);
+    return e > s ? [[s, e]] : [[s, 1440], [0, e]];
+  };
+  const overlap =
+    !missing &&
+    !sameTime &&
+    hasSecond &&
+    span(opensAt, closesAt).some(([a1, a2]) => span(secondOpensAt, secondClosesAt).some(([b1, b2]) => a1 < b2 && b1 < a2));
 
   async function save(clear = false) {
     setBusy(true);
     const ok = await runAction(
-      () => storesApi.setHours(store.id, clear ? null : opensAt, clear ? null : closesAt),
+      () =>
+        storesApi.setHours(
+          store.id,
+          clear ? null : opensAt,
+          clear ? null : closesAt,
+          clear || !hasSecond ? null : secondOpensAt,
+          clear || !hasSecond ? null : secondClosesAt,
+        ),
       clear ? t('المواعيد اتشالت') : t('المواعيد اتحفظت'),
     );
     setBusy(false);
@@ -56,20 +79,43 @@ function HoursForm({ store, onClose }: { store: Store; onClose: () => void }) {
   return (
     <div className="flex flex-col gap-3">
       <p className="-mt-2 text-xs text-ink-3">{t('برا المواعيد دي المحل بيتقفل لوحده، حتى لو زرار الفتح شغال')}</p>
+      {hasSecond && <p className="text-sm font-extrabold text-ink">{t('الفترة الأولى')}</p>}
       <div className="grid grid-cols-2 gap-3">
         <TimeBox label={t('بيفتح')} value={opensAt} onChange={setOpensAt} />
         <TimeBox label={t('بيقفل')} value={closesAt} onChange={setClosesAt} />
       </div>
+      {hasSecond ? (
+        <>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-extrabold text-ink">{t('الفترة التانية')}</p>
+            <button type="button" disabled={busy} onClick={() => setHasSecond(false)} className="text-sm font-bold text-danger hover:underline">
+              {t('شيل الفترة التانية')}
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <TimeBox label={t('بيفتح')} value={secondOpensAt} onChange={setSecondOpensAt} />
+            <TimeBox label={t('بيقفل')} value={secondClosesAt} onChange={setSecondClosesAt} />
+          </div>
+        </>
+      ) : (
+        <button type="button" disabled={busy} onClick={() => setHasSecond(true)} className="self-start text-sm font-bold text-brand-ink hover:underline">
+          + {t('أضف فترة تانية')}
+        </button>
+      )}
       {!missing && (
-        <p className={`text-xs ${sameTime ? 'text-danger' : 'text-ink-2'}`}>
+        <p className={`text-xs ${sameTime || overlap ? 'text-danger' : 'text-ink-2'}`}>
           {sameTime
             ? t('ميعاد الفتح والقفل مينفعش يبقوا واحد')
-            : overnight
-              ? t('بيقفل بعد نص الليل')
-              : t('كل يوم {hours}', { hours: formatStoreHours(opensAt, closesAt) ?? '' })}
+            : overlap
+              ? t('الفترتين داخلين في بعض، خلّي التانية تبدأ بعد ما الأولى تقفل')
+              : overnight && !hasSecond
+                ? t('بيقفل بعد نص الليل')
+                : t('كل يوم {hours}', {
+                    hours: formatStoreHours(opensAt, closesAt, hasSecond ? secondOpensAt : null, hasSecond ? secondClosesAt : null) ?? '',
+                  })}
         </p>
       )}
-      <Button block size="md" className="mt-1" loading={busy} disabled={missing || sameTime} onClick={() => save()}>
+      <Button block size="md" className="mt-1" loading={busy} disabled={missing || sameTime || overlap} onClick={() => save()}>
         {t('حفظ')}
       </Button>
       {store.opensAt && (

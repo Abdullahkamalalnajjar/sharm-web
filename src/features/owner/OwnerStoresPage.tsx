@@ -160,7 +160,7 @@ export function OwnerStoreCard({ store }: { store: StoreModel }) {
     }
     if (store.isOpen) return ['مفتوح للطلبات', 'الزباين شايفينه ويقدروا يطلبوا', 'var(--color-success)'];
     if (store.openSwitch)
-      return ['مقفول دلوقتي', `برا المواعيد • ${formatStoreHours(store.opensAt, store.closesAt) ?? ''}`, 'var(--color-warning)'];
+      return ['مقفول دلوقتي', `برا المواعيد • ${formatStoreHours(store.opensAt, store.closesAt, store.secondOpensAt, store.secondClosesAt) ?? ''}`, 'var(--color-warning)'];
     return ['مقفول', 'شغّل الزرار عشان تستقبل طلبات', 'var(--color-ink-3)'];
   })();
 

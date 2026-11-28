@@ -86,8 +86,17 @@ export function formatTimeOfDay(time: string): string {
 }
 
 /** "من 10:00 ص لـ 2:00 ص", or null without hours. */
-export function formatStoreHours(opensAt: string | null, closesAt: string | null): string | null {
-  return opensAt && closesAt ? t('من {from} لـ {to}', { from: formatTimeOfDay(opensAt), to: formatTimeOfDay(closesAt) }) : null;
+export function formatStoreHours(
+  opensAt: string | null,
+  closesAt: string | null,
+  secondOpensAt?: string | null,
+  secondClosesAt?: string | null,
+): string | null {
+  if (!opensAt || !closesAt) return null;
+  const period = (a: string, b: string) => t('من {from} لـ {to}', { from: formatTimeOfDay(a), to: formatTimeOfDay(b) });
+  const first = period(opensAt, closesAt);
+  // An optional second period in the day (e.g. a break in the afternoon).
+  return secondOpensAt && secondClosesAt ? t('{first} و {second}', { first, second: period(secondOpensAt, secondClosesAt) }) : first;
 }
 
 /** Customer-facing state of a store: open, closed for its hours ("بيفتح 10:00 ص"), or closed. */

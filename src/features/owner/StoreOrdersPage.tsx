@@ -150,7 +150,7 @@ export function StoreOrderPage() {
             <SoftCard className="overflow-hidden">
               {o.items.map((i) => (
                 <div key={i.id} className="flex items-start gap-3 border-b border-line px-4 py-3">
-                  <ProductThumb storeId={o.storeId} productId={i.productId} />
+                  <ProductThumb storeId={o.storeId} productId={i.productId} imageUrl={i.imageUrl} />
                   {o.canEditItems ? (
                     <QuantityStepper
                       quantity={i.quantity}

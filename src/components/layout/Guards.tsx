@@ -13,7 +13,7 @@ export function CustomerArea() {
   const profile = useMyProfile(isCustomer);
   if (session && session.role !== 'customer') return <Navigate to={homeFor(session.role)} replace />;
   // A customer with no phone number (e.g. signed in with Google) can't use the site until they add it.
-  if (isCustomer && profile.data && !profile.data.phoneNumber?.trim()) return <CompleteProfilePage name={profile.data.userName} />;
+  if (isCustomer && profile.data && !profile.data.phoneNumber?.trim()) return <CompleteProfilePage name={profile.data.fullName ?? null} />;
   return <Outlet />;
 }
 

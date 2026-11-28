@@ -69,6 +69,8 @@ export interface Store {
   descriptionIt?: string | null;
   /** The wide header image of the store page. */
   coverUrl: string | null;
+  /** The promotional banner inside the store page (an ad or an offer image). */
+  bannerUrl?: string | null;
   /** Customers can order for later today or tomorrow (admin setting). */
   allowsScheduledOrders: boolean;
   /** The app's % of the products; null for customers (admin setting). */
@@ -81,6 +83,9 @@ export interface Store {
    *  opening means it closes after midnight. */
   opensAt: string | null;
   closesAt: string | null;
+  /** An optional second daily period; both null when the store has one. */
+  secondOpensAt?: string | null;
+  secondClosesAt?: string | null;
 }
 
 export interface NearbyStore {
@@ -112,6 +117,9 @@ export interface NearbyStore {
   openSwitch: boolean;
   opensAt: string | null;
   closesAt: string | null;
+  /** An optional second daily period; both null when the store has one. */
+  secondOpensAt?: string | null;
+  secondClosesAt?: string | null;
 }
 
 export interface StoreInput {
@@ -355,6 +363,8 @@ export interface OrderItem {
   id: number;
   productId: number;
   productName: string;
+  /** The product's current photo, sent with the order (older servers send none). */
+  imageUrl?: string | null;
   optionsText: string | null;
   productNameEn?: string | null;
   productNameRu?: string | null;

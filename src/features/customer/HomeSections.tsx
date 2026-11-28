@@ -20,10 +20,11 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 
 import { useDeliveryLocation, useOffers } from '@/api/queries';
+import { AutoSwipeOffers } from './OfferCards';
 import { formatPrice, storeStatusLabel } from '@/lib/format';
 import type { HomeOffer } from '@/lib/home-content';
 import { t } from '@/lib/i18n';
-import { AppImage, Button, Chip, CountPill, Sheet, Switch } from '@/components/ui';
+import { Button, Chip, CountPill, Sheet, Switch } from '@/components/ui';
 import { localized } from '@/lib/localized';
 import { SHARM_AREAS, categoryLook, categoryOf } from '@/lib/meta';
 import { useBrowse } from '@/store/ui';
@@ -341,32 +342,14 @@ export function OffersCarousel({ offers, categories }: { offers: HomeOffer[]; ca
 
 // ---------- Daily offers ----------
 
-/** "العروض اليومية": the stores' and the admin's offers as square image tiles; hidden when there are none. */
+/** "العروض اليومية": the offers' cards, moving on by themselves like in the apps; hidden when there are none. */
 export function DailyOffersRow() {
   const offers = useOffers().data ?? [];
   if (offers.length === 0) return null;
   return (
     <section className="container-site mt-8">
       <SectionHead title={t('العروض اليومية')} icon={Gift} />
-      <div className="no-scrollbar -mx-3 flex snap-x gap-3 overflow-x-auto px-3 pt-1 pb-2 scroll-px-3 sm:mx-0 sm:px-0">
-        {offers.map((o) => {
-          const title = localized(o.title, o.titleEn, o.titleRu, o.titleTr, o.titleIt);
-          return (
-            <Link
-              key={o.id}
-              to={`/offers/${o.id}`}
-              aria-label={title}
-              title={title}
-              // A thin light frame around the picture, like an app icon.
-              className="block size-[120px] shrink-0 snap-start rounded-[22px] border border-line bg-surface p-[3px] shadow-[0_3px_10px_rgb(0_0_0/0.14)] transition-transform hover:-translate-y-0.5 active:scale-[0.97]"
-            >
-              <span className="block size-full overflow-hidden rounded-[19px] bg-surface-alt">
-                <AppImage url={o.imageUrl} alt={title} fallback={null} />
-              </span>
-            </Link>
-          );
-        })}
-      </div>
+      <AutoSwipeOffers offers={offers} />
     </section>
   );
 }

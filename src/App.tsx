@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router';
 
 import { AppShell } from '@/components/layout/AppShell';
 import { CustomerArea, GuestOnly, RequireRole } from '@/components/layout/Guards';
+import { ProfilePage } from '@/features/account/ProfilePage';
 import { AccountPage } from '@/features/account/AccountPage';
 import { AddressesPage } from '@/features/addresses/AddressesPage';
 import { AdminCategoriesPage } from '@/features/admin/AdminCategoriesPage';
@@ -10,6 +11,8 @@ import { AdminDriversPage } from '@/features/admin/AdminDriversPage';
 import { AdminReportsPage } from '@/features/admin/AdminReportsPage';
 import { AdminOrderPage } from '@/features/admin/AdminOrderPage';
 import { AdminCouponsPage } from '@/features/admin/AdminCouponsPage';
+import { AdminAnnouncementsPage } from '@/features/admin/AdminAnnouncementsPage';
+import { AdminUsersPage } from '@/features/admin/AdminUsersPage';
 import { AdminOffersPage } from '@/features/admin/AdminOffersPage';
 import { AdminOrdersPage } from '@/features/admin/AdminOrdersPage';
 import { AdminStoresPage } from '@/features/admin/AdminStoresPage';
@@ -63,6 +66,7 @@ export function App() {
 
         {/* Shared by every role */}
         <Route path="account" element={<AccountPage />} />
+        <Route path="account/profile" element={<ProfilePage />} />
         <Route path="notifications" element={<NotificationsPage />} />
 
         {/* Store cashier: the store's orders only */}
@@ -97,6 +101,8 @@ export function App() {
           <Route path="admin/categories" element={<AdminCategoriesPage />} />
           <Route path="admin/offers" element={<AdminOffersPage />} />
           <Route path="admin/coupons" element={<AdminCouponsPage />} />
+          <Route path="admin/announcements" element={<AdminAnnouncementsPage />} />
+          <Route path="admin/users" element={<AdminUsersPage />} />
           <Route path="admin/finance" element={<AdminFinancePage />} />
           <Route path="admin/stores/:id/wallet" element={<StoreWalletPage isAdmin />} />
           <Route path="admin/drivers/:id/wallet" element={<DriverWalletPage />} />

@@ -65,8 +65,16 @@ async function authenticate(path: string, body: Record<string, unknown>): Promis
 }
 
 export const profileApi = {
-  get: () => api.get<{ userId: string; email: string; userName: string | null; phoneNumber: string | null; city: string | null }>('/api/profile'),
+  get: () =>
+    api.get<{ userId: string; email: string; fullName?: string | null; userName?: string | null; phoneNumber: string | null; city: string | null }>(
+      '/api/profile',
+    ),
+  /** `userName` is the display name (saved as the account's full name). */
   update: (input: { userName: string; phoneNumber: string; city?: string | null }) => api.put<unknown>('/api/profile', input),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    api.post<unknown>('/api/profile/change-password', { currentPassword, newPassword }),
+  /** Deletes the signed-in account and its personal data (orders stay, without them). */
+  deleteAccount: () => api.delete<void>('/identity/current-user'),
 };
 
 export const authApi = {
@@ -109,14 +117,25 @@ export const storesApi = {
   removeLogo: (storeId: number) => api.delete<Store>(`/api/stores/${storeId}/logo`),
   uploadCover: (storeId: number, file: File) => api.upload<Store>(`/api/stores/${storeId}/cover`, file),
   removeCover: (storeId: number) => api.delete<Store>(`/api/stores/${storeId}/cover`),
+  /** The promotional banner customers see inside the store page. */
+  uploadBanner: (storeId: number, file: File) => api.upload<Store>(`/api/stores/${storeId}/banner`, file),
+  removeBanner: (storeId: number) => api.delete<Store>(`/api/stores/${storeId}/banner`),
   /** Delivery times (UTC) a customer can schedule an order from this store for. */
   scheduleSlots: (storeId: number) => api.get<string[]>(`/api/stores/${storeId}/schedule-slots`),
   setOpen: (storeId: number, isOpen: boolean) => api.patch<void>(`/api/stores/${storeId}/open-status`, { isOpen }),
   /** Daily local hours as "HH:mm" (owner or admin); both null clears them. */
-  setHours: (storeId: number, opensAt: string | null, closesAt: string | null) =>
+  setHours: (
+    storeId: number,
+    opensAt: string | null,
+    closesAt: string | null,
+    secondOpensAt: string | null = null,
+    secondClosesAt: string | null = null,
+  ) =>
     api.put<void>(`/api/stores/${storeId}/hours`, {
       opensAt: opensAt && `${opensAt.slice(0, 5)}:00`,
       closesAt: closesAt && `${closesAt.slice(0, 5)}:00`,
+      secondOpensAt: secondOpensAt && `${secondOpensAt.slice(0, 5)}:00`,
+      secondClosesAt: secondClosesAt && `${secondClosesAt.slice(0, 5)}:00`,
     }),
 
   all: (status?: StoreStatus | null) => api.get<Store[]>('/api/stores/admin', { status }),
