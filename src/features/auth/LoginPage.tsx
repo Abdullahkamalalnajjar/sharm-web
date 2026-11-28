@@ -1,4 +1,4 @@
-import { Bike, Eye, EyeOff, Flame, Lock, Mail } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
@@ -19,14 +19,7 @@ const TEST_ACCOUNTS = [
 export function Logo() {
   return (
     <div className="flex flex-col items-center">
-      <div className="relative">
-        <div className="grid size-[92px] place-items-center rounded-[30px] bg-brand text-white shadow-brand">
-          <Bike className="size-12" />
-        </div>
-        <span className="absolute -top-2 -end-2 grid size-[34px] place-items-center rounded-full bg-highlight text-black ring-[3px] ring-bg">
-          <Flame className="size-4" />
-        </span>
-      </div>
+      <img src="/logo.png" alt="MARID Egypt" width={112} height={112} className="size-[112px] rounded-[32px] shadow-brand" />
       <h1 className="mt-4 text-[32px] font-black text-ink leading-tight">MARID Egypt</h1>
       <p className="text-ink-2 font-semibold">{t('أكل، سوبر ماركت، وصيدليات لحد باب البيت')}</p>
     </div>

@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { Bike, Download, Instagram, Facebook, MessageCircle, Phone, Smartphone, X } from 'lucide-react';
+import { Download, Instagram, Facebook, MessageCircle, Phone, Smartphone, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
@@ -8,15 +8,17 @@ import { t } from '@/lib/i18n';
 
 const BANNER_KEY = 'sharm.appBanner.closed';
 
-/** Brand mark: a rounded square with the bike. White on the red header, red elsewhere. */
+/** Brand mark: the genie-lamp logo in a rounded square. A shadow off the header, a faint ring on it. */
 export function BrandMark({ size = 36, red, className }: { size?: number; red?: boolean; className?: string }) {
   return (
-    <span
-      className={clsx('grid shrink-0 place-items-center rounded-[10px]', red ? 'bg-brand text-white shadow-brand' : 'bg-white text-brand', className)}
+    <img
+      src="/logo.png"
+      alt=""
+      width={size}
+      height={size}
+      className={clsx('shrink-0 rounded-[10px]', red ? 'shadow-brand' : 'ring-1 ring-white/30', className)}
       style={{ width: size, height: size }}
-    >
-      <Bike style={{ width: size * 0.62, height: size * 0.62 }} strokeWidth={2.4} />
-    </span>
+    />
   );
 }
 
