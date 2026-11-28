@@ -1,6 +1,14 @@
 // Translations for the admin pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  '{n} حساب': '{n} accounts',
+  'كل الحسابات': 'All accounts',
+  'المستخدم': 'User',
+  'النوع': 'Type',
+  'التفاصيل': 'Details',
+  'اعرض أكتر': 'Show more',
+  '{n} من {m}': '{n} of {m}',
+  'بيانات الحساب': 'Account details',
   'الزباين بيطلبوا منه دلوقتي': 'Customers can order now',
   'مش بياخد طلبات لحد ما يتفتح': 'Takes no orders until it opens',
   'الكاشير': 'Cashiers',
@@ -234,6 +242,14 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  '{n} حساب': 'Аккаунтов: {n}',
+  'كل الحسابات': 'Все аккаунты',
+  'المستخدم': 'Пользователь',
+  'النوع': 'Тип',
+  'التفاصيل': 'Подробности',
+  'اعرض أكتر': 'Показать ещё',
+  '{n} من {m}': '{n} из {m}',
+  'بيانات الحساب': 'Данные аккаунта',
   'الزباين بيطلبوا منه دلوقتي': 'Клиенты могут заказывать сейчас',
   'مش بياخد طلبات لحد ما يتفتح': 'Не принимает заказы, пока не откроется',
   'الكاشير': 'Кассиры',

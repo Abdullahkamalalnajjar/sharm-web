@@ -1,6 +1,14 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  '{n} حساب': '{n} account',
+  'كل الحسابات': 'Tutti gli account',
+  'المستخدم': 'Utente',
+  'النوع': 'Tipo',
+  'التفاصيل': 'Dettagli',
+  'اعرض أكتر': 'Mostra altri',
+  '{n} من {m}': '{n} di {m}',
+  'بيانات الحساب': 'Dati dell\'account',
   'الزباين بيطلبوا منه دلوقتي': 'I clienti possono ordinare ora',
   'مش بياخد طلبات لحد ما يتفتح': 'Non accetta ordini finché non apre',
   'الكاشير': 'Cassieri',
