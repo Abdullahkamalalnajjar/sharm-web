@@ -1,6 +1,12 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  'كل العروض': 'Tutte le offerte',
+  'منتهية': 'Scadute',
+  '{n} عرض ظاهر للزبون دلوقتي': '{n} offerte visibili ai clienti ora',
+  'دور باسم العرض أو المحل أو المنتج': 'Cerca per offerta, negozio o prodotto',
+  'مفيش عروض هنا': 'Nessuna offerta qui',
+  'ظاهر': 'Visibile',
   '{n} حساب': '{n} account',
   'كل الحسابات': 'Tutti gli account',
   'المستخدم': 'Utente',

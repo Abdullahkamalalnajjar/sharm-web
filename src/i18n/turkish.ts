@@ -1,6 +1,12 @@
 // Turkish translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const tr: Record<string, string> = {
+  'كل العروض': 'Tüm teklifler',
+  'منتهية': 'Süresi dolan',
+  '{n} عرض ظاهر للزبون دلوقتي': 'Şu an müşterilere görünen {n} teklif',
+  'دور باسم العرض أو المحل أو المنتج': 'Teklif, mağaza veya ürün ara',
+  'مفيش عروض هنا': 'Burada teklif yok',
+  'ظاهر': 'Görünür',
   '{n} حساب': '{n} hesap',
   'كل الحسابات': 'Tüm hesaplar',
   'المستخدم': 'Kullanıcı',

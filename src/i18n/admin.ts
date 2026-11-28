@@ -1,6 +1,12 @@
 // Translations for the admin pages (see src/lib/i18n.ts). Keys are the exact Arabic text in the code.
 
 export const en: Record<string, string> = {
+  'كل العروض': 'All offers',
+  'منتهية': 'Expired',
+  '{n} عرض ظاهر للزبون دلوقتي': '{n} offers live for customers now',
+  'دور باسم العرض أو المحل أو المنتج': 'Search by offer, store or product',
+  'مفيش عروض هنا': 'No offers here',
+  'ظاهر': 'Shown',
   '{n} حساب': '{n} accounts',
   'كل الحسابات': 'All accounts',
   'المستخدم': 'User',
@@ -242,6 +248,12 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  'كل العروض': 'Все акции',
+  'منتهية': 'Истёкшие',
+  '{n} عرض ظاهر للزبون دلوقتي': 'Сейчас видно клиентам: {n}',
+  'دور باسم العرض أو المحل أو المنتج': 'Поиск по акции, заведению или товару',
+  'مفيش عروض هنا': 'Здесь нет акций',
+  'ظاهر': 'Видно',
   '{n} حساب': 'Аккаунтов: {n}',
   'كل الحسابات': 'Все аккаунты',
   'المستخدم': 'Пользователь',
