@@ -1,6 +1,11 @@
 // Italian translations for every page group (same Arabic keys as the en/ru maps; missing ones fall back to English).
 
 export const it: Record<string, string> = {
+  'الزباين بيطلبوا منه دلوقتي': 'I clienti possono ordinare ora',
+  'مش بياخد طلبات لحد ما يتفتح': 'Non accetta ordini finché non apre',
+  'الكاشير': 'Cassieri',
+  'بيانات المحل': 'Dati del negozio',
+  'الإعدادات': 'Impostazioni',
   'كل الأقسام': 'Tutte le categorie',
   'ظاهرة للزبون': 'Visibili ai clienti',
   'مخفية': 'Nascoste',

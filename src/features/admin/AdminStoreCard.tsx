@@ -1,11 +1,13 @@
-import { Ban, BookOpen, UserRound, CalendarClock, Check, Clock, IdCard, Lock, LockOpen, Pencil, Percent, Phone, ReceiptText, RotateCcw, ShoppingBag, MapPin, Crosshair, SlidersHorizontal, Wallet, type LucideIcon } from 'lucide-react';
-import { useState } from 'react';
+import clsx from 'clsx';
+import { Ban, BookOpen, UserRound, CalendarClock, Check, ChevronRight, Clock, ExternalLink, IdCard, Lock, LockOpen, Pencil, Percent, Phone, ReceiptText, RotateCcw, ShoppingBag, MapPin, SlidersHorizontal, Wallet, type LucideIcon } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 
 import { storesApi } from '@/api';
 import { useRefreshAdmin } from '@/api/queries';
-import { AppImage, Button, IconWell, Sheet, SoftCard, StatusChip, Switch } from '@/components/ui';
+import { AppImage, Button, Sheet, SoftCard, StatusChip, Switch } from '@/components/ui';
 import { StoreAvatar } from '@/features/customer/StoreBits';
+import { mapHref, telHref } from '@/features/orders/OrderWidgets';
 import { formatPrice, formatStoreHours } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { localized } from '@/lib/localized';
@@ -164,11 +166,21 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
       <StoreHoursDialog store={store} open={hoursOpen} onClose={() => setHoursOpen(false)} />
       <StoreOwnerDialog store={store} currentEmail={ownedByMe ? null : (store.ownerEmail ?? null)} open={ownerOpen} onClose={() => setOwnerOpen(false)} />
       <StoreTaxDialog store={store} open={taxOpen} onClose={() => setTaxOpen(false)} />
-      <Sheet open={open} onClose={onClose}>
-        <div className="flex items-center gap-3.5">
-          <StoreAvatar category={store} logoUrl={store.logoUrl} size={56} />
-          <div className="min-w-0 flex-1">
-            <h3 className="text-[19px] font-extrabold text-ink">{localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt)}</h3>
+      <Sheet open={open} onClose={onClose} wide>
+        {/* Cover with the logo over its edge. */}
+        <div className="-mx-5 -mt-4 relative h-32 overflow-hidden sm:h-36" style={{ background: `color-mix(in srgb, ${meta.color} 18%, var(--color-surface-alt))` }}>
+          <div className="absolute inset-0 grid place-items-center" style={{ color: meta.color }}>
+            <meta.Icon className="size-12 opacity-50" />
+          </div>
+          <AppImage url={store.coverUrl ?? store.logoUrl} fallback={null} className="absolute inset-0" />
+          <span className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+        </div>
+        <div className="relative -mt-9 flex items-end gap-3.5">
+          <span className="rounded-[20px] bg-surface p-[3px] shadow-card">
+            <StoreAvatar category={store} logoUrl={store.logoUrl} size={68} />
+          </span>
+          <div className="min-w-0 flex-1 pb-0.5">
+            <h3 className="truncate text-[20px] font-extrabold leading-tight text-ink">{localized(store.name, store.nameEn, store.nameRu, store.nameTr, store.nameIt)}</h3>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               <StatusChip label={status.label} color={status.color} />
               {store.status === 'Active' && <OpenChip store={store} />}
@@ -176,35 +188,79 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
             </div>
           </div>
         </div>
-        {store.description && <p className="mt-3.5 text-ink-2">{store.description}</p>}
-        <div className="mt-4 flex flex-col gap-2">
-          <InfoRow icon={meta.Icon} label={t('القسم')} value={meta.label} />
-          <InfoRow icon={MapPin} label={t('العنوان')} value={store.address} />
-          <InfoRow icon={Phone} label={t('التليفون')} value={store.phone} ltr />
-          <InfoRow icon={ShoppingBag} label={t('أقل طلب')} value={store.minOrderAmount > 0 ? formatPrice(store.minOrderAmount) : t('مفيش حد أدنى')} />
-          <InfoRow icon={Percent} label={t('العمولة')} value={`${store.commissionPercent ?? 0}%`} />
-          <InfoRow icon={ReceiptText} label={t('الضريبة')} value={store.taxPercent ? `${store.taxPercent}%` : t('من غير ضريبة')} />
-          <InfoRow icon={Clock} label={t('المواعيد')} value={formatStoreHours(store.opensAt, store.closesAt, store.secondOpensAt, store.secondClosesAt) ?? t('مفيش (الزرار بس)')} />
-          <InfoRow icon={CalendarClock} label={t('المجدولة')} value={store.allowsScheduledOrders ? t('بياخد طلبات مجدولة') : t('مقفولة')} />
-          <InfoRow icon={Crosshair} label={t('الإحداثيات')} value={`${store.latitude.toFixed(4)}, ${store.longitude.toFixed(4)}`} ltr />
-        </div>
-        <div className="my-4 border-t border-line" />
-        <div className="flex flex-col">
-          {store.status === 'PendingApproval' && (
-            <ActionTile icon={Check} color="var(--color-success)" title={t('موافقة وتفعيل')} subtitle={t('المحل هيظهر للزباين بعد ما صاحبه يفتحه')} onClick={() => run(() => storesApi.approve(store.id), t('المحل اتفعّل'))} />
-          )}
-          {store.status === 'Active' && (
-            <ActionTile
-              icon={store.openSwitch ? Lock : LockOpen}
-              color="var(--color-ink)"
-              title={store.openSwitch ? t('قفل المحل') : t('فتح المحل')}
-              subtitle={store.openSwitch && !store.isOpen ? t('الزرار شغال بس المحل برا المواعيد') : undefined}
-              onClick={() => run(() => storesApi.setOpen(store.id, !store.openSwitch), store.openSwitch ? t('المحل اتقفل') : t('المحل اتفتح'))}
+        {store.description && <p className="mt-3 text-sm leading-relaxed text-ink-2">{store.description}</p>}
+
+        {/* What the admin does most: approve, or open / close. */}
+        {store.status === 'PendingApproval' && (
+          <Button block className="mt-4" icon={<Check className="size-5" />} onClick={() => run(() => storesApi.approve(store.id), t('المحل اتفعّل'))}>
+            {t('موافقة وتفعيل')}
+          </Button>
+        )}
+        {store.status === 'Active' && (
+          <div className="mt-4 flex items-center gap-3 rounded-2xl border border-line bg-surface-alt/50 px-3.5 py-3">
+            <span
+              className="grid size-10 shrink-0 place-items-center rounded-xl"
+              style={{
+                background: `color-mix(in srgb, ${store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)'} 16%, transparent)`,
+                color: store.isOpen ? 'var(--color-success)' : 'var(--color-ink-3)',
+              }}
+            >
+              {store.openSwitch ? <LockOpen className="size-5" /> : <Lock className="size-5" />}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-bold text-ink">{switchLabel(store)}</span>
+              <span className="block text-xs text-ink-2">
+                {store.openSwitch && !store.isOpen
+                  ? t('الزرار شغال بس المحل برا المواعيد')
+                  : store.openSwitch
+                    ? t('الزباين بيطلبوا منه دلوقتي')
+                    : t('مش بياخد طلبات لحد ما يتفتح')}
+              </span>
+            </span>
+            <Switch
+              checked={store.openSwitch}
+              label={t('مفتوح للطلبات')}
+              onChange={(on) => run(() => storesApi.setOpen(store.id, on), on ? t('المحل اتفتح') : t('المحل اتقفل'))}
             />
-          )}
-          <ActionTile
+          </div>
+        )}
+
+        {/* Shortcuts to the store's pages. */}
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          <QuickTile icon={BookOpen} label={t('المنيو')} onClick={() => go(`/admin/stores/${store.id}/menu`)} />
+          <QuickTile icon={Wallet} label={t('المحفظة')} onClick={() => go(`/admin/stores/${store.id}/wallet`)} />
+          <QuickTile icon={IdCard} label={t('الكاشير')} onClick={() => go(`/admin/stores/${store.id}/employees`)} />
+          <QuickTile icon={Pencil} label={t('تعديل')} onClick={() => go(`/admin/stores/${store.id}/edit`)} />
+        </div>
+
+        <SectionTitle>{t('بيانات المحل')}</SectionTitle>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <InfoTile icon={meta.Icon} label={t('القسم')} value={meta.label} />
+          <InfoTile icon={Phone} label={t('التليفون')} value={store.phone} ltr href={telHref(store.phone)} />
+          <InfoTile icon={ShoppingBag} label={t('أقل طلب')} value={store.minOrderAmount > 0 ? formatPrice(store.minOrderAmount) : t('مفيش حد أدنى')} />
+          <InfoTile icon={Percent} label={t('العمولة')} value={`${store.commissionPercent ?? 0}%`} />
+          <InfoTile icon={ReceiptText} label={t('الضريبة')} value={store.taxPercent ? `${store.taxPercent}%` : t('من غير ضريبة')} />
+          <InfoTile icon={CalendarClock} label={t('المجدولة')} value={store.allowsScheduledOrders ? t('بياخد طلبات مجدولة') : t('مقفولة')} />
+          <InfoTile
+            icon={Clock}
+            label={t('المواعيد')}
+            value={formatStoreHours(store.opensAt, store.closesAt, store.secondOpensAt, store.secondClosesAt) ?? t('مفيش (الزرار بس)')}
+            className="col-span-2 sm:col-span-3"
+          />
+          <InfoTile
+            icon={MapPin}
+            label={t('العنوان')}
+            value={store.address}
+            href={mapHref(store.latitude, store.longitude)}
+            linkLabel={t('افتح الخريطة')}
+            className="col-span-2 sm:col-span-3"
+          />
+        </div>
+
+        <SectionTitle>{t('الإعدادات')}</SectionTitle>
+        <div className="flex flex-col divide-y divide-line overflow-hidden rounded-2xl border border-line">
+          <ActionRow
             icon={SlidersHorizontal}
-            color="var(--color-ink)"
             title={t('إعدادات المحل')}
             subtitle={t('العمولة والطلبات المجدولة')}
             onClick={() => {
@@ -212,9 +268,8 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
               setSettingsOpen(true);
             }}
           />
-          <ActionTile
+          <ActionRow
             icon={ReceiptText}
-            color="var(--color-ink)"
             title={t('ضريبة المحل')}
             subtitle={store.taxPercent ? t('{p}% على المنتجات، الزبون بيدفعها', { p: store.taxPercent }) : t('من غير ضريبة')}
             onClick={() => {
@@ -222,9 +277,8 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
               setTaxOpen(true);
             }}
           />
-          <ActionTile
+          <ActionRow
             icon={Clock}
-            color="var(--color-ink)"
             title={t('مواعيد الفتح والقفل')}
             subtitle={formatStoreHours(store.opensAt, store.closesAt, store.secondOpensAt, store.secondClosesAt) ?? t('مفيش مواعيد، الزرار بس اللي بيتحكم')}
             onClick={() => {
@@ -232,9 +286,9 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
               setHoursOpen(true);
             }}
           />
-          <ActionTile
+          <ActionRow
             icon={UserRound}
-            color={ownedByMe ? 'var(--color-warning)' : 'var(--color-ink)'}
+            color={ownedByMe ? 'var(--color-warning)' : undefined}
             title={t('صاحب المحل')}
             subtitle={ownedByMe ? t('باسمك لسه. اربطه بإيميل وباسورد لصاحبه') : (store.ownerEmail ?? t('غيّر صاحب المحل'))}
             onClick={() => {
@@ -242,20 +296,17 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
               setOwnerOpen(true);
             }}
           />
-          <ActionTile
-            icon={IdCard}
-            color="var(--color-ink)"
-            title={t('حسابات الكاشير')}
-            subtitle={t('بيشتغلوا على أوردرات المحل من غير ما يشوفوا فلوسه')}
-            onClick={() => go(`/admin/stores/${store.id}/employees`)}
-          />
-          <ActionTile icon={Wallet} color="var(--color-ink)" title={t('المحفظة')} subtitle={t('رصيده وطلبات السحب والحركات')} onClick={() => go(`/admin/stores/${store.id}/wallet`)} />
-          <ActionTile icon={BookOpen} color="var(--color-ink)" title={t('إدارة المنيو')} subtitle={t('الأقسام والمنتجات والإضافات')} onClick={() => go(`/admin/stores/${store.id}/menu`)} />
-          <ActionTile icon={Pencil} color="var(--color-ink)" title={t('تعديل البيانات')} onClick={() => go(`/admin/stores/${store.id}/edit`)} />
+        </div>
+
+        <div className="mt-5">
           {store.status === 'Suspended' ? (
-            <ActionTile icon={RotateCcw} color="var(--color-success)" title={t('إعادة التفعيل')} onClick={() => run(() => storesApi.approve(store.id), t('المحل اتفعّل تاني'))} />
+            <Button block variant="secondary" icon={<RotateCcw className="size-4" />} onClick={() => run(() => storesApi.approve(store.id), t('المحل اتفعّل تاني'))}>
+              {t('إعادة التفعيل')}
+            </Button>
           ) : (
-            <ActionTile icon={Ban} color="var(--color-danger)" title={store.status === 'PendingApproval' ? t('رفض الطلب') : t('إيقاف المحل')} onClick={suspend} />
+            <Button block variant="outline" className="border-danger/50 text-danger hover:bg-danger/10" icon={<Ban className="size-4" />} onClick={suspend}>
+              {store.status === 'PendingApproval' ? t('رفض الطلب') : t('إيقاف المحل')}
+            </Button>
           )}
         </div>
       </Sheet>
@@ -263,28 +314,84 @@ function StoreDetailsSheet({ store, open, onClose }: { store: Store; open: boole
   );
 }
 
-function InfoRow({ icon: Icon, label, value, ltr }: { icon: LucideIcon; label: string; value: string; ltr?: boolean }) {
+function SectionTitle({ children }: { children: ReactNode }) {
+  return <p className="mb-2 mt-5 px-1 text-[12px] font-extrabold tracking-wide text-ink-3">{children}</p>;
+}
+
+/** A shortcut button: icon over a short label. */
+function QuickTile({ icon: Icon, label, onClick }: { icon: LucideIcon; label: string; onClick: () => void }) {
   return (
-    <div className="flex items-start gap-2.5">
-      <Icon className="mt-0.5 size-[18px] text-ink-3" />
-      <span className="w-[74px] text-[13px] text-ink-3">{label}</span>
-      <span className="flex-1 font-semibold text-ink" dir={ltr ? 'ltr' : undefined} style={{ textAlign: ltr ? 'end' : undefined }}>
-        {value}
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-w-0 flex-col items-center gap-1.5 rounded-2xl border border-line bg-surface px-1 py-3 text-[12px] font-bold text-ink-2 transition-colors hover:border-brand/40 hover:bg-surface-alt hover:text-ink"
+    >
+      <span className="grid size-9 place-items-center rounded-xl text-brand-ink" style={{ background: 'color-mix(in srgb, var(--color-brand) 14%, transparent)' }}>
+        <Icon className="size-[18px]" />
+      </span>
+      <span className="max-w-full truncate">{label}</span>
+    </button>
+  );
+}
+
+/** One fact about the store: a small label over its value, optionally a link (call, map). */
+function InfoTile({
+  icon: Icon,
+  label,
+  value,
+  ltr,
+  href,
+  linkLabel,
+  className,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  ltr?: boolean;
+  href?: string;
+  /** Shown as a separate link beside the value (the value itself stays plain text). */
+  linkLabel?: string;
+  className?: string;
+}) {
+  return (
+    <div className={clsx('min-w-0 rounded-2xl bg-surface-alt/60 px-3 py-2.5', className)}>
+      <span className="flex items-center gap-1.5 text-[11.5px] font-semibold text-ink-3">
+        <Icon className="size-3.5" />
+        {label}
+      </span>
+      <span className="mt-0.5 flex items-center gap-2">
+        {href && !linkLabel ? (
+          <a href={href} dir={ltr ? 'ltr' : undefined} className="truncate text-[14px] font-bold text-brand-ink hover:underline">
+            {value}
+          </a>
+        ) : (
+          <span dir={ltr ? 'ltr' : undefined} className="min-w-0 flex-1 truncate text-[14px] font-bold text-ink">
+            {value}
+          </span>
+        )}
+        {href && linkLabel && (
+          <a href={href} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-brand-ink hover:underline">
+            <ExternalLink className="size-3.5" />
+            {linkLabel}
+          </a>
+        )}
       </span>
     </div>
   );
 }
 
-function ActionTile({ icon, color, title, subtitle, onClick }: { icon: LucideIcon; color: string; title: string; subtitle?: string; onClick: () => void }) {
+/** A settings row inside the grouped card, with a chevron. */
+function ActionRow({ icon: Icon, color, title, subtitle, onClick }: { icon: LucideIcon; color?: string; title: string; subtitle?: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-2xl px-1 py-2.5 text-start hover:bg-surface-alt">
-      <IconWell icon={icon} size={42} color={color} />
-      <span className="flex-1">
-        <span className="block font-bold" style={{ color }}>
+    <button type="button" onClick={onClick} className="flex w-full items-center gap-3 bg-surface px-3.5 py-3 text-start transition-colors hover:bg-surface-alt">
+      <Icon className="size-5 shrink-0" style={{ color: color ?? 'var(--color-ink-2)' }} />
+      <span className="min-w-0 flex-1">
+        <span className="block text-[14px] font-bold" style={{ color: color ?? 'var(--color-ink)' }}>
           {title}
         </span>
-        {subtitle && <span className="block text-xs text-ink-2">{subtitle}</span>}
+        {subtitle && <span className="block truncate text-xs text-ink-2">{subtitle}</span>}
       </span>
+      <ChevronRight className="size-4 shrink-0 text-ink-3 rtl:-scale-x-100" />
     </button>
   );
 }
