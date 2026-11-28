@@ -30,6 +30,7 @@ import { useAuth } from '@/store/auth';
 import { useBrowse } from '@/store/ui';
 import type { AppRole } from '@/types';
 
+import { AdminSidebar } from './AdminSidebar';
 import { LiveBanner, NotificationBell, useLiveNotifications } from './LiveNotifications';
 import { ConfirmDialog, LoginPromptSheet, Toaster } from './Overlays';
 import { AppBanner, BrandMark, SiteFooter } from './SiteChrome';
@@ -120,6 +121,8 @@ export function AppShell() {
   const pickerOpen = useBrowse((s) => s.pickerOpen);
   const setPickerOpen = useBrowse((s) => s.setPickerOpen);
   const isCustomer = role === 'customer';
+  // On wide screens the admin's pages are in a sidebar, not the top bar.
+  const isAdmin = !!session && role === 'admin';
   const isHome = location.pathname === '/';
   useLiveNotifications();
 
@@ -141,7 +144,7 @@ export function AppShell() {
 
           {isCustomer && !isHome && <AreaButton />}
 
-          <nav className="hidden items-center gap-0.5 lg:flex ms-1" aria-label={t('الرئيسية')}>
+          <nav className={clsx('hidden items-center gap-0.5 ms-1', !isAdmin && 'lg:flex')} aria-label={t('الرئيسية')}>
             {items.filter((i) => !i.phoneOnly).map((item) => (
               <NavLink
                 key={item.to}
@@ -220,9 +223,20 @@ export function AppShell() {
         </div>
       </header>
 
-      <main className={clsx('flex-1 w-full', !isHome && 'mx-auto max-w-6xl', showBar && 'pb-28 md:pb-10')}>
-        <Outlet />
-      </main>
+      {isAdmin ? (
+        <div className="flex flex-1">
+          <AdminSidebar />
+          <main className={clsx('min-w-0 flex-1', showBar && 'pb-28 md:pb-10')}>
+            <div className="mx-auto w-full max-w-6xl">
+              <Outlet />
+            </div>
+          </main>
+        </div>
+      ) : (
+        <main className={clsx('flex-1 w-full', !isHome && 'mx-auto max-w-6xl', showBar && 'pb-28 md:pb-10')}>
+          <Outlet />
+        </main>
+      )}
 
       {isCustomer && <SiteFooter />}
 

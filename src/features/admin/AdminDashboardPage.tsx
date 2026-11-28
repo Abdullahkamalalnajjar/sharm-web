@@ -1,19 +1,44 @@
-import { Bike, CheckCircle2, ChevronLeft, Gift, Hourglass, Landmark, LayoutGrid, LogOut, Package, PlusSquare, SlidersHorizontal, Store, TrendingUp, UserRoundSearch, Users, type LucideIcon } from 'lucide-react';
+import clsx from 'clsx';
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Banknote,
+  Bike,
+  ChevronLeft,
+  CircleCheck,
+  Hourglass,
+  Landmark,
+  LayoutGrid,
+  LogOut,
+  Package,
+  PlusSquare,
+  ReceiptText,
+  ShoppingBag,
+  SlidersHorizontal,
+  Store,
+  Truck,
+  UserRoundSearch,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { useAdminDashboard, useTodayReport, useWalletsOverview } from '@/api/queries';
-import { Button, ErrorView, IconWell, Loading, SectionHeader, SoftCard, StatusChip } from '@/components/ui';
+import { useAdminDashboard, useAdminOrders, useReport, useTodayReport, useWalletsOverview } from '@/api/queries';
+import { Button, ErrorView, IconWell, Loading, SoftCard, StatusChip } from '@/components/ui';
+import { ADMIN_GROUPS, useAdminBadges } from '@/components/layout/AdminSidebar';
 import { LoyaltySettingsCard } from '@/features/loyalty/LoyaltyAdmin';
-import { AppFeaturesCard } from './AppFeaturesCard';
-import { compactNumber, formatFullDate, formatPrice } from '@/lib/format';
-import { ORDER_STATUSES, categoryLook, storeStatus } from '@/lib/meta';
-import { t } from '@/lib/i18n';
+import { compactNumber, formatFullDate, formatOrderDate, formatPrice } from '@/lib/format';
+import { categoryLook, orderStatus, storeStatus } from '@/lib/meta';
+import { t, tIn } from '@/lib/i18n';
 import { useAuth } from '@/store/auth';
-import type { AdminDashboard, OrderStatus, StoreStatus } from '@/types';
+import type { AdminDashboard, OrderStatus, ReportTotals, StoreStatus } from '@/types';
 
 import { AdminStoreCard } from './AdminStoreCard';
+import { ChartCard } from './AdminReportsPage';
+import { AppFeaturesCard } from './AppFeaturesCard';
 
+/** The admin's home: what needs action, today's numbers, the month's chart, the latest orders. */
 export function AdminDashboardPage() {
   const dashboard = useAdminDashboard();
   const navigate = useNavigate();
@@ -24,97 +49,59 @@ export function AdminDashboardPage() {
   const openOrders = (status: OrderStatus | 'all' = 'Pending') => navigate(`/admin/orders?status=${status}`);
 
   return (
-    <div className="pb-8">
-      {/* Red gradient header */}
-      <div className="relative overflow-hidden rounded-b-[32px] bg-gradient-to-br from-brand-light via-brand to-brand-dark px-5 pt-[max(env(safe-area-inset-top),12px)] pb-6 md:mx-4 md:mt-4 md:rounded-card md:px-8 md:pt-7">
-        <span className="absolute -end-10 -top-8 size-48 rounded-full bg-white/10" />
-        <span className="absolute end-14 -bottom-12 size-32 rounded-full bg-black/10" />
-        <div className="relative flex items-center gap-3">
-          <div className="flex-1">
-            <h1 className="text-xl font-extrabold text-white">{t('أهلاً يا أدمن 👋')}</h1>
-            <p className="text-[13px] text-white/85">{formatFullDate(new Date())}</p>
-          </div>
+    <div className="flex flex-col gap-4 px-4 pt-[max(env(safe-area-inset-top),14px)] pb-8 md:px-6 md:pt-6">
+      {/* Greeting and the two main actions */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-extrabold text-ink">{t('أهلاً يا أدمن 👋')}</h1>
+          <p className="text-[13px] text-ink-3">{formatFullDate(new Date())}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button size="md" variant="outline" icon={<ReceiptText className="size-4" />} onClick={() => openOrders('all')}>
+            {t('كل الأوردرات')}
+          </Button>
+          <Button size="md" icon={<PlusSquare className="size-4" />} onClick={() => navigate('/admin/stores/new')}>
+            {t('محل جديد')}
+          </Button>
           <button
             type="button"
             title={t('تسجيل الخروج')}
+            aria-label={t('تسجيل الخروج')}
             onClick={() => {
               logout();
               navigate('/');
             }}
-            className="grid size-11 place-items-center rounded-full bg-white/15 text-white hover:bg-white/25 md:hidden"
+            className="grid size-10 place-items-center rounded-full border border-line text-ink-2 hover:bg-surface md:hidden"
           >
             <LogOut className="size-5" />
           </button>
         </div>
-        <p className="relative mt-5 text-sm text-white/85">{t('المحلات على المنصة')}</p>
-        <p className="relative text-[52px] font-extrabold leading-tight text-highlight">{d ? compactNumber(d.totalStores) : '—'}</p>
-        {d && (
-          <div className="relative mt-1 flex flex-wrap gap-2">
-            <HeaderPill icon={Store} text={t('{n} مفتوح دلوقتي', { n: d.openStores })} />
-            <HeaderPill icon={CheckCircle2} text={t('{n} مفعّل', { n: d.activeStores })} />
-          </div>
-        )}
       </div>
 
-      <div className="px-4 pt-4">
-        {dashboard.isLoading ? (
-          <Loading />
-        ) : dashboard.isError || !d ? (
-          <ErrorView message={(dashboard.error as Error)?.message ?? t('حصل خطأ')} onRetry={() => dashboard.refetch()} />
-        ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="flex flex-col gap-4">
-              <TodayCard onOpen={() => navigate('/admin/reports')} />
-              <OrdersStrip dashboard={d} onOpen={openOrders} />
+      {dashboard.isLoading ? (
+        <Loading />
+      ) : dashboard.isError || !d ? (
+        <ErrorView message={(dashboard.error as Error)?.message ?? t('حصل خطأ')} onRetry={() => dashboard.refetch()} />
+      ) : (
+        <>
+          <AttentionRow dashboard={d} onOrders={openOrders} onStores={() => openStores('PendingApproval')} onFinance={() => navigate('/admin/finance')} />
+          <TodayKpis onOpen={() => navigate('/admin/reports')} />
+
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">
+              <MonthChart onOpen={() => navigate('/admin/reports')} />
+              <RecentOrders onOpen={(id) => navigate(`/admin/orders/${id}`)} onAll={() => openOrders('all')} />
+            </div>
+            <div className="flex min-w-0 flex-col gap-4">
+              <OrdersPipeline dashboard={d} onOpen={openOrders} />
               <FinanceCard onOpen={() => navigate('/admin/finance')} />
-              {d.unassignedOrders > 0 && (
-                <AttentionBanner
-                  icon={UserRoundSearch}
-                  title={d.unassignedOrders === 1 ? t('أوردر واحد محتاج مندوب') : t('{n} أوردرات محتاجة مندوب', { n: d.unassignedOrders })}
-                  subtitle={t('معروضة على المناديب ومحدش قبلها لسه، أو اختار مندوب')}
-                  onClick={() => openOrders('all')}
-                />
-              )}
-              {d.pendingStores > 0 && (
-                <AttentionBanner
-                  icon={Hourglass}
-                  title={d.pendingStores === 1 ? t('محل واحد مستني موافقتك') : t('{n} محلات مستنية موافقتك', { n: d.pendingStores })}
-                  subtitle={t('راجع البيانات ووافق عشان يظهروا للزباين')}
-                  onClick={() => openStores('PendingApproval')}
-                />
-              )}
+              <PlatformCard dashboard={d} onStores={() => openStores()} onDrivers={() => navigate('/admin/drivers')} />
             </div>
+          </div>
 
-            <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-3">
-                <StatTile icon={Users} label={t('الزباين')} value={d.customers} />
-                <StatTile icon={Store} label={t('أصحاب المحلات')} value={d.storeOwners} onClick={() => openStores()} />
-                <StatTile icon={Package} label={t('المنتجات')} value={d.totalProducts} caption={d.unavailableProducts > 0 ? t('{n} خلصان', { n: d.unavailableProducts }) : t('كله متاح')} />
-                <StatTile icon={LayoutGrid} label={t('الأقسام')} value={d.totalCategories} />
-                <StatTile
-                  icon={Bike}
-                  label={t('المندوبين المفعّلين')}
-                  value={d.activeDrivers}
-                  caption={d.unassignedOrders > 0 ? t('{n} أوردر مستني مندوب', { n: d.unassignedOrders }) : undefined}
-                  onClick={() => navigate('/admin/drivers')}
-                  className="col-span-2"
-                />
-              </div>
-              <div className="flex gap-3">
-                <Button block icon={<PlusSquare className="size-5" />} onClick={() => navigate('/admin/stores/new')}>
-                  {t('محل جديد')}
-                </Button>
-                <Button block variant="outline" icon={<Store className="size-5" />} onClick={() => openStores()}>
-                  {t('كل المحلات')}
-                </Button>
-              </div>
-              <Button block variant="outline" icon={<Gift className="size-5" />} onClick={() => navigate('/admin/offers')}>
-                {t('العروض اليومية')}
-              </Button>
-              <LoyaltySettingsCard />
-              <AppFeaturesCard />
-            </div>
+          <Shortcuts />
 
+          <div className="grid gap-4 lg:grid-cols-2">
             <SoftCard className="p-4">
               <div className="flex items-center">
                 <h3 className="flex-1 font-extrabold text-ink">{t('المحلات حسب القسم')}</h3>
@@ -128,89 +115,229 @@ export function AdminDashboardPage() {
               <h3 className="font-extrabold text-ink">{t('حالة المحلات')}</h3>
               <StoreStatusMeters dashboard={d} onSelect={openStores} />
             </SoftCard>
-
-            {d.pendingApprovals.length > 0 && (
-              <div className="lg:col-span-2">
-                <SectionHeader title={t('مستنية موافقتك')} action={t('عرض الكل')} onAction={() => openStores('PendingApproval')} />
-                <div className="grid gap-3 md:grid-cols-2">
-                  {d.pendingApprovals.map((s) => (
-                    <AdminStoreCard key={s.id} store={s} />
-                  ))}
-                </div>
-              </div>
-            )}
+            <LoyaltySettingsCard />
+            <AppFeaturesCard />
           </div>
-        )}
-      </div>
+
+          {d.pendingApprovals.length > 0 && (
+            <section>
+              <CardTitle title={t('مستنية موافقتك')} action={t('عرض الكل')} onAction={() => openStores('PendingApproval')} />
+              <div className="mt-2 grid gap-3 md:grid-cols-2">
+                {d.pendingApprovals.map((s) => (
+                  <AdminStoreCard key={s.id} store={s} />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
+      )}
     </div>
   );
 }
 
-function HeaderPill({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
+function CardTitle({ title, action, onAction }: { title: string; action?: string; onAction?: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1.5 text-[13px] font-semibold text-white">
-      <Icon className="size-4" />
-      {text}
-    </span>
+    <div className="flex items-center gap-2">
+      <h3 className="flex-1 font-extrabold text-ink">{title}</h3>
+      {action && (
+        <button type="button" onClick={onAction} className="inline-flex items-center gap-0.5 text-[13px] font-bold text-brand-ink hover:underline">
+          {action}
+          <ChevronLeft className="size-4 ltr:rotate-180" />
+        </button>
+      )}
+    </div>
   );
 }
 
-/** Today's money and orders; opens the full statistics. */
-function TodayCard({ onOpen }: { onOpen: () => void }) {
-  const today = useTodayReport().data?.totals;
-  const Cell = ({ label, value, accent }: { label: string; value: string; accent?: boolean }) => (
-    <div className="min-w-0 flex-1">
-      <p className="text-xs text-ink-2">{label}</p>
-      <p className={`truncate text-lg font-extrabold ${accent ? 'text-accent' : 'text-ink'}`}>{value}</p>
+/** Everything waiting for the admin, as small cards; one calm line when nothing is. */
+function AttentionRow({
+  dashboard: d,
+  onOrders,
+  onStores,
+  onFinance,
+}: {
+  dashboard: AdminDashboard;
+  onOrders: (s: OrderStatus | 'all') => void;
+  onStores: () => void;
+  onFinance: () => void;
+}) {
+  const withdrawals = useAdminBadges().withdrawals;
+  const items: { icon: LucideIcon; count: number; text: string; color: string; onClick: () => void }[] = [
+    { icon: Hourglass, count: d.pendingOrders, text: t('أوردر جديد مستني مراجعة'), color: 'var(--color-warning)', onClick: () => onOrders('Pending') },
+    { icon: UserRoundSearch, count: d.unassignedOrders, text: t('أوردر محتاج مندوب'), color: 'var(--color-series-1)', onClick: () => onOrders('all') },
+    { icon: Store, count: d.pendingStores, text: t('محل مستني موافقتك'), color: 'var(--color-series-3)', onClick: onStores },
+    { icon: Banknote, count: withdrawals, text: t('طلب سحب فلوس'), color: 'var(--color-success)', onClick: onFinance },
+  ].filter((i) => i.count > 0);
+
+  if (items.length === 0) {
+    return (
+      <p className="flex items-center gap-2 rounded-card bg-success/10 px-4 py-3 text-sm font-bold text-ink">
+        <CircleCheck className="size-5 text-success" />
+        {t('مفيش حاجة مستنياك دلوقتي')}
+      </p>
+    );
+  }
+  return (
+    <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+      {items.map((i) => (
+        <button
+          key={i.text}
+          type="button"
+          onClick={i.onClick}
+          className="flex items-center gap-3 rounded-card border p-3 text-start transition-colors hover:brightness-105"
+          style={{ background: `color-mix(in srgb, ${i.color} 10%, var(--color-surface))`, borderColor: `color-mix(in srgb, ${i.color} 35%, transparent)` }}
+        >
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl text-white" style={{ background: i.color }}>
+            <i.icon className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-xl font-extrabold leading-tight text-ink">{i.count}</span>
+            <span className="block truncate text-xs font-semibold text-ink-2">{i.text}</span>
+          </span>
+          <ChevronLeft className="size-5 text-ink-3 ltr:rotate-180" />
+        </button>
+      ))}
     </div>
   );
+}
+
+/** Change against yesterday, as "+12%"; nothing when there is no yesterday to compare with. */
+function change(now: number, before: number): { text: string; up: boolean } | null {
+  if (before === 0) return null;
+  const pct = Math.round(((now - before) / before) * 100);
+  return { text: `${pct > 0 ? '+' : ''}${pct}%`, up: pct >= 0 };
+}
+
+/** Today's four numbers, each against yesterday. */
+function TodayKpis({ onOpen }: { onOpen: () => void }) {
+  const report = useTodayReport().data;
+  const now = report?.totals;
+  const before = report?.previous;
+  const kpi = (pick: (r: ReportTotals) => number) => ({ value: now ? pick(now) : null, delta: now && before ? change(pick(now), pick(before)) : null });
+  const tiles: { icon: LucideIcon; label: string; color: string; money: boolean; data: ReturnType<typeof kpi> }[] = [
+    { icon: Banknote, label: t('مبيعات النهارده'), color: 'var(--color-brand)', money: true, data: kpi((r) => r.sales) },
+    { icon: ShoppingBag, label: t('أوردرات النهارده'), color: 'var(--color-series-3)', money: false, data: kpi((r) => r.ordersPlaced) },
+    { icon: Truck, label: t('ربح التوصيل'), color: 'var(--color-success)', money: true, data: kpi((r) => r.deliveryFees) },
+    { icon: ReceiptText, label: t('متوسط الأوردر'), color: 'var(--color-accent)', money: true, data: kpi((r) => r.averageOrder) },
+  ];
   return (
-    <SoftCard as="button" onClick={onOpen} className="p-3.5">
-      <div className="flex items-center gap-2">
-        <TrendingUp className="size-5 text-accent" />
-        <span className="font-extrabold text-ink">{t('النهارده')}</span>
-        <span className="flex-1" />
-        <span className="text-[13px] font-bold text-brand-ink">{t('كل الإحصائيات')}</span>
-        <ChevronLeft className="size-5 text-brand-ink" />
-      </div>
-      <div className="mt-3 flex gap-3">
-        <Cell label={t('اتحصّل')} value={today ? formatPrice(today.sales) : '—'} accent />
-        <Cell label={t('ليك (توصيل)')} value={today ? formatPrice(today.deliveryFees) : '—'} />
-        <Cell label={t('أوردرات')} value={today ? String(today.ordersPlaced) : '—'} />
-      </div>
+    <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      {tiles.map((k) => (
+        <SoftCard key={k.label} as="button" onClick={onOpen} className="p-4 text-start">
+          <div className="flex items-center gap-2">
+            <span className="grid size-9 place-items-center rounded-xl" style={{ background: `color-mix(in srgb, ${k.color} 14%, transparent)`, color: k.color }}>
+              <k.icon className="size-[18px]" />
+            </span>
+            <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-ink-2">{k.label}</span>
+          </div>
+          <p className="mt-3 truncate text-[26px] font-extrabold leading-tight text-ink tabular-nums">
+            {k.data.value === null ? '—' : k.money ? formatPrice(Math.round(k.data.value)) : compactNumber(k.data.value)}
+          </p>
+          <p className="mt-1 flex items-center gap-1 text-xs font-bold">
+            {k.data.delta ? (
+              <>
+                <span className={clsx('inline-flex items-center', k.data.delta.up ? 'text-success' : 'text-danger')}>
+                  {k.data.delta.up ? <ArrowUpRight className="size-3.5" /> : <ArrowDownRight className="size-3.5" />}
+                  <span dir="ltr">{k.data.delta.text}</span>
+                </span>
+                <span className="font-medium text-ink-3">{t('عن امبارح')}</span>
+              </>
+            ) : (
+              <span className="font-medium text-ink-3">{t('مفيش مقارنة بامبارح')}</span>
+            )}
+          </p>
+        </SoftCard>
+      ))}
+    </div>
+  );
+}
+
+/** This month's bars (money or orders), from the statistics page. */
+function MonthChart({ onOpen }: { onOpen: () => void }) {
+  const [key] = useState(() => ({ period: 'month' as const, date: new Date() }));
+  const report = useReport(key);
+  if (report.isLoading) return <SoftCard className="h-[290px] animate-pulse">{null}</SoftCard>;
+  if (!report.data) return null;
+  return (
+    <div className="flex flex-col gap-1">
+      <ChartCard report={report.data} reportKey={key} />
+      <button type="button" onClick={onOpen} className="self-end px-1 text-[13px] font-bold text-brand-ink hover:underline">
+        {t('كل الإحصائيات')}
+      </button>
+    </div>
+  );
+}
+
+/** The newest orders as a table on wide screens, a list on phones. */
+function RecentOrders({ onOpen, onAll }: { onOpen: (id: number) => void; onAll: () => void }) {
+  const orders = useAdminOrders(null);
+  const rows = (orders.data ?? []).slice(0, 7);
+  return (
+    <SoftCard className="p-4">
+      <CardTitle title={t('آخر الأوردرات')} action={t('كل الأوردرات')} onAction={onAll} />
+      {orders.isLoading ? (
+        <Loading />
+      ) : rows.length === 0 ? (
+        <p className="py-6 text-center text-ink-3">{t('لسه مفيش أوردرات')}</p>
+      ) : (
+        <div className="mt-3 -mx-4">
+          <div className="hidden grid-cols-[90px_minmax(0,1.4fr)_minmax(0,1fr)_110px_130px] gap-3 border-b border-line px-4 pb-2 text-xs font-bold text-ink-3 md:grid">
+            <span>{t('رقم')}</span>
+            <span>{t('المحل')}</span>
+            <span>{t('الوقت')}</span>
+            <span>{t('الإجمالي')}</span>
+            <span>{t('الحالة')}</span>
+          </div>
+          {rows.map((o) => {
+            const meta = orderStatus(o.status);
+            const store = o.isCustomOrder ? t('طلب خاص') : o.storeNames.join('، ');
+            return (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => onOpen(o.id)}
+                className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-b border-line px-4 py-3 text-start text-sm last:border-b-0 hover:bg-surface-alt/60 md:grid-cols-[90px_minmax(0,1.4fr)_minmax(0,1fr)_110px_130px]"
+              >
+                <span className="font-extrabold text-ink tabular-nums" dir="ltr">#{o.number}</span>
+                <span className="truncate font-semibold text-ink max-md:order-3">{store}</span>
+                <span className="truncate text-xs text-ink-3 max-md:order-4 max-md:text-end">{formatOrderDate(o.createdUtc)}</span>
+                <span className="font-bold text-ink tabular-nums max-md:hidden">{formatPrice(o.total)}</span>
+                <span className="max-md:order-2 max-md:justify-self-end">
+                  <StatusChip label={meta.label} color={meta.color} />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </SoftCard>
   );
 }
 
-/** Order work at a glance: new (needs review), in progress, delivered. */
-function OrdersStrip({ dashboard: d, onOpen }: { dashboard: AdminDashboard; onOpen: (s: OrderStatus | 'all') => void }) {
-  const cells: [OrderStatus, string, number][] = [
+/** Orders by stage, each a meter against all orders on the board. */
+function OrdersPipeline({ dashboard: d, onOpen }: { dashboard: AdminDashboard; onOpen: (s: OrderStatus | 'all') => void }) {
+  const rows: [OrderStatus, string, number][] = [
     ['Pending', t('جديدة'), d.pendingOrders],
     ['Confirmed', t('شغالة'), d.ordersInProgress],
     ['Delivered', t('اتوصلت'), d.deliveredOrders],
   ];
+  const total = rows.reduce((n, r) => n + r[2], 0);
   return (
-    <SoftCard className="p-3.5">
-      <div className="flex items-center">
-        <h3 className="flex-1 font-extrabold text-ink">{t('الأوردرات')}</h3>
-        <button type="button" onClick={() => onOpen('all')} className="text-[13px] font-bold text-brand-ink hover:underline">
-          {t('كل الأوردرات')}
-        </button>
-      </div>
-      <div className="mt-2 grid grid-cols-3 gap-2">
-        {cells.map(([status, label, count]) => {
-          const meta = ORDER_STATUSES.find((s) => s.value === status)!;
+    <SoftCard className="p-4">
+      <CardTitle title={t('الأوردرات')} action={t('عرض الكل')} onAction={() => onOpen('all')} />
+      <div className="mt-2 flex flex-col">
+        {rows.map(([status, label, count]) => {
+          const meta = orderStatus(status);
           return (
-            <button
-              key={status}
-              type="button"
-              onClick={() => onOpen(status)}
-              className="flex flex-col items-center rounded-2xl py-3 hover:brightness-110"
-              style={{ background: status === 'Pending' && count > 0 ? 'color-mix(in srgb, var(--color-warning) 14%, transparent)' : 'var(--color-surface-alt)' }}
-            >
-              <meta.Icon className="size-[22px]" style={{ color: meta.color }} />
-              <span className="mt-1.5 text-[22px] font-extrabold leading-tight text-ink">{count}</span>
-              <span className="text-xs text-ink-2">{label}</span>
+            <button key={status} type="button" onClick={() => onOpen(status)} className="rounded-lg px-0.5 py-2 text-start hover:bg-surface-alt/50">
+              <div className="flex items-center gap-2">
+                <meta.Icon className="size-[18px]" style={{ color: meta.color }} />
+                <span className="flex-1 text-ink">{label}</span>
+                <span className="font-extrabold text-ink tabular-nums">{count}</span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded" style={{ background: `color-mix(in srgb, ${meta.color} 15%, transparent)` }}>
+                <div className="h-full rounded" style={{ width: `${total === 0 ? 0 : (count / total) * 100}%`, background: meta.color }} />
+              </div>
             </button>
           );
         })}
@@ -224,43 +351,82 @@ function FinanceCard({ onOpen }: { onOpen: () => void }) {
   const o = useWalletsOverview().data;
   const pending = o?.pendingWithdrawalsCount ?? 0;
   return (
-    <SoftCard as="button" onClick={onOpen} className="flex items-center gap-3 p-4 text-start">
-      <IconWell icon={Landmark} size={44} color="var(--color-success)" />
-      <span className="min-w-0 flex-1">
-        <span className="block font-extrabold text-ink">{t('المالية')}</span>
-        <span className="block text-xs text-ink-2">
-          {o
-            ? t('للمحلات {stores} • كاش مع المناديب {cash}', { stores: formatPrice(o.owedToStores), cash: formatPrice(o.cashWithDrivers) })
-            : t('المحافظ وطلبات السحب والحركات')}
-        </span>
-      </span>
-      {pending > 0 && <StatusChip label={t('{n} طلب سحب', { n: pending })} color="var(--color-warning)" />}
-      <ChevronLeft className="size-5 text-ink-3" />
+    <SoftCard as="button" onClick={onOpen} className="p-4 text-start">
+      <div className="flex items-center gap-3">
+        <IconWell icon={Landmark} size={40} color="var(--color-success)" />
+        <span className="flex-1 font-extrabold text-ink">{t('المالية')}</span>
+        {pending > 0 && <StatusChip label={t('{n} طلب سحب', { n: pending })} color="var(--color-warning)" />}
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-surface-alt p-2.5">
+          <p className="text-xs text-ink-2">{t('للمحلات')}</p>
+          <p className="truncate font-extrabold text-ink tabular-nums">{o ? formatPrice(o.owedToStores) : '—'}</p>
+        </div>
+        <div className="rounded-xl bg-surface-alt p-2.5">
+          <p className="text-xs text-ink-2">{t('كاش مع المناديب')}</p>
+          <p className="truncate font-extrabold text-ink tabular-nums">{o ? formatPrice(o.cashWithDrivers) : '—'}</p>
+        </div>
+      </div>
     </SoftCard>
   );
 }
 
-function AttentionBanner({ icon, title, subtitle, onClick }: { icon: LucideIcon; title: string; subtitle: string; onClick: () => void }) {
+/** The platform's size: people, stores, products. */
+function PlatformCard({ dashboard: d, onStores, onDrivers }: { dashboard: AdminDashboard; onStores: () => void; onDrivers: () => void }) {
+  const rows: { icon: LucideIcon; label: string; value: number; caption?: string; onClick?: () => void }[] = [
+    { icon: Store, label: t('المحلات'), value: d.totalStores, caption: t('{n} مفتوح دلوقتي', { n: d.openStores }), onClick: onStores },
+    { icon: Users, label: t('الزباين'), value: d.customers },
+    { icon: Bike, label: t('المندوبين المفعّلين'), value: d.activeDrivers, onClick: onDrivers },
+    { icon: Store, label: t('أصحاب المحلات'), value: d.storeOwners },
+    { icon: Package, label: t('المنتجات'), value: d.totalProducts, caption: d.unavailableProducts > 0 ? t('{n} خلصان', { n: d.unavailableProducts }) : undefined },
+    { icon: LayoutGrid, label: t('الأقسام'), value: d.totalCategories },
+  ];
   return (
-    <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-card bg-accent/15 p-3.5 text-start hover:bg-accent/20">
-      <IconWell icon={icon} size={40} color="var(--color-accent)" />
-      <span className="min-w-0 flex-1">
-        <span className="block font-extrabold text-ink">{title}</span>
-        <span className="block text-xs text-ink-2">{subtitle}</span>
-      </span>
-      <ChevronLeft className="size-5 text-accent" />
-    </button>
+    <SoftCard className="p-4">
+      <h3 className="font-extrabold text-ink">{t('المنصة')}</h3>
+      <div className="mt-2 flex flex-col">
+        {rows.map((r) => (
+          <button
+            key={r.label}
+            type="button"
+            disabled={!r.onClick}
+            onClick={r.onClick}
+            className="flex items-center gap-2.5 rounded-lg px-0.5 py-2 text-start enabled:hover:bg-surface-alt/50"
+          >
+            <r.icon className="size-[18px] text-ink-3" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm text-ink">{r.label}</span>
+              {r.caption && <span className="block text-[11px] text-ink-3">{r.caption}</span>}
+            </span>
+            <span className="font-extrabold text-ink tabular-nums">{compactNumber(r.value)}</span>
+          </button>
+        ))}
+      </div>
+    </SoftCard>
   );
 }
 
-function StatTile({ icon, label, value, caption, onClick, className }: { icon: LucideIcon; label: string; value: number; caption?: string; onClick?: () => void; className?: string }) {
+/** Phones have no sidebar: every admin page as a tile. */
+function Shortcuts() {
+  const navigate = useNavigate();
+  const links = ADMIN_GROUPS.flatMap((g) => g.links).filter((l) => l.to !== '/admin');
   return (
-    <SoftCard as={onClick ? 'button' : 'div'} onClick={onClick} className={`p-3.5 ${className ?? ''}`}>
-      <IconWell icon={icon} size={38} />
-      <p className="mt-3 text-[26px] font-extrabold leading-tight text-ink">{compactNumber(value)}</p>
-      <p className="text-[13px] text-ink-2">{label}</p>
-      {caption && <p className="text-[11px] text-ink-3">{caption}</p>}
-    </SoftCard>
+    <section className="lg:hidden">
+      <h3 className="mb-2 font-extrabold text-ink">{t('كل الصفحات')}</h3>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+        {links.map((l) => (
+          <button
+            key={l.to}
+            type="button"
+            onClick={() => navigate(l.to)}
+            className="flex flex-col items-center gap-1.5 rounded-2xl bg-surface px-1 py-3 text-center hover:bg-surface-alt"
+          >
+            <l.icon className="size-[22px] text-brand-ink" />
+            <span className="max-w-full truncate text-[12px] font-bold text-ink">{tIn('nav', l.label)}</span>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 

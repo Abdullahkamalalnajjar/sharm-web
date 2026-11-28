@@ -195,7 +195,7 @@ function MiniStat({ icon: Icon, color, label, value, delta: d, caption }: { icon
 const hourLabel = (h: number) => (h < 12 ? t('{h}ص', { h: h === 0 ? 12 : h, h24: h }) : t('{h}م', { h: h === 12 ? 12 : h - 12, h24: h }));
 
 /** Day: orders per hour. Month / year: money or orders per day / month. */
-function ChartCard({ report: r, reportKey: key }: { report: Report; reportKey: ReportKey }) {
+export function ChartCard({ report: r, reportKey: key }: { report: Report; reportKey: ReportKey }) {
   const [metric, setMetric] = useState<'money' | 'orders'>('money');
   const now = new Date();
   const current = isCurrentPeriod(key);
